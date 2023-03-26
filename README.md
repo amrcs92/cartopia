@@ -4,5 +4,6 @@ Simple store cart
 
 For demo login try:
 
-email: amrcs1992@gmail.com \n
-pass: 12345
+<p>email: amrcs1992@gmail.com</p>
+<br/>
+<p>pass: 12345</p>
