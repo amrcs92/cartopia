@@ -1,14 +1,13 @@
 -- phpMyAdmin SQL Dump
--- version 4.7.9
+-- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1:3306
--- Generation Time: Dec 02, 2018 at 11:28 PM
--- Server version: 5.7.21
--- PHP Version: 5.6.35
+-- Host: 127.0.0.1
+-- Generation Time: Mar 27, 2023 at 12:50 AM
+-- Server version: 10.4.24-MariaDB
+-- PHP Version: 8.1.6
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-SET AUTOCOMMIT = 0;
 START TRANSACTION;
 SET time_zone = "+00:00";
 
@@ -28,15 +27,12 @@ SET time_zone = "+00:00";
 -- Table structure for table `orders`
 --
 
-DROP TABLE IF EXISTS `orders`;
-CREATE TABLE IF NOT EXISTS `orders` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+CREATE TABLE `orders` (
+  `id` int(11) NOT NULL,
   `shipping_id` int(11) NOT NULL,
   `total_cost` decimal(10,2) NOT NULL,
-  `created_at` timestamp NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `shipping_id` (`shipping_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `orders`
@@ -55,17 +51,15 @@ INSERT INTO `orders` (`id`, `shipping_id`, `total_cost`, `created_at`) VALUES
 -- Table structure for table `products`
 --
 
-DROP TABLE IF EXISTS `products`;
-CREATE TABLE IF NOT EXISTS `products` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+CREATE TABLE `products` (
+  `id` int(11) NOT NULL,
   `name` varchar(200) NOT NULL,
   `description` text NOT NULL,
   `price` double(10,2) NOT NULL,
   `sku` bigint(20) NOT NULL,
-  `created_at` timestamp NOT NULL,
-  `updated_at` timestamp NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `products`
@@ -83,16 +77,12 @@ INSERT INTO `products` (`id`, `name`, `description`, `price`, `sku`, `created_at
 -- Table structure for table `products_order`
 --
 
-DROP TABLE IF EXISTS `products_order`;
-CREATE TABLE IF NOT EXISTS `products_order` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+CREATE TABLE `products_order` (
+  `id` int(11) NOT NULL,
   `order_id` int(11) NOT NULL,
   `product_id` int(11) NOT NULL,
-  `quantity` int(11) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `order_id` (`order_id`),
-  KEY `product_id` (`product_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8;
+  `quantity` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `products_order`
@@ -116,16 +106,13 @@ INSERT INTO `products_order` (`id`, `order_id`, `product_id`, `quantity`) VALUES
 -- Table structure for table `product_images`
 --
 
-DROP TABLE IF EXISTS `product_images`;
-CREATE TABLE IF NOT EXISTS `product_images` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+CREATE TABLE `product_images` (
+  `id` int(11) NOT NULL,
   `name` varchar(50) NOT NULL,
   `product_id` int(11) NOT NULL,
-  `created_at` timestamp NOT NULL,
-  `updated_at` timestamp NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `product_id` (`product_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8;
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `product_images`
@@ -143,13 +130,11 @@ INSERT INTO `product_images` (`id`, `name`, `product_id`, `created_at`, `updated
 -- Table structure for table `shipping`
 --
 
-DROP TABLE IF EXISTS `shipping`;
-CREATE TABLE IF NOT EXISTS `shipping` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+CREATE TABLE `shipping` (
+  `id` int(11) NOT NULL,
   `method` varchar(50) NOT NULL,
-  `fees` int(11) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+  `fees` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `shipping`
@@ -165,18 +150,16 @@ INSERT INTO `shipping` (`id`, `method`, `fees`) VALUES
 -- Table structure for table `users`
 --
 
-DROP TABLE IF EXISTS `users`;
-CREATE TABLE IF NOT EXISTS `users` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+CREATE TABLE `users` (
+  `id` int(11) NOT NULL,
   `username` varchar(100) NOT NULL,
   `phone` varchar(100) NOT NULL,
   `address` varchar(200) NOT NULL,
   `email` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
   `balance` decimal(10,2) NOT NULL,
-  `user_role` int(11) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8;
+  `user_role` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `users`
@@ -190,7 +173,8 @@ INSERT INTO `users` (`id`, `username`, `phone`, `address`, `email`, `password`, 
 (5, 'ramzy', '0129843985', 'mansheya - alexandria', 'ramzy@gmail.com', '$6$rounds=5000$usesomesillystri$5WxXV00Jv1lKssvR375aHSbVfBNbxuKpQx0oQSArCRfoC4IDPBd55jdlRyNa/zsrYE6EJKIQd6sNKKxhyHOne0', '100.00', 0),
 (6, 'son-goku', '0122345678909', 'vegeta planet - dragon ball', 'kamehameha@gmail.com', '$6$rounds=5000$usesomesillystri$5WxXV00Jv1lKssvR375aHSbVfBNbxuKpQx0oQSArCRfoC4IDPBd55jdlRyNa/zsrYE6EJKIQd6sNKKxhyHOne0', '100.00', 0),
 (7, 'ahmedhussien', '019278459379', 'tanta - 3ataba - egypt', 'ahmedhussien@gmail.com', '$6$rounds=5000$usesomesillystri$5WxXV00Jv1lKssvR375aHSbVfBNbxuKpQx0oQSArCRfoC4IDPBd55jdlRyNa/zsrYE6EJKIQd6sNKKxhyHOne0', '87.96', 0),
-(8, 'yassin', '01234456789', 'bakous - alexandria - egypt', 'yassin@gmail.com', '$6$rounds=5000$usesomesillystri$5WxXV00Jv1lKssvR375aHSbVfBNbxuKpQx0oQSArCRfoC4IDPBd55jdlRyNa/zsrYE6EJKIQd6sNKKxhyHOne0', '83.00', 0);
+(8, 'yassin', '01234456789', 'bakous - alexandria - egypt', 'yassin@gmail.com', '$6$rounds=5000$usesomesillystri$5WxXV00Jv1lKssvR375aHSbVfBNbxuKpQx0oQSArCRfoC4IDPBd55jdlRyNa/zsrYE6EJKIQd6sNKKxhyHOne0', '83.00', 0),
+(9, 'amrcs92', '01092237499', '453 south spring street', 'amrcs1992@gmail.com', '$6$rounds=5000$usesomesillystri$hoaIZGYQkyfevDZUSlLGcwiMJ5PQrdFyjlQZZNJOgVU0urVnuk6vX1CVkCLKy5PsrloQ8YFrK3Q.qu0I460TH.', '100.00', 0);
 
 -- --------------------------------------------------------
 
@@ -198,17 +182,13 @@ INSERT INTO `users` (`id`, `username`, `phone`, `address`, `email`, `password`, 
 -- Table structure for table `user_rating`
 --
 
-DROP TABLE IF EXISTS `user_rating`;
-CREATE TABLE IF NOT EXISTS `user_rating` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+CREATE TABLE `user_rating` (
+  `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `product_id` int(11) NOT NULL,
   `rate` int(11) NOT NULL,
-  `created_at` timestamp NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`),
-  KEY `product_id` (`product_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `user_rating`
@@ -219,7 +199,106 @@ INSERT INTO `user_rating` (`id`, `user_id`, `product_id`, `rate`, `created_at`) 
 (2, 1, 2, 4, '2018-08-26 12:45:08'),
 (3, 6, 2, 3, '2018-08-26 12:46:23'),
 (4, 7, 3, 5, '2018-08-28 02:30:40'),
-(5, 8, 4, 5, '2018-08-29 12:26:51');
+(5, 8, 4, 5, '2018-08-29 12:26:51'),
+(6, 5, 1, 3, '2023-03-26 21:03:42');
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `orders`
+--
+ALTER TABLE `orders`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `shipping_id` (`shipping_id`);
+
+--
+-- Indexes for table `products`
+--
+ALTER TABLE `products`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `products_order`
+--
+ALTER TABLE `products_order`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `order_id` (`order_id`),
+  ADD KEY `product_id` (`product_id`);
+
+--
+-- Indexes for table `product_images`
+--
+ALTER TABLE `product_images`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `product_id` (`product_id`);
+
+--
+-- Indexes for table `shipping`
+--
+ALTER TABLE `shipping`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `user_rating`
+--
+ALTER TABLE `user_rating`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `product_id` (`product_id`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `orders`
+--
+ALTER TABLE `orders`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `products`
+--
+ALTER TABLE `products`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `products_order`
+--
+ALTER TABLE `products_order`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
+-- AUTO_INCREMENT for table `product_images`
+--
+ALTER TABLE `product_images`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT for table `shipping`
+--
+ALTER TABLE `shipping`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT for table `user_rating`
+--
+ALTER TABLE `user_rating`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- Constraints for dumped tables
