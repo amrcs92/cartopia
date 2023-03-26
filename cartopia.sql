@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 27, 2023 at 12:50 AM
+-- Generation Time: Mar 27, 2023 at 12:54 AM
 -- Server version: 10.4.24-MariaDB
 -- PHP Version: 8.1.6
 
@@ -173,8 +173,7 @@ INSERT INTO `users` (`id`, `username`, `phone`, `address`, `email`, `password`, 
 (5, 'ramzy', '0129843985', 'mansheya - alexandria', 'ramzy@gmail.com', '$6$rounds=5000$usesomesillystri$5WxXV00Jv1lKssvR375aHSbVfBNbxuKpQx0oQSArCRfoC4IDPBd55jdlRyNa/zsrYE6EJKIQd6sNKKxhyHOne0', '100.00', 0),
 (6, 'son-goku', '0122345678909', 'vegeta planet - dragon ball', 'kamehameha@gmail.com', '$6$rounds=5000$usesomesillystri$5WxXV00Jv1lKssvR375aHSbVfBNbxuKpQx0oQSArCRfoC4IDPBd55jdlRyNa/zsrYE6EJKIQd6sNKKxhyHOne0', '100.00', 0),
 (7, 'ahmedhussien', '019278459379', 'tanta - 3ataba - egypt', 'ahmedhussien@gmail.com', '$6$rounds=5000$usesomesillystri$5WxXV00Jv1lKssvR375aHSbVfBNbxuKpQx0oQSArCRfoC4IDPBd55jdlRyNa/zsrYE6EJKIQd6sNKKxhyHOne0', '87.96', 0),
-(8, 'yassin', '01234456789', 'bakous - alexandria - egypt', 'yassin@gmail.com', '$6$rounds=5000$usesomesillystri$5WxXV00Jv1lKssvR375aHSbVfBNbxuKpQx0oQSArCRfoC4IDPBd55jdlRyNa/zsrYE6EJKIQd6sNKKxhyHOne0', '83.00', 0),
-(9, 'amrcs92', '01092237499', '453 south spring street', 'amrcs1992@gmail.com', '$6$rounds=5000$usesomesillystri$hoaIZGYQkyfevDZUSlLGcwiMJ5PQrdFyjlQZZNJOgVU0urVnuk6vX1CVkCLKy5PsrloQ8YFrK3Q.qu0I460TH.', '100.00', 0);
+(8, 'yassin', '01234456789', 'bakous - alexandria - egypt', 'yassin@gmail.com', '$6$rounds=5000$usesomesillystri$5WxXV00Jv1lKssvR375aHSbVfBNbxuKpQx0oQSArCRfoC4IDPBd55jdlRyNa/zsrYE6EJKIQd6sNKKxhyHOne0', '83.00', 0);
 
 -- --------------------------------------------------------
 
