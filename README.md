@@ -2,8 +2,9 @@
 Simple store cart
 
 
-For demo login try:
+<h3>For demo login try:</h3>
+
+<br/>
 
 <p>email: amrcs1992@gmail.com</p>
-<br/>
 <p>pass: 12345</p>
