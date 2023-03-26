@@ -1,0 +1,9 @@
+@font-face {
+  font-family: nunito-regular;
+  src: url(../font/Nunito-Regular.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: nunito-semibold;
+  src: url('../font/Nunito-SemiBold.ttf') format('truetype');
+} 

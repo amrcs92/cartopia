@@ -1,0 +1,459 @@
+body{
+  margin:0;
+  padding: 0;
+}
+
+h1,h2,h3,h4,h5,h6{
+  font-family: nunito-semibold !important;
+  font-weight: bolder;
+}
+
+a,p,span,button{
+  font-family: nunito-regular !important;
+}
+
+.home-bg{
+	background-color: #eaeaea;
+  height: 100vh;
+  min-height: 100%;  
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+}
+
+footer p,footer h5,footer a,footer div {
+	color: #ffffff;
+}
+
+footer a:hover{
+	color: #ffffff;
+	/*text-decoration: none;*/
+}
+
+.blue{
+	background-color: #2196f3!important;
+}
+
+footer.page-footer .footer-copyright{
+	background-color: rgba(0,0,0, 0.2);
+}
+
+/* navbar */
+
+@import url("//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css");
+
+ul li.nav-item{
+	padding-right: 10px;
+	padding-left: 10px;
+}
+
+ul li.nav-item:hover{
+	background-color: #2196f3;
+}
+
+ul li.nav-item a:hover{
+	color: #ffffff;
+}
+
+ul.navbar-nav {
+  width: 100% !important;
+}  
+
+.navbar-default, .bg-default{
+	background-color: #f5f5f5!important;
+}
+
+.navbar-icon-top .navbar-nav .nav-link > .fa {
+  position: relative;
+  width: 36px;
+  font-size: 24px;
+}
+
+.navbar-icon-top .navbar-nav .nav-link > .fa > .badge {
+  font-size: 0.75rem;
+  position: absolute;
+  right: 0;
+  font-family: sans-serif;
+}
+
+.navbar-icon-top .navbar-nav .nav-link > .fa {
+  top: 3px;
+  line-height: 12px;
+}
+
+.navbar-icon-top .navbar-nav .nav-link > .fa > .badge {
+  top: -10px;
+}
+
+@media (min-width: 576px) {
+  .navbar-icon-top.navbar-expand-sm .navbar-nav .nav-link {
+    text-align: center;
+    display: table-cell;
+    height: 70px;
+    vertical-align: middle;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .navbar-icon-top.navbar-expand-sm .navbar-nav .nav-link > .fa {
+    display: block;
+    width: 48px;
+    margin: 2px auto 4px auto;
+    top: 0;
+    line-height: 24px;
+  }
+
+  .navbar-icon-top.navbar-expand-sm .navbar-nav .nav-link > .fa > .badge {
+    top: -7px;
+  }
+}
+
+@media (min-width: 768px) {
+  .navbar-icon-top.navbar-expand-md .navbar-nav .nav-link {
+    text-align: center;
+    display: table-cell;
+    height: 70px;
+    vertical-align: middle;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .navbar-icon-top.navbar-expand-md .navbar-nav .nav-link > .fa {
+    display: block;
+    width: 48px;
+    margin: 2px auto 4px auto;
+    top: 0;
+    line-height: 24px;
+  }
+
+  .navbar-icon-top.navbar-expand-md .navbar-nav .nav-link > .fa > .badge {
+    top: -7px;
+  }
+}
+
+@media (min-width: 992px) {
+  .navbar-icon-top.navbar-expand-lg .navbar-nav .nav-link {
+    text-align: center;
+    display: table-cell;
+    height: 70px;
+    vertical-align: middle;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .navbar-icon-top.navbar-expand-lg .navbar-nav .nav-link > .fa {
+    display: block;
+    width: 48px;
+    margin: 2px auto 4px auto;
+    top: 0;
+    line-height: 24px;
+  }
+
+  .navbar-icon-top.navbar-expand-lg .navbar-nav .nav-link > .fa > .badge {
+    top: -7px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .navbar-icon-top.navbar-expand-xl .navbar-nav .nav-link {
+    text-align: center;
+    display: table-cell;
+    height: 70px;
+    vertical-align: middle;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .navbar-icon-top.navbar-expand-xl .navbar-nav .nav-link > .fa {
+    display: block;
+    width: 48px;
+    margin: 2px auto 4px auto;
+    top: 0;
+    line-height: 24px;
+  }
+
+  .navbar-icon-top.navbar-expand-xl .navbar-nav .nav-link > .fa > .badge {
+    top: -7px;
+  }
+}
+
+a[data-toggle="collapse"] {
+    position: relative;
+}
+
+.dropdown-toggle::after {
+    display: block;
+    position: absolute;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+}
+
+#sidebar.active {
+    margin-left: -250px;
+}
+
+#sidebar {
+    min-width: 250px;
+    max-width: 250px;
+    margin-right: auto;
+    margin-left: auto;
+    min-height: 100vh;
+}
+
+@media (max-width: 768px) {
+    #sidebar {
+        margin-left: -250px;
+    }
+    #sidebar.active {
+        margin-left: 0;
+    }
+}
+
+/*sidebar*/
+
+.related-products{
+	margin-bottom: 10px;
+}
+
+.inlineBlock{
+  display: inline-block;
+}
+
+/*end sidebar*/
+
+.bg-verticaly-height{
+  height: 100vh;
+}
+
+/*Signin*/
+
+.card-signin{
+  margin-top: 150px;
+}
+
+/*End signin*/
+
+/*Product details page*/
+.section{
+  width:100%;
+  margin-left:-15px;
+  padding:2px;
+  padding-left:15px;
+  padding-right:15px;
+}
+.btn-minus{
+  cursor:pointer;
+  font-size:7px;
+  display:flex;
+  align-items:center;
+  padding:5px;
+  padding-left:10px;
+  padding-right:10px;
+  border:1px solid gray;
+  border-radius:2px;
+  border-right:0;
+}
+.btn-plus{
+  cursor:pointer;
+  font-size:7px;
+  display:flex;
+  align-items:center;
+  padding:5px;
+  padding-left:10px;
+  padding-right:10px;
+  border:1px solid gray;
+  border-radius:2px;
+  border-left:0;
+}
+div.section > div {
+  width:100%;
+  display:inline-flex;
+}
+div.section > div > input {
+  margin:0;
+  padding-left:5px;
+  font-size:10px;
+  padding-right:5px;
+  max-width:18%;
+  text-align:center;
+}
+/*End product details page*/
+
+/*Home page*/
+
+.login-register-btn{
+  position: relative;
+  top: 15px;
+  left: 50%;
+}
+
+.card{
+  transition:1s;
+}
+
+.card-product-column{
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.card-product:hover, .related-products:hover{
+  box-sizing: border-box;
+  box-shadow: 0 0 3px 3px #ccc;
+}
+
+.card-body.text-center{
+  padding-left: 11px;
+  padding-right: 11px;
+}
+
+.card-img-product{
+  transition: 1s;
+  padding:20px;
+  padding: 20px;
+}
+
+.card-img-product:hover{
+  -ms-transform: scale(1.2); /* IE 9 */
+  -webkit-transform: scale(1.2); /* Safari 3-8 */
+  transform: scale(1.2);
+}
+
+/*rating stars*/
+
+.rating {
+  float:left;
+  margin-left:25px;
+}
+
+/* :not(:checked) is a filter, so that browsers that don’t support :checked don’t 
+  follow these rules. Every browser that supports :checked also supports :not(), so
+  it doesn’t make the test unnecessarily selective */
+.rating:not(:checked) > form > input {
+    position:absolute;
+    /*top:-9999px;*/
+    clip:rect(0,0,0,0);
+}
+
+.rating:not(:checked) > form > label {
+    float:right;
+    width:0.8em;
+    /* padding:0 .1em; */
+    overflow:hidden;
+    white-space:nowrap;
+    cursor:pointer;
+    font-size:250%;
+    /* line-height:1.2; */
+    color:#ddd;
+}
+
+.rating:not(:checked) > form > label:before {
+    content: '★ ';
+}
+
+.rating > form > input:checked ~ label {
+    color: #FFD700;
+    
+}
+
+.rating:not(:checked) > form > label:hover,
+.rating:not(:checked) > form > label:hover ~ label {
+    color: #FFD700;
+    
+}
+
+.rating > form > input:checked + label:hover,
+.rating > form > input:checked + label:hover ~ label,
+.rating > form > input:checked ~ label:hover,
+.rating > form > input:checked ~ label:hover ~ label,
+.rating > form > label:hover ~ input:checked ~ label {
+    color: #FFD700;
+    
+}
+
+.rating > form > label:active {
+    position:relative;
+    top:2px;
+    left:2px;
+}
+
+.rating > i{
+  color: #FFD700;
+  float:left;
+  width:0.8em;
+  white-space:nowrap;
+  cursor:pointer;
+  font-size:200%;
+  margin-right: 10px;
+}
+
+.rating > i.icon-star-empty{
+  color: #ddd !important;
+  float:right;
+}
+
+/*End home page*/
+
+/*My cart page*/
+
+.table>tbody>tr>td, .table>tfoot>tr>td{
+    vertical-align: middle;
+}
+
+@media screen and (max-width: 600px) {
+    table#cart tbody td .form-control{
+    width:20%;
+    display: inline !important;
+  }
+  .actions .btn{
+    width:36%;
+    margin:1.5em 0;
+  }
+  
+  .actions .btn-info{
+    float:left;
+  }
+  .actions .btn-danger{
+    float:right;
+  }
+  
+  table#cart thead { display: none; }
+  table#cart tbody td { display: block; padding: .6rem; min-width:320px;}
+  table#cart tbody tr td:first-child { background: #333; color: #fff; }
+  table#cart tbody td:before {
+    content: attr(data-th); font-weight: bold;
+    display: inline-block; width: 8rem;
+  }
+  
+  
+  
+  table#cart tfoot td{display:block; }
+  table#cart tfoot td .btn{display:block;}
+  
+}
+
+.shipping_method{
+  display: inline-block;
+}
+
+.icon-5{
+  font-size:12em;
+}
+
+.borderless td, .borderless th{
+  border: none !important;
+}
+
+td#product_description div{
+  min-width: 100%;
+}
+
+.pt-2{
+  padding-top: 2px
+} 
+
+.dropdown-mycart:after{
+  right: 10px !important;
+}
+
+/*End My cart page*/
