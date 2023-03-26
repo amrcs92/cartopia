@@ -1,5 +1,5 @@
 # cartopia
-Simple store cart
+Simple store cart with virtual balance to shopping
 
 
 <h3>For demo login try:</h3>
