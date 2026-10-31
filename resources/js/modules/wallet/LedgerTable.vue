@@ -27,7 +27,7 @@ const props = defineProps<{
     >
         <table class="w-full min-w-[34rem] border-collapse text-left">
             <thead>
-                <tr class="border-b-2 border-outline bg-well text-ink">
+                <tr class="border-b-2 border-outline bg-field text-ink">
                     <th scope="col" class="px-4 py-3 text-sm font-extrabold">
                         Date
                     </th>

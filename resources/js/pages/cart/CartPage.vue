@@ -32,7 +32,7 @@ const props = defineProps<{
             <div class="flex flex-col items-center gap-5 text-center">
                 <span
                     aria-hidden="true"
-                    class="inline-flex size-28 items-center justify-center rounded-full border-[2.5px] border-outline bg-well text-ink"
+                    class="inline-flex size-28 items-center justify-center rounded-full border-[2.5px] border-outline bg-field text-ink"
                 >
                     <Icon name="basket" :size="56" />
                 </span>

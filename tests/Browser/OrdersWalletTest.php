@@ -73,3 +73,34 @@ it('shows the order-placed banner after checkout but not when coming back to it'
         ->assertDontSee('Order placed.')
         ->assertDontSee('Your receipt is below.');
 });
+
+it('keeps the transaction history header on the field surface in dark mode', function () {
+    $user = User::factory()->create();
+    WalletTransaction::create([
+        'user_id' => $user->id,
+        'type' => WalletTransactionType::AdminAdjustment,
+        'amount' => Money::fromCents(500),
+        'balance_after' => Money::fromCents(500),
+        'description' => 'Goodwill credit',
+    ]);
+
+    $this->actingAs($user);
+
+    // The photo backdrop (--well) stays light in dark mode, so text-ink on it
+    // would vanish: the header row has to sit on --field instead.
+    $page = visit('/wallet')->assertPresent('[data-test="ledger-row"]');
+    $page->script("localStorage.setItem('appearance', 'dark'); document.documentElement.classList.add('dark');");
+
+    $page->assertScript(<<<'JS'
+        (() => {
+            const probe = document.createElement('div');
+            probe.style.backgroundColor = 'var(--field)';
+            document.body.appendChild(probe);
+            const field = getComputedStyle(probe).backgroundColor;
+            probe.remove();
+            const tr = document.querySelector('thead tr');
+            return getComputedStyle(tr).backgroundColor === field
+                && getComputedStyle(tr.querySelector('th')).color !== field;
+        })()
+        JS, true);
+});

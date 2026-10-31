@@ -20,7 +20,7 @@ const props = defineProps<{
         />
         <span
             v-if="props.thumbnails.length === 0"
-            class="inline-flex size-14 items-center justify-center rounded-xl border-2 border-outline bg-well text-ink"
+            class="inline-flex size-14 items-center justify-center rounded-xl border-2 border-outline bg-field text-ink"
         >
             <Icon name="basket" :size="26" />
         </span>

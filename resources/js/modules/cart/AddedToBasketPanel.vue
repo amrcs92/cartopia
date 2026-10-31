@@ -50,7 +50,7 @@ function close(): void {
     >
         <div v-if="shown" class="flex flex-col gap-6">
             <div
-                class="flex items-center gap-4 rounded-[18px] border-[1.5px] border-line bg-well p-3"
+                class="flex items-center gap-4 rounded-[18px] border-[1.5px] border-line bg-field p-3"
                 data-test="added-item"
             >
                 <span
