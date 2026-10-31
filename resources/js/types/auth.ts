@@ -6,6 +6,7 @@ export type User = {
     name: string;
     email: string;
     balance: string;
+    balance_cents: number;
     is_admin: boolean;
     avatar?: string;
 };
