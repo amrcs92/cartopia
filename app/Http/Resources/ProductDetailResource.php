@@ -24,6 +24,9 @@ class ProductDetailResource extends ProductResource
         return [
             ...parent::toArray($request),
             'description' => $this->description,
+            'category' => $this->category === null
+                ? null
+                : ['name' => $this->category->name, 'slug' => $this->category->slug],
             'images' => $this->images
                 ->map(fn (ProductImage $image): string => Storage::disk('public')->url($image->path))
                 ->values()

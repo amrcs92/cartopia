@@ -29,6 +29,7 @@ class ProductResource extends JsonResource
             'image_url' => $image === null ? null : Storage::disk('public')->url($image->path),
             'rating_average' => round((float) ($this->ratings_avg_stars ?? 0), 1),
             'rating_count' => (int) ($this->ratings_count ?? 0),
+            'aisle' => $this->whenLoaded('category', fn (): ?string => $this->category?->name),
         ];
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\Rating;
 use App\Models\User;
@@ -18,12 +19,12 @@ it('shows the four newest products on the welcome page', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('WelcomePage')
-            ->has('featured', 4)
-            ->where('featured.0.id', $newest->id)
-            ->where('featured.0.slug', $newest->slug)
-            ->where('featured.0.price', $newest->price->format())
-            ->where('featured.0.image_url', Storage::disk('public')->url($newest->images()->first()->path))
-            ->where('featured.3.id', $products[1]->id)
+            ->has('counter', 4)
+            ->where('counter.0.id', $newest->id)
+            ->where('counter.0.slug', $newest->slug)
+            ->where('counter.0.price', $newest->price->format())
+            ->where('counter.0.image_url', Storage::disk('public')->url($newest->images()->first()->path))
+            ->where('counter.3.id', $products[1]->id)
         );
 });
 
@@ -75,7 +76,7 @@ it('applies filters and echoes them back', function () {
             ->where('products.data.0.rating_average', 4.5)
             ->where('products.data.0.rating_count', 2)
             ->where('products.data.1.id', $cheaper->id)
-            ->where('filters', $query)
+            ->where('filters', [...$query, 'aisle' => null, 'rated' => null, 'featured' => null])
         );
 });
 
@@ -83,7 +84,7 @@ it('echoes null filters when none are given', function () {
     $this->get(route('products.index'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->where('filters', ['q' => null, 'min_price' => null, 'max_price' => null, 'rating' => null, 'sort' => null])
+            ->where('filters', ['q' => null, 'min_price' => null, 'max_price' => null, 'rating' => null, 'sort' => null, 'aisle' => null, 'rated' => null, 'featured' => null])
         );
 });
 
@@ -175,4 +176,139 @@ it('never exposes internal columns', function () {
             ->missing('product.created_at')
             ->missing('product.updated_at')
         );
+});
+
+it('shows at most six aisles with products, most stocked first', function () {
+    $big = Category::factory()->create(['name' => 'Big']);
+    Product::factory()->count(3)->inCategory($big)->create();
+    Category::factory()->count(6)->create()->each(fn ($c) => Product::factory()->inCategory($c)->create());
+    Category::factory()->create(['name' => 'Empty']);
+
+    $this->get(route('home'))->assertInertia(fn (Assert $page) => $page
+        ->has('aisles', 6)
+        ->where('aisles.0.name', 'Big')
+        ->where('aisles.0.product_count', 3)
+    );
+});
+
+it('shows up to eight featured products, newest first, and nothing when none are featured', function () {
+    $this->get(route('home'))->assertInertia(fn (Assert $page) => $page->has('featured', 0));
+
+    $products = Product::factory()->count(9)->featured()->create();
+    Product::factory()->create();
+
+    $this->get(route('home'))->assertInertia(fn (Assert $page) => $page
+        ->has('featured', 8)
+        ->where('featured.0.id', $products[8]->id)
+    );
+});
+
+it('filters the shop by one or more aisles', function () {
+    $drinks = Category::factory()->create(['name' => 'Drinks', 'slug' => 'drinks']);
+    $dairy = Category::factory()->create(['name' => 'Dairy', 'slug' => 'dairy']);
+    Product::factory()->inCategory($drinks)->create();
+    Product::factory()->inCategory($dairy)->create();
+    Product::factory()->create(['category_id' => null]);
+
+    $this->get(route('products.index', ['aisle' => ['drinks']]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('products.data', 1)
+            ->where('products.data.0.aisle', 'Drinks')
+            ->where('filters.aisle', ['drinks'])
+            ->has('aisles', 2)
+        );
+
+    $this->get(route('products.index', ['aisle' => ['drinks', 'dairy']]))
+        ->assertInertia(fn (Assert $page) => $page->has('products.data', 2));
+
+    $this->get(route('products.index'))
+        ->assertInertia(fn (Assert $page) => $page->has('products.data', 3));
+});
+
+it('filters the shop to rated products and to featured products', function () {
+    $rated = Product::factory()->create();
+    Rating::factory()->for($rated)->create(['stars' => 3]);
+    $featured = Product::factory()->featured()->create();
+    Product::factory()->create();
+
+    $this->get(route('products.index', ['rated' => '1']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('products.data', 1)
+            ->where('products.data.0.id', $rated->id)
+            ->where('filters.rated', '1')
+        );
+
+    $this->get(route('products.index', ['featured' => '1']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('products.data', 1)
+            ->where('products.data.0.id', $featured->id)
+            ->has('featured', 1)
+        );
+
+    $this->get(route('products.index', ['featured' => '0', 'rated' => '0']))
+        ->assertInertia(fn (Assert $page) => $page->has('products.data', 3));
+});
+
+it('combines aisle with search and price filters', function () {
+    $drinks = Category::factory()->create(['slug' => 'drinks']);
+    $match = Product::factory()->inCategory($drinks)->create(['name' => 'Spring Water', 'price' => 100]);
+    Product::factory()->inCategory($drinks)->create(['name' => 'Spring Water Large', 'price' => 200]);
+    Product::factory()->inCategory($drinks)->create(['name' => 'Cola', 'price' => 100]);
+    Product::factory()->create(['name' => 'Water Pistol', 'price' => 100]);
+
+    $this->get(route('products.index', ['aisle' => ['drinks'], 'q' => 'wat', 'max_price' => '1.50']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('products.data', 1)
+            ->where('products.data.0.id', $match->id)
+        );
+});
+
+it('rejects bad aisle input without a server error', function (array|string $aisle, string $field) {
+    Category::factory()->create(['slug' => 'drinks']);
+
+    $this->get(route('products.index', ['aisle' => $aisle]))->assertSessionHasErrors($field);
+})->with([
+    'unknown slug' => [['nope'], 'aisle.0'],
+    'not an array' => ['drinks', 'aisle'],
+    'too many' => [array_fill(0, 21, 'drinks'), 'aisle'],
+]);
+
+it('treats a repeated aisle as one', function () {
+    $drinks = Category::factory()->create(['slug' => 'drinks']);
+    Product::factory()->inCategory($drinks)->create();
+    Product::factory()->create();
+
+    $this->get(route('products.index', ['aisle' => ['drinks', 'drinks']]))
+        ->assertOk()
+        ->assertSessionHasNoErrors()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('products.data', 1)
+        );
+});
+
+it('shows the breadcrumb aisle on the product page, or none', function () {
+    $drinks = Category::factory()->create(['name' => 'Drinks', 'slug' => 'drinks']);
+    $product = Product::factory()->inCategory($drinks)->create();
+    $loose = Product::factory()->create(['category_id' => null]);
+
+    $this->get(route('products.show', $product))->assertInertia(fn (Assert $page) => $page
+        ->where('product.category', ['name' => 'Drinks', 'slug' => 'drinks'])
+    );
+    $this->get(route('products.show', $loose))->assertInertia(fn (Assert $page) => $page
+        ->where('product.category', null)
+    );
+});
+
+it('leaves the current product out of its featured carousel', function () {
+    $product = Product::factory()->featured()->create();
+    $others = Product::factory()->count(2)->featured()->create();
+
+    $this->get(route('products.show', $product))->assertInertia(fn (Assert $page) => $page
+        ->has('featured', 2)
+        ->where('featured', fn ($featured) => collect($featured)->pluck('id')->doesntContain($product->id))
+    );
 });

@@ -7,7 +7,7 @@ import { index as productsIndex } from '@/routes/products';
 import type { Product } from '@/types';
 
 const props = defineProps<{
-    featured: Product[];
+    counter: Product[];
 }>();
 </script>
 
@@ -51,11 +51,11 @@ const props = defineProps<{
         </div>
 
         <div
-            v-if="props.featured.length > 0"
+            v-if="props.counter.length > 0"
             class="grid grid-cols-2 gap-4 md:grid-cols-4"
         >
             <ProductCard
-                v-for="product in props.featured"
+                v-for="product in props.counter"
                 :key="product.id"
                 :product="product"
             />

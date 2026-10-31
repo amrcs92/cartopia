@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Catalog\Aisles;
+use App\Catalog\FeaturedProducts;
 use App\Http\Requests\ProductIndexRequest;
+use App\Http\Resources\AisleResource;
 use App\Http\Resources\ProductDetailResource;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
@@ -18,8 +21,11 @@ class ProductController extends Controller
         $filters = $request->filters();
 
         $products = Product::query()
-            ->with('primaryImage')
+            ->with(['primaryImage', 'category'])
             ->withRatingStats()
+            ->inAisles($filters['aisle'])
+            ->when($filters['rated'], fn ($query) => $query->rated())
+            ->when($filters['featured'], fn ($query) => $query->featured())
             ->search($filters['q'])
             ->priceBetween($filters['min_price'], $filters['max_price'])
             ->minRating($filters['rating'])
@@ -30,17 +36,20 @@ class ProductController extends Controller
         return Inertia::render('products/ProductsIndexPage', [
             'products' => ProductResource::collection($products),
             'filters' => $request->rawFilters(),
+            'aisles' => AisleResource::collection(Aisles::all())->resolve(),
+            'featured' => ProductResource::collection(FeaturedProducts::take())->resolve(),
         ]);
     }
 
     public function show(Product $product): Response
     {
-        $product->load(['images', 'primaryImage'])
+        $product->load(['images', 'primaryImage', 'category'])
             ->loadAvg('ratings', 'stars')
             ->loadCount('ratings');
 
         return Inertia::render('products/ProductShowPage', [
             'product' => (new ProductDetailResource($product))->resolve(),
+            'featured' => ProductResource::collection(FeaturedProducts::take(8, $product->id))->resolve(),
         ]);
     }
 }
