@@ -1,17 +1,14 @@
 <script setup lang="ts">
 import Icon from '@/common/icon/Icon.vue';
 import SectionHeading from '@/common/stall/SectionHeading.vue';
+import { feeLabel, isPickup } from '@/modules/home/shipping';
 import type { ShippingMethod } from '@/types';
 
-// "Getting it home": one card per shipping method. A free method is pickup,
-// a paid one is delivery; the fee reads "Free" when it is zero.
+// "Getting it home": one card per shipping method, pickup or delivery by its
+// name (see shipping.ts); the fee reads "Free" when it is zero.
 const props = defineProps<{
     shippingMethods: ShippingMethod[];
 }>();
-
-function isPickup(method: ShippingMethod): boolean {
-    return method.fee_cents === 0;
-}
 </script>
 
 <template>
@@ -25,6 +22,7 @@ function isPickup(method: ShippingMethod): boolean {
             <li
                 v-for="method in props.shippingMethods"
                 :key="method.id"
+                data-test="shipping-method"
                 class="flex items-center gap-4 rounded-[22px] border-[2.5px] border-outline bg-surface p-4 sm:p-5"
             >
                 <span
@@ -54,12 +52,10 @@ function isPickup(method: ShippingMethod): boolean {
                 <p
                     class="shrink-0 font-serif text-[22px] text-ink tabular-nums sm:text-[26px]"
                 >
-                    {{ isPickup(method) ? 'Free' : method.fee }}
+                    {{ feeLabel(method) }}
                 </p>
             </li>
         </ul>
-        <p v-else class="text-body">
-            Delivery options are on their way. Check back soon.
-        </p>
+        <p v-else class="text-body">Delivery options are shown at checkout.</p>
     </section>
 </template>

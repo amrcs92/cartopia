@@ -1,28 +1,16 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import SectionHeading from '@/common/stall/SectionHeading.vue';
+import { deliverySentence } from '@/modules/home/shipping';
 import type { ShippingMethod } from '@/types';
 
-// "How shopping works": three numbered steps. The second quotes the real
-// delivery fees: a free method reads as pickup, a paid one as delivery.
+// "How shopping works": three numbered steps. The second is built from the
+// real shipping methods and their fees.
 const props = defineProps<{
     shippingMethods: ShippingMethod[];
 }>();
 
-const deliveryLine = computed(() => {
-    const free = props.shippingMethods.some((method) => method.fee_cents === 0);
-    const paid = props.shippingMethods.find((method) => method.fee_cents > 0);
-
-    if (free && paid) {
-        return `Pick it up for free, or have ${paid.name} deliver it for ${paid.fee}.`;
-    }
-
-    if (paid) {
-        return `Have ${paid.name} deliver it for ${paid.fee}.`;
-    }
-
-    return 'Pick it up for free when it suits you.';
-});
+const deliveryLine = computed(() => deliverySentence(props.shippingMethods));
 
 const steps = computed(() => [
     {

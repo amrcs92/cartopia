@@ -2,6 +2,7 @@
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ShippingMethod;
 use App\Models\User;
 
 // The theme, menu and carousel arrow buttons are icon-only, so they are found
@@ -61,4 +62,53 @@ it('shows a basket on an aisle tile that has no photo', function () {
     visit('/')->assertSee('Shop by aisle')
         ->assertSee('1 product')
         ->assertPresent('[data-test="aisle-tile-fallback"]');
+});
+
+// Carousel helpers: the live region's text, and each slide as "--" (in view)
+// or "ih" (inert and aria-hidden).
+const CAROUSEL_LIVE = 'document.querySelector("[aria-roledescription=carousel] [aria-live]").textContent';
+const CAROUSEL_SLIDES = '[...document.querySelectorAll("[aria-roledescription=slide]")].map(s => (s.inert ? "i" : "-") + (s.getAttribute("aria-hidden") === "true" ? "h" : "-")).join("")';
+
+it('wraps the featured carousel to the last position when Previous is pressed', function () {
+    Product::factory()->count(5)->featured()->create();
+
+    visit('/')->assertScript(CAROUSEL_LIVE.'.includes("1 to 3")', true)
+        ->click('[aria-label="Previous featured products"]')
+        ->assertScript(CAROUSEL_LIVE.'.includes("3 to 5")', true)
+        ->click('[aria-label="Next featured products"]')
+        ->assertScript(CAROUSEL_LIVE.'.includes("1 to 3")', true);
+});
+
+it('moves the featured carousel to the position of a pressed dot', function () {
+    Product::factory()->count(5)->featured()->create();
+
+    visit('/')->click('[aria-label="Show products 3 to 5"]')
+        ->assertScript(CAROUSEL_LIVE.'.includes("3 to 5")', true)
+        ->assertScript('document.querySelector("[aria-label=\'Show products 3 to 5\']").getAttribute("aria-current")', 'true')
+        ->assertScript('document.querySelector("[aria-label=\'Show products 1 to 3\']").hasAttribute("aria-current")', false);
+});
+
+it('keeps out-of-view featured slides away from the keyboard and screen readers', function () {
+    Product::factory()->count(5)->featured()->create();
+
+    visit('/')->assertScript(CAROUSEL_SLIDES, '------ihih')
+        ->click('[aria-label="Next featured products"]')
+        ->assertScript(CAROUSEL_SLIDES, 'ih------ih');
+});
+
+it('labels shipping methods as pickup or delivery by name, not by fee', function () {
+    ShippingMethod::factory()->create(['name' => 'Pickup', 'fee' => 0]);
+    ShippingMethod::factory()->create(['name' => 'Courier', 'fee' => 0]);
+    ShippingMethod::factory()->create(['name' => 'UPS', 'fee' => 500]);
+
+    visit('/')->assertScript(
+        '[...document.querySelectorAll("[data-test=shipping-method]")].map(e => e.innerText.replace(/\\s+/g, " ").trim()).join(" | ")',
+        'Pickup Collect your order yourself. Free | Courier Delivered to your address. Free | UPS Delivered to your address. $5.00',
+    )->assertSee('Pick it up for free, or have it delivered: Courier for free, or UPS for $5.00.');
+});
+
+it('keeps the delivery copy neutral when there are no shipping methods', function () {
+    visit('/')->assertSee('Choose how to get it at checkout.')
+        ->assertSee('Delivery options are shown at checkout.')
+        ->assertPresent('#delivery');
 });
