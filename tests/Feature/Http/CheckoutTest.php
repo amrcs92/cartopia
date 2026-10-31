@@ -78,7 +78,7 @@ it('places only one order on double submit', function () {
     $this->actingAs($user)
         ->post(route('checkout.store'), ['shipping_method_id' => $ups->id])
         ->assertRedirect(route('cart.show'))
-        ->assertSessionHas('error', 'Your cart is empty.');
+        ->assertSessionHas('error', 'Your basket is empty.');
 
     expect(Order::count())->toBe(1);
 });

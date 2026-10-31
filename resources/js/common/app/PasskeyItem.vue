@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import DialogContent from '@/common/dialog/DialogContent.vue';
 import { KeyRound, Trash2 } from '@lucide/vue';
 import { ref } from 'vue';
-import { Button } from '@/lib/shadcn/button';
+import Button from '@/common/button/Button.vue';
 import {
     Dialog,
     DialogClose,
-    DialogContent,
     DialogDescription,
     DialogFooter,
     DialogTitle,
@@ -75,7 +75,7 @@ const handleDelete = () => {
                 <DialogTitle>Remove passkey</DialogTitle>
                 <DialogDescription>
                     Are you sure you want to remove the "{{ passkey.name }}"
-                    passkey? You will no longer be able to use it to sign in.
+                    passkey? You will no longer be able to use it to log in.
                 </DialogDescription>
                 <DialogFooter class="gap-2">
                     <DialogClose as-child>

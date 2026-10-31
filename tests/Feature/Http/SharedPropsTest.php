@@ -54,11 +54,11 @@ it("counts a guest's session cart", function () {
 });
 
 it('shares flash messages', function () {
-    $this->withSession(['success' => 'Order placed.', 'error' => 'Your cart is empty.'])
+    $this->withSession(['success' => 'Order placed.', 'error' => 'Your basket is empty.'])
         ->get(route('home'))
         ->assertInertia(fn (Assert $page) => $page
             ->where('flash.success', 'Order placed.')
-            ->where('flash.error', 'Your cart is empty.')
+            ->where('flash.error', 'Your basket is empty.')
         );
 });
 

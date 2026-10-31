@@ -3,9 +3,9 @@ import { Form, Head } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import InputError from '@/common/app/InputError.vue';
 import PasswordInput from '@/common/app/PasswordInput.vue';
-import { Button } from '@/lib/shadcn/button';
-import { Input } from '@/lib/shadcn/input';
-import { Label } from '@/lib/shadcn/label';
+import StallButton from '@/common/stall/StallButton.vue';
+import Input from '@/common/input/Input.vue';
+import Label from '@/common/label/Label.vue';
 import { Spinner } from '@/lib/shadcn/spinner';
 import { update } from '@/routes/password';
 
@@ -76,7 +76,9 @@ const inputEmail = ref(props.email);
                 <InputError :message="errors.password_confirmation" />
             </div>
 
-            <Button
+            <StallButton
+                variant="marigold"
+                size="lg"
                 type="submit"
                 class="mt-4 w-full"
                 :disabled="processing"
@@ -84,7 +86,7 @@ const inputEmail = ref(props.email);
             >
                 <Spinner v-if="processing" />
                 Reset password
-            </Button>
+            </StallButton>
         </div>
     </Form>
 </template>

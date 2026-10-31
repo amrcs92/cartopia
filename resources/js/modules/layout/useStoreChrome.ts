@@ -12,6 +12,7 @@ export type StoreSection =
     | 'wallet'
     | 'account'
     | 'login'
+    | 'register'
     | null;
 
 const sections: [RegExp, Exclude<StoreSection, null>][] = [
@@ -22,6 +23,7 @@ const sections: [RegExp, Exclude<StoreSection, null>][] = [
     [/^\/wallet(\/|$)/, 'wallet'],
     [/^\/settings(\/|$)/, 'account'],
     [/^\/login(\/|$)/, 'login'],
+    [/^\/register(\/|$)/, 'register'],
 ];
 
 export function sectionFor(url: string): StoreSection {

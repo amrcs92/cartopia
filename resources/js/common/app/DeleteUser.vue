@@ -1,22 +1,22 @@
 <script setup lang="ts">
+import DialogContent from '@/common/dialog/DialogContent.vue';
 import { Form } from '@inertiajs/vue3';
 import { useTemplateRef } from 'vue';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import Heading from '@/common/app/Heading.vue';
 import InputError from '@/common/app/InputError.vue';
 import PasswordInput from '@/common/app/PasswordInput.vue';
-import { Button } from '@/lib/shadcn/button';
+import Button from '@/common/button/Button.vue';
 import {
     Dialog,
     DialogClose,
-    DialogContent,
     DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
 } from '@/lib/shadcn/dialog';
-import { Label } from '@/lib/shadcn/label';
+import Label from '@/common/label/Label.vue';
 
 const passwordInput = useTemplateRef('passwordInput');
 </script>
@@ -29,10 +29,10 @@ const passwordInput = useTemplateRef('passwordInput');
             description="Delete your account and all of its resources"
         />
         <div
-            class="space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10"
+            class="space-y-4 rounded-[18px] border-2 border-danger bg-surface p-4"
         >
-            <div class="relative space-y-0.5 text-red-600 dark:text-red-100">
-                <p class="font-medium">Warning</p>
+            <div class="relative space-y-0.5 text-danger">
+                <p class="font-extrabold">Warning</p>
                 <p class="text-sm">
                     Please proceed with caution, this cannot be undone.
                 </p>

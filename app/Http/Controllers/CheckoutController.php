@@ -21,7 +21,7 @@ class CheckoutController extends Controller
         } catch (InsufficientBalance) {
             return to_route('cart.show')->with('error', 'Your balance is too low for this order.');
         } catch (EmptyCart) {
-            return to_route('cart.show')->with('error', 'Your cart is empty.');
+            return to_route('cart.show')->with('error', 'Your basket is empty.');
         }
 
         // Inertia's native flash: delivered once, never kept in history state, so

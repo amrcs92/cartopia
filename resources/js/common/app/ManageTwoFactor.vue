@@ -5,7 +5,7 @@ import { onUnmounted, ref } from 'vue';
 import Heading from '@/common/app/Heading.vue';
 import TwoFactorRecoveryCodes from '@/common/app/TwoFactorRecoveryCodes.vue';
 import TwoFactorSetupModal from '@/common/app/TwoFactorSetupModal.vue';
-import { Button } from '@/lib/shadcn/button';
+import Button from '@/common/button/Button.vue';
 import { useTwoFactorAuth } from '@/composables/useTwoFactorAuth';
 import { disable, enable } from '@/routes/two-factor';
 

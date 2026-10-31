@@ -3,7 +3,7 @@ import { Form } from '@inertiajs/vue3';
 import { Eye, EyeOff, LockKeyhole, RefreshCw } from '@lucide/vue';
 import { nextTick, onMounted, ref, useTemplateRef } from 'vue';
 import AlertError from '@/common/app/AlertError.vue';
-import { Button } from '@/lib/shadcn/button';
+import Button from '@/common/button/Button.vue';
 import {
     Card,
     CardContent,

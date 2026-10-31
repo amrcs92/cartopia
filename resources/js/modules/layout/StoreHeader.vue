@@ -5,7 +5,7 @@ import Icon from '@/common/icon/Icon.vue';
 import { press, pressTransition, sticker } from '@/common/stall/press';
 import ThemeToggle from '@/common/theme/ThemeToggle.vue';
 import { cn } from '@/lib/utils';
-import { home, login } from '@/routes';
+import { home, login, register } from '@/routes';
 import { show as showCart } from '@/routes/cart';
 import { index as ordersIndex } from '@/routes/orders';
 import { index as productsIndex } from '@/routes/products';
@@ -85,14 +85,22 @@ const basketClass = cn(
                         </span>
                     </Link>
                 </template>
-                <Link
-                    v-else
-                    :href="login()"
-                    :class="navClass('login')"
-                    :aria-current="current('login')"
-                >
-                    Log in
-                </Link>
+                <template v-else>
+                    <Link
+                        :href="login()"
+                        :class="navClass('login')"
+                        :aria-current="current('login')"
+                    >
+                        Log in
+                    </Link>
+                    <Link
+                        :href="register()"
+                        :class="navClass('register')"
+                        :aria-current="current('register')"
+                    >
+                        Sign up
+                    </Link>
+                </template>
             </nav>
 
             <div class="flex items-center gap-3">

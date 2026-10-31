@@ -2,8 +2,8 @@
 import { Form, Head, setLayoutProps } from '@inertiajs/vue3';
 import { computed, ref, watchEffect } from 'vue';
 import InputError from '@/common/app/InputError.vue';
-import { Button } from '@/lib/shadcn/button';
-import { Input } from '@/lib/shadcn/input';
+import StallButton from '@/common/stall/StallButton.vue';
+import Input from '@/common/input/Input.vue';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/lib/shadcn/input-otp';
 import { store } from '@/routes/two-factor/login';
 import type { TwoFactorConfigContent } from '@/types';
@@ -70,6 +70,7 @@ const toggleRecoveryMode = (clearErrors: () => void): void => {
                             <InputOTPGroup>
                                 <InputOTPSlot
                                     v-for="index in 6"
+                                    class="size-11 text-lg"
                                     :key="index"
                                     :index="index - 1"
                                 />
@@ -78,14 +79,19 @@ const toggleRecoveryMode = (clearErrors: () => void): void => {
                     </div>
                     <InputError :message="errors.code" />
                 </div>
-                <Button type="submit" class="w-full" :disabled="processing"
-                    >Continue</Button
+                <StallButton
+                    variant="marigold"
+                    size="lg"
+                    type="submit"
+                    class="w-full"
+                    :disabled="processing"
+                    >Continue</StallButton
                 >
                 <div class="text-center text-sm text-muted-foreground">
                     <span>or you can </span>
                     <button
                         type="button"
-                        class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+                        class="inline-flex min-h-11 items-center font-bold text-link underline underline-offset-4 hover:no-underline"
                         @click="() => toggleRecoveryMode(clearErrors)"
                     >
                         {{ authConfigContent.buttonText }}
@@ -109,15 +115,20 @@ const toggleRecoveryMode = (clearErrors: () => void): void => {
                     required
                 />
                 <InputError :message="errors.recovery_code" />
-                <Button type="submit" class="w-full" :disabled="processing"
-                    >Continue</Button
+                <StallButton
+                    variant="marigold"
+                    size="lg"
+                    type="submit"
+                    class="w-full"
+                    :disabled="processing"
+                    >Continue</StallButton
                 >
 
                 <div class="text-center text-sm text-muted-foreground">
                     <span>or you can </span>
                     <button
                         type="button"
-                        class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+                        class="inline-flex min-h-11 items-center font-bold text-link underline underline-offset-4 hover:no-underline"
                         @click="() => toggleRecoveryMode(clearErrors)"
                     >
                         {{ authConfigContent.buttonText }}

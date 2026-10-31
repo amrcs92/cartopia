@@ -3,10 +3,10 @@ import { Form, Head } from '@inertiajs/vue3';
 import InputError from '@/common/app/InputError.vue';
 import PasswordInput from '@/common/app/PasswordInput.vue';
 import TextLink from '@/common/app/TextLink.vue';
-import { Button } from '@/lib/shadcn/button';
+import StallButton from '@/common/stall/StallButton.vue';
 import { Checkbox } from '@/lib/shadcn/checkbox';
-import { Input } from '@/lib/shadcn/input';
-import { Label } from '@/lib/shadcn/label';
+import Input from '@/common/input/Input.vue';
+import Label from '@/common/label/Label.vue';
 import { Spinner } from '@/lib/shadcn/spinner';
 import { register } from '@/routes';
 import { store } from '@/routes/login';
@@ -31,7 +31,8 @@ defineProps<{
 
     <div
         v-if="status"
-        class="mb-4 text-center text-sm font-medium text-green-600"
+        role="status"
+        class="mb-4 rounded-xl border-2 border-green bg-chip px-4 py-3 text-sm font-bold text-chip-ink"
     >
         {{ status }}
     </div>
@@ -84,13 +85,23 @@ defineProps<{
             </div>
 
             <div class="flex items-center justify-between">
-                <Label for="remember" class="flex items-center space-x-3">
-                    <Checkbox id="remember" name="remember" :tabindex="3" />
+                <Label
+                    for="remember"
+                    class="flex min-h-11 cursor-pointer items-center gap-3 font-bold text-ink"
+                >
+                    <Checkbox
+                        id="remember"
+                        name="remember"
+                        :tabindex="3"
+                        class="size-6 rounded-md border-2 border-outline"
+                    />
                     <span>Remember me</span>
                 </Label>
             </div>
 
-            <Button
+            <StallButton
+                variant="marigold"
+                size="lg"
                 type="submit"
                 class="mt-4 w-full"
                 :tabindex="4"
@@ -99,7 +110,7 @@ defineProps<{
             >
                 <Spinner v-if="processing" />
                 Log in
-            </Button>
+            </StallButton>
         </div>
 
         <div class="text-center text-sm text-muted-foreground">

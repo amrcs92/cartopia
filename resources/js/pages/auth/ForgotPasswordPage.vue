@@ -2,9 +2,9 @@
 import { Form, Head } from '@inertiajs/vue3';
 import InputError from '@/common/app/InputError.vue';
 import TextLink from '@/common/app/TextLink.vue';
-import { Button } from '@/lib/shadcn/button';
-import { Input } from '@/lib/shadcn/input';
-import { Label } from '@/lib/shadcn/label';
+import StallButton from '@/common/stall/StallButton.vue';
+import Input from '@/common/input/Input.vue';
+import Label from '@/common/label/Label.vue';
 import { Spinner } from '@/lib/shadcn/spinner';
 import { login } from '@/routes';
 import { email } from '@/routes/password';
@@ -26,7 +26,8 @@ defineProps<{
 
     <div
         v-if="status"
-        class="mb-4 text-center text-sm font-medium text-green-600"
+        role="status"
+        class="mb-4 rounded-xl border-2 border-green bg-chip px-4 py-3 text-sm font-bold text-chip-ink"
     >
         {{ status }}
     </div>
@@ -47,14 +48,17 @@ defineProps<{
             </div>
 
             <div class="my-6 flex items-center justify-start">
-                <Button
+                <StallButton
+                    variant="marigold"
+                    size="lg"
+                    type="submit"
                     class="w-full"
                     :disabled="processing"
                     data-test="email-password-reset-link-button"
                 >
                     <Spinner v-if="processing" />
                     Email password reset link
-                </Button>
+                </StallButton>
             </div>
         </Form>
 

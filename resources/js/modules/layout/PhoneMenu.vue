@@ -7,7 +7,7 @@ import Sheet from '@/common/sheet/Sheet.vue';
 import Chip from '@/common/stall/Chip.vue';
 import StallButton from '@/common/stall/StallButton.vue';
 import ThemeToggle from '@/common/theme/ThemeToggle.vue';
-import { home, login, logout } from '@/routes';
+import { home, login, logout, register } from '@/routes';
 import { show as showCart } from '@/routes/cart';
 import { index as ordersIndex } from '@/routes/orders';
 import { index as productsIndex } from '@/routes/products';
@@ -164,9 +164,14 @@ const links = computed<MenuLink[]>(() => [
             >
                 Log out
             </Link>
-            <StallButton v-else variant="green" as="link" :href="login.url()">
-                Log in
-            </StallButton>
+            <div v-else class="flex flex-col gap-3">
+                <StallButton variant="green" as="link" :href="login.url()">
+                    Log in
+                </StallButton>
+                <StallButton variant="outline" as="link" :href="register.url()">
+                    Sign up
+                </StallButton>
+            </div>
         </div>
     </Sheet>
 </template>

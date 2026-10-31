@@ -34,7 +34,7 @@ function tintFor(index: number): 1 | 2 | 3 {
 
 const walletPoints = [
     '$100 of credit when you create an account',
-    'Shop as a guest; your basket comes with you when you sign in',
+    'Shop as a guest; your basket comes with you when you log in',
     'Every order kept with the exact prices you paid',
 ];
 </script>

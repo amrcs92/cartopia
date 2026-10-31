@@ -2,8 +2,8 @@
 import { Form, Head } from '@inertiajs/vue3';
 import InputError from '@/common/app/InputError.vue';
 import PasswordInput from '@/common/app/PasswordInput.vue';
-import { Button } from '@/lib/shadcn/button';
-import { Label } from '@/lib/shadcn/label';
+import StallButton from '@/common/stall/StallButton.vue';
+import Label from '@/common/label/Label.vue';
 import { Spinner } from '@/lib/shadcn/spinner';
 import { store } from '@/routes/password/confirm';
 import {
@@ -41,7 +41,7 @@ defineOptions({
     >
         <div class="space-y-6">
             <div class="grid gap-2">
-                <Label htmlFor="password">Password</Label>
+                <Label for="password">Password</Label>
                 <PasswordInput
                     id="password"
                     name="password"
@@ -55,14 +55,17 @@ defineOptions({
             </div>
 
             <div class="flex items-center">
-                <Button
+                <StallButton
+                    variant="marigold"
+                    size="lg"
+                    type="submit"
                     class="w-full"
                     :disabled="processing"
                     data-test="confirm-password-button"
                 >
                     <Spinner v-if="processing" />
                     Confirm password
-                </Button>
+                </StallButton>
             </div>
         </div>
     </Form>
