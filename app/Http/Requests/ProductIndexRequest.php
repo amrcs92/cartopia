@@ -11,9 +11,10 @@ use Illuminate\Validation\Rule;
 class ProductIndexRequest extends FormRequest
 {
     /**
-     * Exactly the dollar strings Money::fromDollars parses.
+     * Dollar strings Money::fromDollars parses, capped at 7 integer digits so
+     * the cents value cannot overflow an int.
      */
-    private const string DOLLARS = 'regex:/^\d+(\.\d{1,2})?$/';
+    private const string DOLLARS = 'regex:/^\d{1,7}(\.\d{1,2})?$/';
 
     /**
      * @return array<string, ValidationRule|array<mixed>|string>

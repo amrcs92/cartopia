@@ -110,7 +110,20 @@ it('rejects invalid filters', function (array $query, string $field) {
     'trailing dot' => [['min_price' => '5.'], 'min_price'],
     'plus sign' => [['max_price' => '+5'], 'max_price'],
     'long search' => [['q' => str_repeat('a', 101)], 'q'],
+    'huge max price' => [['max_price' => '100000000000000000'], 'max_price'],
+    'huge min price' => [['min_price' => '100000000000000000'], 'min_price'],
+    'eight integer digits' => [['max_price' => '10000000'], 'max_price'],
 ]);
+
+it('accepts the largest dollar amount', function () {
+    $this->get(route('products.index', ['min_price' => '9999999.99', 'max_price' => '9999999.99']))
+        ->assertOk()
+        ->assertSessionHasNoErrors()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('products.data', 0)
+            ->where('filters.max_price', '9999999.99')
+        );
+});
 
 it("shows a product by slug with images and the viewer's rating", function () {
     $product = Product::factory()->withImages(2)->create(['description' => 'Fresh and crunchy']);
