@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\ShippingMethod;
 use App\Models\User;
@@ -29,6 +30,15 @@ it('seeds the legacy catalog, shipping, demo and admin users', function () {
             ->and($product->images[0]->sort_order)->toBe(0);
         Storage::disk('public')->assertExists("products/{$file}");
     }
+
+    $aisles = Category::query()->orderBy('id')->get()
+        ->mapWithKeys(fn ($c) => [$c->slug => [$c->name, $c->products()->orderBy('id')->pluck('slug')->all()]])
+        ->all();
+    expect($aisles)->toBe([
+        'fruit-and-veg' => ['Fruit and veg', ['apple']],
+        'drinks' => ['Drinks', ['beer', 'water']],
+        'dairy' => ['Dairy', ['cheese-triangle']],
+    ])->and(Product::query()->where('is_featured', false)->count())->toBe(0);
 
     expect(Product::query()->where('slug', 'water')->value('description'))->toContain("St Ann's Spring")
         ->and(Product::query()->where('slug', 'apple')->value('description'))->toContain('"health is wealth."')

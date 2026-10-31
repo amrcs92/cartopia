@@ -12,11 +12,11 @@ it('shares null user and zero cart for guests', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->where('auth.user', null)
             ->where('cart.count', 0)
-            ->where('flash', ['success' => null, 'error' => null])
+            ->where('flash', ['success' => null, 'error' => null, 'addedToBasket' => null])
         );
 });
 
-it('shares the formatted balance for users', function () {
+it('shares the formatted balance and balance in cents for users', function () {
     $user = User::factory()->withBalance(Money::fromCents(10000))->create();
 
     $this->actingAs($user)
@@ -28,6 +28,7 @@ it('shares the formatted balance for users', function () {
                 'name' => $user->name,
                 'email' => $user->email,
                 'balance' => '$100.00',
+                'balance_cents' => 10000,
                 'is_admin' => false,
             ])
         );

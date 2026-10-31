@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\WalletTransactionType;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ShippingMethod;
@@ -17,12 +18,13 @@ class DatabaseSeeder extends Seeder
     /**
      * The legacy Cartopia catalog.
      *
-     * @var list<array{name: string, slug: string, price: int, sku: string, image: string, description: string}>
+     * @var list<array{name: string, slug: string, aisle: string, price: int, sku: string, image: string, description: string}>
      */
     private const array PRODUCTS = [
         [
             'name' => 'Apple',
             'slug' => 'apple',
+            'aisle' => 'fruit-and-veg',
             'price' => 30,
             'sku' => '63310304118428',
             'image' => 'apple.jpg',
@@ -31,6 +33,7 @@ class DatabaseSeeder extends Seeder
         [
             'name' => 'Beer',
             'slug' => 'beer',
+            'aisle' => 'drinks',
             'price' => 200,
             'sku' => '73310304118423',
             'image' => 'heineken_beer.jpg',
@@ -39,6 +42,7 @@ class DatabaseSeeder extends Seeder
         [
             'name' => 'Water',
             'slug' => 'water',
+            'aisle' => 'drinks',
             'price' => 100,
             'sku' => '93312304138923',
             'image' => 'water_bottle.jpg',
@@ -47,6 +51,7 @@ class DatabaseSeeder extends Seeder
         [
             'name' => 'Cheese Triangle',
             'slug' => 'cheese-triangle',
+            'aisle' => 'dairy',
             'price' => 374,
             'sku' => '47729135118723',
             'image' => 'cheese-traingles.jpg',
@@ -79,8 +84,15 @@ class DatabaseSeeder extends Seeder
     {
         $disk = Storage::disk('public');
 
+        $aisles = [];
+        foreach (['fruit-and-veg' => 'Fruit and veg', 'drinks' => 'Drinks', 'dairy' => 'Dairy'] as $slug => $name) {
+            $aisles[$slug] = Category::query()->create(['name' => $name, 'slug' => $slug]);
+        }
+
         foreach (self::PRODUCTS as $data) {
             $product = Product::query()->create([
+                'category_id' => $aisles[$data['aisle']]->id,
+                'is_featured' => true,
                 'name' => $data['name'],
                 'slug' => $data['slug'],
                 'description' => $data['description'],

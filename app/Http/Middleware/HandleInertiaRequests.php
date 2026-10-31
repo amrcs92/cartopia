@@ -48,13 +48,14 @@ class HandleInertiaRequests extends Middleware
             'flash' => Inertia::always(fn (): array => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),
+                'addedToBasket' => $request->session()->get('addedToBasket'),
             ]),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }
 
     /**
-     * @return array{id: int, name: string, email: string, balance: string, is_admin: bool}|null
+     * @return array{id: int, name: string, email: string, balance: string, balance_cents: int, is_admin: bool}|null
      */
     private function currentUser(?User $user): ?array
     {
@@ -67,6 +68,7 @@ class HandleInertiaRequests extends Middleware
             'name' => $user->name,
             'email' => $user->email,
             'balance' => $user->balance->format(),
+            'balance_cents' => $user->balance->cents(),
             'is_admin' => $user->is_admin,
         ];
     }

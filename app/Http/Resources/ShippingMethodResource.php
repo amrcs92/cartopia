@@ -20,6 +20,7 @@ class ShippingMethodResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'fee' => $this->fee->format(),
+            'fee_cents' => $this->fee->cents(),
         ];
     }
 }

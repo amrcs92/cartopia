@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\ShippingMethod;
 use App\Models\User;
 use App\Support\Money;
+use Inertia\Testing\AssertableInertia as Assert;
 
 function checkoutSetup(int $balance = 10000): array
 {
@@ -111,4 +112,17 @@ test('a guest following the checkout link returns to the cart after logging in',
     ])->assertRedirect(route('checkout.start'));
 
     $this->get(route('checkout.start'))->assertRedirect(route('cart.show'));
+});
+
+it('exposes the subtotal and shipping fees in cents on the cart page', function () {
+    [$user, $ups] = checkoutSetup();
+
+    $this->actingAs($user)
+        ->get(route('cart.show'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('cart.subtotal', '$7.74')
+            ->where('cart.subtotal_cents', 774)
+            ->where('shippingMethods.0.fee', $ups->fee->format())
+            ->where('shippingMethods.0.fee_cents', $ups->fee->cents())
+        );
 });

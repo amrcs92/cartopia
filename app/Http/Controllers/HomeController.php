@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Catalog\Aisles;
+use App\Catalog\FeaturedProducts;
+use App\Http\Resources\AisleResource;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use Inertia\Inertia;
@@ -9,19 +12,21 @@ use Inertia\Response;
 
 class HomeController extends Controller
 {
-    public const int FEATURED_COUNT = 4;
+    public const int COUNTER_COUNT = 4;
 
     public function __invoke(): Response
     {
-        $featured = Product::query()
+        $counter = Product::query()
             ->with('primaryImage')
             ->withRatingStats()
             ->sortBy('newest')
-            ->limit(self::FEATURED_COUNT)
+            ->limit(self::COUNTER_COUNT)
             ->get();
 
         return Inertia::render('WelcomePage', [
-            'featured' => ProductResource::collection($featured)->resolve(),
+            'counter' => ProductResource::collection($counter)->resolve(),
+            'featured' => ProductResource::collection(FeaturedProducts::take())->resolve(),
+            'aisles' => AisleResource::collection(Aisles::forHome())->resolve(),
         ]);
     }
 }

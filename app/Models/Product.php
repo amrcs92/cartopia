@@ -10,12 +10,15 @@ use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
+ * @property int|null $category_id
+ * @property bool $is_featured
  * @property string $name
  * @property string $slug
  * @property string $description
@@ -24,7 +27,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'slug', 'description', 'price', 'sku'])]
+#[Fillable(['category_id', 'is_featured', 'name', 'slug', 'description', 'price', 'sku'])]
 class Product extends Model
 {
     /** @use HasFactory<ProductFactory> */
@@ -39,12 +42,20 @@ class Product extends Model
      */
     protected function casts(): array
     {
-        return ['price' => MoneyCast::class];
+        return ['price' => MoneyCast::class, 'is_featured' => 'bool'];
     }
 
     public function getRouteKeyName(): string
     {
         return 'slug';
+    }
+
+    /**
+     * @return BelongsTo<Category, $this>
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
     }
 
     /**
@@ -146,5 +157,37 @@ class Product extends Model
     protected function withRatingStats(Builder $query): void
     {
         $query->withAvg('ratings', 'stars')->withCount('ratings');
+    }
+
+    /**
+     * @param  Builder<Product>  $query
+     */
+    #[Scope]
+    protected function featured(Builder $query): void
+    {
+        $query->where('is_featured', true)->latest('id');
+    }
+
+    /**
+     * @param  Builder<Product>  $query
+     * @param  array<int, string>|null  $slugs
+     */
+    #[Scope]
+    protected function inAisles(Builder $query, ?array $slugs): void
+    {
+        if ($slugs === null || $slugs === []) {
+            return;
+        }
+
+        $query->whereHas('category', fn (Builder $q) => $q->whereIn('slug', $slugs));
+    }
+
+    /**
+     * @param  Builder<Product>  $query
+     */
+    #[Scope]
+    protected function rated(Builder $query): void
+    {
+        $query->whereHas('ratings');
     }
 }
