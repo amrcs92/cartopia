@@ -3,6 +3,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import Button from '@/common/button/Button.vue';
 import CartLineItem from '@/modules/cart/CartLineItem.vue';
 import CartSummary from '@/modules/cart/CartSummary.vue';
+import CheckoutPanel from '@/modules/cart/CheckoutPanel.vue';
 import { index as productsIndex } from '@/routes/products';
 import type { Cart, ShippingMethod } from '@/types';
 
@@ -38,8 +39,12 @@ const props = defineProps<{
                 />
             </ul>
 
-            <!-- Shipping select + checkout button join here (Task 11). -->
-            <CartSummary :cart="props.cart" />
+            <CartSummary :cart="props.cart">
+                <CheckoutPanel
+                    :cart="props.cart"
+                    :shipping-methods="props.shippingMethods"
+                />
+            </CartSummary>
         </div>
     </div>
 </template>

@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { LogOut, Search, Settings, ShoppingCart, User } from '@lucide/vue';
+import {
+    LogOut,
+    Package,
+    Search,
+    Settings,
+    ShoppingCart,
+    User,
+} from '@lucide/vue';
 import { computed, ref } from 'vue';
 import Breadcrumbs from '@/common/app/Breadcrumbs.vue';
 import Badge from '@/common/badge/Badge.vue';
@@ -14,6 +21,7 @@ import Input from '@/common/input/Input.vue';
 import { useCurrentUser } from '@/modules/auth/useCurrentUser';
 import { home, login, logout, register } from '@/routes';
 import { show as showCart } from '@/routes/cart';
+import { index as ordersIndex } from '@/routes/orders';
 import { index as productsIndex } from '@/routes/products';
 import { edit as editProfile } from '@/routes/profile';
 import type { BreadcrumbItem } from '@/types';
@@ -135,7 +143,16 @@ function handleLogout(): void {
                                 </div>
                             </DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <!-- Orders (Task 11) and Wallet (Task 13) join this menu with their routes. -->
+                            <DropdownMenuItem as-child>
+                                <Link
+                                    :href="ordersIndex()"
+                                    class="flex w-full cursor-pointer items-center gap-2"
+                                >
+                                    <Package class="size-4" />
+                                    Orders
+                                </Link>
+                            </DropdownMenuItem>
+                            <!-- Wallet (Task 13) joins this menu with its route. -->
                             <DropdownMenuItem as-child>
                                 <Link
                                     :href="editProfile()"
