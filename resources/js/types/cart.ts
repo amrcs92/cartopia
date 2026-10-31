@@ -18,4 +18,5 @@ export type ShippingMethod = {
     id: number;
     name: string;
     fee: string;
+    fee_cents: number;
 };

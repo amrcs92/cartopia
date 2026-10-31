@@ -9,12 +9,14 @@ it('browses, carts, logs in, checks out and sees the order', function () {
     User::factory()->withBalance(Money::fromCents(10000))->create([
         'email' => 'shopper@example.com',
     ]);
-    Product::factory()->withImages()->create(['price' => 1000]);
+    Product::factory()->withImages()->create(['name' => 'Garden Peas', 'price' => 1000]);
     ShippingMethod::factory()->pickup()->create();
     ShippingMethod::factory()->ups()->create();
 
+    // The product card's basket button is icon-only, so it is found by its
+    // accessible name.
     visit('/products')
-        ->click('Add to cart')
+        ->click('[aria-label="Add Garden Peas to basket"]')
         ->assertSeeIn('[data-test="cart-badge"]', '1')
         ->navigate('/cart')
         ->click('Log in to check out')

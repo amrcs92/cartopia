@@ -6,6 +6,8 @@ export type Product = {
     image_url: string | null;
     rating_average: number;
     rating_count: number;
+    /** The aisle's name; only sent where the aisle is loaded (the featured carousel). */
+    aisle?: string | null;
 };
 
 export type ProductDetail = Product & {

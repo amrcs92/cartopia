@@ -3,6 +3,7 @@
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Rating;
+use App\Models\ShippingMethod;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -14,6 +15,8 @@ beforeEach(function () {
 it('shows the four newest products on the welcome page', function () {
     $products = Product::factory()->count(5)->withImages()->create();
     $newest = $products[4];
+    ShippingMethod::factory()->pickup()->create();
+    ShippingMethod::factory()->ups()->create();
 
     $this->get(route('home'))
         ->assertOk()
@@ -25,6 +28,7 @@ it('shows the four newest products on the welcome page', function () {
             ->where('counter.0.price', $newest->price->format())
             ->where('counter.0.image_url', Storage::disk('public')->url($newest->images()->first()->path))
             ->where('counter.3.id', $products[1]->id)
+            ->has('shippingMethods', 2)
         );
 });
 

@@ -1,61 +1,82 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { ImageOff, ShoppingCart } from '@lucide/vue';
-import Button from '@/common/button/Button.vue';
-import Card from '@/common/card/Card.vue';
-import CardContent from '@/common/card/CardContent.vue';
+import { useMediaQuery } from '@vueuse/core';
+import { ref } from 'vue';
+import Icon from '@/common/icon/Icon.vue';
+import PriceTag from '@/common/stall/PriceTag.vue';
+import QuantityBasketBar from '@/common/stall/QuantityBasketBar.vue';
 import { addToCart } from '@/modules/cart/useCartActions';
 import StarRating from '@/modules/products/StarRating.vue';
 import { show } from '@/routes/products';
 import type { Product } from '@/types';
 
+// A product on the counter: the photo on `well` with its price tag, the name,
+// the rating line and, on desktop, the joined quantity-and-basket bar. Below
+// 640px (the store's phone breakpoint) the card is narrower and shows the
+// full-width "Add" button instead.
 const props = defineProps<{
     product: Product;
 }>();
+
+const isPhone = useMediaQuery('(max-width: 639.98px)');
+const quantity = ref(1);
+
+function add(): void {
+    addToCart(props.product.id, quantity.value);
+}
 </script>
 
 <template>
-    <Card class="group gap-0 overflow-hidden py-0 transition hover:shadow-md">
-        <Link :href="show(props.product)" class="block">
-            <div class="aspect-square overflow-hidden bg-muted">
-                <img
-                    v-if="props.product.image_url"
-                    :src="props.product.image_url"
-                    :alt="props.product.name"
-                    loading="lazy"
-                    class="size-full object-cover transition duration-300 group-hover:scale-105"
-                />
-                <div
-                    v-else
-                    class="flex size-full items-center justify-center text-muted-foreground"
-                >
-                    <ImageOff class="size-8" aria-hidden="true" />
-                </div>
-            </div>
+    <article
+        class="flex flex-col overflow-hidden rounded-[26px] border-[1.5px] border-line bg-surface"
+    >
+        <Link
+            :href="show(props.product)"
+            tabindex="-1"
+            aria-hidden="true"
+            class="relative flex h-[130px] items-center justify-center bg-well p-3 sm:h-[270px] sm:p-5"
+        >
+            <img
+                v-if="props.product.image_url"
+                :src="props.product.image_url"
+                alt=""
+                loading="lazy"
+                class="max-h-[106px] max-w-full object-contain mix-blend-multiply sm:max-h-[228px]"
+            />
+            <Icon
+                v-else
+                name="basket"
+                :size="48"
+                class="text-on-marigold opacity-30"
+            />
+            <span class="absolute top-2.5 left-2.5 sm:top-4 sm:left-4">
+                <PriceTag :price="props.product.price" />
+            </span>
         </Link>
-        <CardContent class="flex flex-1 flex-col gap-2 p-4">
-            <Link
-                :href="show(props.product)"
-                class="line-clamp-2 font-medium hover:underline"
+
+        <div class="flex flex-1 flex-col gap-2 p-3 sm:gap-3 sm:p-5">
+            <h3
+                class="font-serif text-[19px] leading-[1.2] font-normal wrap-anywhere text-ink sm:text-[25px]"
             >
-                {{ props.product.name }}
-            </Link>
+                <Link
+                    :href="show(props.product)"
+                    class="rounded-md underline-offset-4 hover:underline"
+                >
+                    {{ props.product.name }}
+                </Link>
+            </h3>
             <StarRating
                 :average="props.product.rating_average"
                 :count="props.product.rating_count"
             />
-            <p class="mt-auto text-lg font-semibold">
-                {{ props.product.price }}
-            </p>
-            <Button
-                size="sm"
-                type="button"
-                :aria-label="`Add ${props.product.name} to cart`"
-                @click="addToCart(props.product.id)"
-            >
-                <ShoppingCart class="size-4" aria-hidden="true" />
-                Add to cart
-            </Button>
-        </CardContent>
-    </Card>
+            <div class="mt-auto pt-1">
+                <QuantityBasketBar
+                    v-model="quantity"
+                    :product-name="props.product.name"
+                    :compact="isPhone"
+                    @add="add"
+                />
+            </div>
+        </div>
+    </article>
 </template>
