@@ -112,3 +112,56 @@ it('keeps the delivery copy neutral when there are no shipping methods', functio
         ->assertSee('Delivery options are shown at checkout.')
         ->assertPresent('#delivery');
 });
+
+it('narrows the grid when an aisle is ticked', function () {
+    $drinks = Category::factory()->create(['name' => 'Drinks', 'slug' => 'drinks']);
+    Product::factory()->inCategory($drinks)->create(['name' => 'Water']);
+    Product::factory()->create(['name' => 'Apple']);
+    visit('/products')->check('Drinks')->waitForText('Water')->assertDontSee('Apple');
+});
+
+// "Show 1 product" is also a substring of "Show 1 products", so the old count
+// is checked as gone too.
+it('opens the filters sheet on a phone and shows the matching total', function () {
+    Product::factory()->count(2)->create();
+    Product::factory()->featured()->create();
+
+    visit('/products')->resize(360, 800)
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
+        ->click('Filters')
+        ->assertSee('Show 3 products')
+        ->check('Featured products only')
+        ->assertSee('Show 1 product')
+        ->assertDontSee('Show 3 products')
+        ->assertQueryStringHas('featured', '1');
+});
+
+// A chip's remove button is named "Remove <chip text>" through
+// aria-labelledby, so it is found by its role and accessible name.
+it('clears a filter from its chip when nothing matches', function () {
+    Product::factory()->create(['name' => 'Apple', 'price' => 300]);
+
+    visit('/products?q=mango&max_price=1')
+        ->assertSee('Results for "mango"')
+        ->assertSee('Nothing on the stall matches that')
+        ->assertSee('Remove the price filter to see more.')
+        ->click('internal:role=button[name="Remove Search: mango"s]')
+        ->assertSee('All products')
+        ->assertQueryStringMissing('q')
+        ->click('internal:role=button[name="Remove Under $1"s]')
+        ->waitForText('Apple')
+        ->assertDontSee('Nothing on the stall matches that');
+});
+
+it('shows the aisle in the breadcrumb and rates a product with the stars', function () {
+    $drinks = Category::factory()->create(['name' => 'Drinks', 'slug' => 'drinks']);
+    $product = Product::factory()->inCategory($drinks)->create(['name' => 'Sparkling Water']);
+    $this->actingAs(User::factory()->create());
+
+    visit('/products/'.$product->slug)
+        ->assertSeeIn('nav[aria-label="Breadcrumb"]', 'Drinks')
+        ->assertSee('Add to basket')
+        ->click('[aria-label="4 stars"]')
+        ->assertSee('You rated this 4 out of 5.')
+        ->assertScript('document.querySelector("[aria-label=\'4 stars\']").getAttribute("aria-checked")', 'true');
+});
