@@ -44,13 +44,15 @@ const basketClass = cn(
 <template>
     <header class="bg-paper">
         <div
-            class="mx-auto flex max-w-[1200px] flex-wrap items-center gap-5 px-6 py-[18px]"
+            class="mx-auto flex max-w-[1200px] flex-wrap items-center gap-5 px-6 py-[18px] lg:flex-nowrap lg:gap-4"
         >
             <Link :href="home()" aria-label="Cartopia home" class="rounded-xl">
                 <AppLogo />
             </Link>
 
-            <StallSearch class="min-w-64 flex-1 basis-80" />
+            <StallSearch
+                class="min-w-64 flex-1 basis-80 lg:min-w-36 lg:basis-0"
+            />
 
             <nav aria-label="Main" class="ml-auto flex items-center gap-2">
                 <Link
@@ -79,7 +81,7 @@ const basketClass = cn(
                                 : 'bg-surface text-ink hover:bg-field'
                         "
                     >
-                        Wallet
+                        <span class="lg:max-xl:sr-only">Wallet</span>
                         <span class="tabular-nums" data-test="balance">
                             {{ user.balance }}
                         </span>
