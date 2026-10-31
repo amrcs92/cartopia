@@ -2,7 +2,10 @@
 
 namespace Database\Factories;
 
+use App\Enums\WalletTransactionType;
 use App\Models\User;
+use App\Support\Money;
+use App\Wallet\Wallet;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -36,6 +39,13 @@ class UserFactory extends Factory
             'balance' => 0,
             'is_admin' => false,
         ];
+    }
+
+    public function withBalance(Money $amount): static
+    {
+        return $this->afterCreating(function (User $user) use ($amount): void {
+            app(Wallet::class)->credit($user, $amount, WalletTransactionType::SignupBonus);
+        });
     }
 
     public function admin(): static
