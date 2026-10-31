@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { ImageOff } from '@lucide/vue';
+import { ImageOff, ShoppingCart } from '@lucide/vue';
+import Button from '@/common/button/Button.vue';
 import Card from '@/common/card/Card.vue';
 import CardContent from '@/common/card/CardContent.vue';
+import { addToCart } from '@/modules/cart/useCartActions';
 import StarRating from '@/modules/products/StarRating.vue';
 import { show } from '@/routes/products';
 import type { Product } from '@/types';
@@ -45,6 +47,15 @@ const props = defineProps<{
             <p class="mt-auto text-lg font-semibold">
                 {{ props.product.price }}
             </p>
+            <Button
+                size="sm"
+                type="button"
+                :aria-label="`Add ${props.product.name} to cart`"
+                @click="addToCart(props.product.id)"
+            >
+                <ShoppingCart class="size-4" aria-hidden="true" />
+                Add to cart
+            </Button>
         </CardContent>
     </Card>
 </template>

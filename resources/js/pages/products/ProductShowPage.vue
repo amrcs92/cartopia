@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import { ImageOff } from '@lucide/vue';
+import { ImageOff, ShoppingCart } from '@lucide/vue';
 import { computed, ref } from 'vue';
+import Button from '@/common/button/Button.vue';
+import QuantityStepper from '@/modules/cart/QuantityStepper.vue';
+import { addToCart } from '@/modules/cart/useCartActions';
 import StarRating from '@/modules/products/StarRating.vue';
 import { index as productsIndex } from '@/routes/products';
 import type { ProductDetail } from '@/types';
@@ -17,6 +20,7 @@ defineOptions({
 });
 
 const selected = ref(0);
+const quantity = ref(1);
 const currentImage = computed(
     () => props.product.images[selected.value] ?? props.product.image_url,
 );
@@ -88,6 +92,20 @@ const currentImage = computed(
             >
                 You rated this {{ props.product.my_rating }} out of 5.
             </p>
+
+            <div class="flex flex-wrap items-center gap-3">
+                <QuantityStepper
+                    v-model="quantity"
+                    :label="props.product.name"
+                />
+                <Button
+                    type="button"
+                    @click="addToCart(props.product.id, quantity)"
+                >
+                    <ShoppingCart class="size-4" aria-hidden="true" />
+                    Add to cart
+                </Button>
+            </div>
 
             <div class="space-y-2">
                 <h2 class="text-lg font-medium">Description</h2>

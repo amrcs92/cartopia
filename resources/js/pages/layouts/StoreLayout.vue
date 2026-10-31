@@ -13,6 +13,7 @@ import FlashToast from '@/common/flash-toast/FlashToast.vue';
 import Input from '@/common/input/Input.vue';
 import { useCurrentUser } from '@/modules/auth/useCurrentUser';
 import { home, login, logout, register } from '@/routes';
+import { show as showCart } from '@/routes/cart';
 import { index as productsIndex } from '@/routes/products';
 import { edit as editProfile } from '@/routes/profile';
 import type { BreadcrumbItem } from '@/types';
@@ -86,9 +87,9 @@ function handleLogout(): void {
                         <Link :href="productsIndex()">Shop</Link>
                     </Button>
 
-                    <!-- Becomes a <Link> to cart.show once the cart page lands (Task 10). -->
-                    <span
-                        class="relative inline-flex size-9 items-center justify-center"
+                    <Link
+                        :href="showCart()"
+                        class="relative inline-flex size-9 items-center justify-center rounded-md hover:bg-accent"
                         :aria-label="`Cart: ${cartCount} items`"
                         data-test="cart-badge"
                     >
@@ -99,7 +100,7 @@ function handleLogout(): void {
                         >
                             {{ cartCount }}
                         </Badge>
-                    </span>
+                    </Link>
 
                     <template v-if="user">
                         <span
