@@ -86,15 +86,31 @@ it('gives each order at most two product thumbnails, skipping products without a
 
 it('does not query once per order for thumbnails', function () {
     $user = User::factory()->create();
-    foreach (range(1, 4) as $i) {
-        $order = Order::factory()->for($user)->create();
-        OrderItem::factory()->for($order)->create(['product_id' => Product::factory()->withImages()->create()->id]);
-    }
 
-    DB::enableQueryLog();
-    $this->actingAs($user)->get(route('orders.index'))->assertOk();
+    $countQueries = function () use ($user): int {
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        $this->actingAs($user)->get(route('orders.index'))->assertOk();
 
-    expect(count(DB::getQueryLog()))->toBeLessThan(20);
+        return count(DB::getQueryLog());
+    };
+
+    $addOrders = function (int $orders) use ($user): void {
+        foreach (range(1, $orders) as $i) {
+            $order = Order::factory()->for($user)->create();
+            foreach (range(1, 2 + $i % 2) as $j) {
+                OrderItem::factory()->for($order)->create(['product_id' => Product::factory()->withImages()->create()->id]);
+            }
+        }
+    };
+
+    $addOrders(2);
+    $withTwo = $countQueries();
+
+    $addOrders(4);
+    $withSix = $countQueries();
+
+    expect($withSix)->toBe($withTwo);
 });
 
 it('shows the wallet balance after the order on the receipt', function () {
