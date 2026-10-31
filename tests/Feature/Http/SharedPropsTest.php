@@ -82,3 +82,15 @@ it('sends the menu aisles when the menu asks for them', function () {
             )
         );
 });
+
+it('keeps bracketed query arrays as requested in the page url', function () {
+    Category::factory()->create(['name' => 'Drinks', 'slug' => 'drinks']);
+
+    $this->get('/products?aisle%5B%5D=drinks')
+        ->assertOk()
+        ->assertInertia(function (Assert $page) {
+            $url = $page->toArray()['url'];
+
+            expect($url)->toContain('aisle%5B%5D=drinks')->not->toContain('aisle%5B0%5D');
+        });
+});

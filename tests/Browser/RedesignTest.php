@@ -169,7 +169,9 @@ it('shows the aisle in the breadcrumb and rates a product with the stars', funct
         ->click('[aria-label="4 stars"]')
         ->assertSee('You rated this 4 out of 5.')
         ->assertScript('document.querySelector("[aria-label=\'4 stars\']").getAttribute("aria-checked")', 'true')
-        ->keys('[aria-label="4 stars"]', ['ArrowRight', 'Enter'])
+        ->keys('[aria-label="4 stars"]', 'ArrowRight')
+        ->assertScript('document.activeElement.getAttribute("aria-label")', '5 stars')
+        ->keys('[aria-label="5 stars"]', 'Enter')
         ->waitForText('You rated this 5 out of 5.');
 });
 

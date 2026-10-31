@@ -6,6 +6,7 @@ use App\Cart\Cart;
 use App\Catalog\Aisles;
 use App\Http\Resources\AisleResource;
 use App\Models\User;
+use Closure;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Middleware;
@@ -29,6 +30,16 @@ class HandleInertiaRequests extends Middleware
     public function version(Request $request): ?string
     {
         return parent::version($request);
+    }
+
+    /**
+     * Report the URL exactly as requested. The default resolver goes through
+     * fullUrl(), which rewrites `aisle[]=x` into `aisle[0]=x` and would push
+     * that into the browser history.
+     */
+    public function urlResolver(): Closure
+    {
+        return fn (Request $request): string => $request->getRequestUri();
     }
 
     /**

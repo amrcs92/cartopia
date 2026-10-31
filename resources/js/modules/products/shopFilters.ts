@@ -111,7 +111,6 @@ export function visitShop(filters: ShopFilters): void {
     router.get(productsIndex.url(), toQuery(filters), {
         preserveScroll: true,
         preserveState: true,
-        queryStringArrayFormat: 'brackets',
     });
 }
 
