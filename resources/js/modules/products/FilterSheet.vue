@@ -7,6 +7,7 @@ import {
     isShortcut,
     PRICE_SHORTCUTS,
     productCount,
+    RATING_STEPS,
     visitShop,
     withShortcut,
 } from '@/modules/products/shopFilters';
@@ -26,8 +27,6 @@ const props = defineProps<{
 const emit = defineEmits<{
     close: [];
 }>();
-
-const ratings = ['', '4', '3'] as const;
 
 function update(patch: Partial<ShopFilters>): void {
     visitShop({ ...props.filters, ...patch });
@@ -71,25 +70,31 @@ const control = 'size-5 shrink-0 cursor-pointer accent-green dark:scheme-dark';
                 <legend :class="heading">Minimum rating</legend>
                 <div class="flex flex-wrap gap-2">
                     <ToggleChip
-                        v-for="rating in ratings"
-                        :key="rating"
-                        :pressed="props.filters.rating === rating"
-                        @click="update({ rating })"
+                        :pressed="props.filters.rating === ''"
+                        @click="update({ rating: '' })"
                     >
-                        <template v-if="rating === ''">Any</template>
-                        <template v-else>
-                            <span
-                                aria-hidden="true"
-                                :class="
-                                    props.filters.rating === rating
-                                        ? 'text-white'
-                                        : 'text-star'
-                                "
-                                >★</span
-                            >
-                            {{ rating }}<span class="sr-only"> stars</span> and
-                            up
-                        </template>
+                        Any
+                    </ToggleChip>
+                    <ToggleChip
+                        v-for="stars in RATING_STEPS"
+                        :key="stars"
+                        :pressed="props.filters.rating === String(stars)"
+                        @click="update({ rating: String(stars) })"
+                    >
+                        <span
+                            aria-hidden="true"
+                            :class="
+                                props.filters.rating === String(stars)
+                                    ? 'text-white'
+                                    : 'text-star'
+                            "
+                            >★</span
+                        >
+                        {{ stars
+                        }}<span class="sr-only">
+                            {{ stars === 1 ? 'star' : 'stars' }}</span
+                        >
+                        and up
                     </ToggleChip>
                 </div>
             </fieldset>

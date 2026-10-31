@@ -37,11 +37,14 @@ function setQuantity(value: number): void {
 }
 
 function onQuantityInput(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
+    const input = event.target as HTMLInputElement;
 
-    if (value !== '') {
-        setQuantity(Number(value));
+    if (input.value !== '') {
+        setQuantity(Number(input.value));
     }
+
+    // Vue skips the patch when a clamped value equals the old one.
+    input.value = String(quantity.value);
 }
 
 const stepButton =

@@ -8,7 +8,10 @@ import { update } from '@/routes/products/rating';
 // to your rating (or up to the star you're pointing at), and every star keeps
 // its outline, so the value never rests on colour alone. Pressing a star
 // saves it; the arrow keys move between stars (one tab stop for the group).
-// Guests get a link to log in instead.
+// Deliberate deviation from the radio pattern: arrows move focus only, and
+// Enter or Space saves, so a keyboard user can browse the stars without
+// firing a request (and a rating) on every arrow press. Focus drives the
+// preview the same way hover does. Guests get a link to log in instead.
 const props = defineProps<{
     slug: string;
     name: string;
@@ -20,7 +23,10 @@ const authenticated = computed(() => page.props.auth.user !== null);
 const stars = [1, 2, 3, 4, 5];
 
 const hovered = ref<number | null>(null);
-const shown = computed(() => hovered.value ?? props.myRating ?? 0);
+const focused = ref<number | null>(null);
+const shown = computed(
+    () => hovered.value ?? focused.value ?? props.myRating ?? 0,
+);
 const tabStop = computed(() => props.myRating ?? 1);
 
 const buttons = useTemplateRef<HTMLButtonElement[]>('buttons');
@@ -60,9 +66,11 @@ const STAR =
                 :aria-label="`${star} ${star === 1 ? 'star' : 'stars'}`"
                 :aria-checked="props.myRating === star"
                 :tabindex="star === tabStop ? 0 : -1"
-                class="inline-flex size-12 items-center justify-center rounded-xl transition-colors duration-200 ease-stall hover:bg-field"
+                class="inline-flex size-12 items-center justify-center rounded-xl transition-colors duration-200 ease-stall hover:bg-field focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-marigold focus-visible:outline-solid"
                 @click="rate(star)"
                 @mouseenter="hovered = star"
+                @focus="focused = star"
+                @blur="focused = null"
                 @keydown.right.prevent="move(star, 1)"
                 @keydown.down.prevent="move(star, 1)"
                 @keydown.left.prevent="move(star, -1)"
@@ -88,7 +96,7 @@ const STAR =
                 </svg>
             </button>
         </div>
-        <p class="text-[15px] font-semibold text-body">
+        <p class="text-[15px] font-semibold text-body" role="status">
             <template v-if="props.myRating !== null">
                 You rated this {{ props.myRating }} out of 5. Pick a star to
                 change it.

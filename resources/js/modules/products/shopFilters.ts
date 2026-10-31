@@ -37,6 +37,7 @@ export const PRICE_SHORTCUTS: PriceShortcut[] = [
     { label: '$2 to $5', min: '2', max: '5' },
 ];
 
+// The minimum-rating options after "Any", shared by the sidebar and the sheet.
 export const RATING_STEPS = [4, 3, 2, 1] as const;
 
 const TRUE_VALUES = ['1', 'true', 'on', 'yes'];
@@ -110,6 +111,7 @@ export function visitShop(filters: ShopFilters): void {
     router.get(productsIndex.url(), toQuery(filters), {
         preserveScroll: true,
         preserveState: true,
+        queryStringArrayFormat: 'brackets',
     });
 }
 
@@ -125,10 +127,6 @@ export function clearedFilters(filters: ShopFilters): ShopFilters {
         featured: false,
         sort: filters.sort,
     };
-}
-
-export function hasActiveFilters(filters: ShopFilters): boolean {
-    return Object.keys(toQuery({ ...filters, sort: DEFAULT_SORT })).length > 0;
 }
 
 export function hasPriceFilter(filters: ShopFilters): boolean {

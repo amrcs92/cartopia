@@ -117,7 +117,12 @@ it('narrows the grid when an aisle is ticked', function () {
     $drinks = Category::factory()->create(['name' => 'Drinks', 'slug' => 'drinks']);
     Product::factory()->inCategory($drinks)->create(['name' => 'Water']);
     Product::factory()->create(['name' => 'Apple']);
-    visit('/products')->check('Drinks')->waitForText('Water')->assertDontSee('Apple');
+    visit('/products')->check('Drinks')
+        ->waitForText('1 product')
+        ->assertSee('Water')
+        ->assertDontSee('Apple')
+        ->assertScript('location.search.includes("aisle%5B%5D=drinks") || location.search.includes("aisle[]=drinks")', true)
+        ->assertScript('location.search.includes("aisle%5B0%5D") || location.search.includes("aisle[0]")', false);
 });
 
 // "Show 1 product" is also a substring of "Show 1 products", so the old count
@@ -163,5 +168,7 @@ it('shows the aisle in the breadcrumb and rates a product with the stars', funct
         ->assertSee('Add to basket')
         ->click('[aria-label="4 stars"]')
         ->assertSee('You rated this 4 out of 5.')
-        ->assertScript('document.querySelector("[aria-label=\'4 stars\']").getAttribute("aria-checked")', 'true');
+        ->assertScript('document.querySelector("[aria-label=\'4 stars\']").getAttribute("aria-checked")', 'true')
+        ->keys('[aria-label="4 stars"]', ['ArrowRight', 'Enter'])
+        ->waitForText('You rated this 5 out of 5.');
 });
