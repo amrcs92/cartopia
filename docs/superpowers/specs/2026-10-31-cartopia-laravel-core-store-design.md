@@ -26,7 +26,7 @@ The rewrite also fixes defects in the legacy app:
 - Order history
 - Search, filters, sorting and pagination
 - Balance top-up with a wallet transaction ledger
-- `is_admin` flag and the Filament panel gate (the panel itself is sub-project 2)
+- `is_admin` flag and a seeded admin (the Filament panel and its access gate are delivered in sub-project 2)
 
 ### Out of scope
 
@@ -179,7 +179,7 @@ The listing query is `Product::with('primaryImage')->withRatingStats()->search()
 | `POST /wallet/top-ups` | `TopUpController@store` | `TopUpRequest`: `amount` in dollars, `decimal:0,2`, 5–500, converted to cents | `auth`, `throttle:10,1` |
 | Starter-kit auth and settings routes | kit controllers | kit requests + `phone` and `address` (nullable, string ≤100 / ≤200) | — |
 
-`User` implements `FilamentUser`, and `canAccessPanel()` returns `is_admin`. The panel itself comes in sub-project 2.
+The `is_admin` flag and seeded admin ship in v1. The Filament panel gate (`User` implementing `FilamentUser`, with `canAccessPanel()` returning `is_admin`) is delivered together with the panel in sub-project 2.
 
 ### 5.2 Shared Inertia props (`HandleInertiaRequests`)
 
