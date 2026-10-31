@@ -7,7 +7,8 @@ export function initializeFlashToast(): void {
         const flash = (event as CustomEvent).detail?.flash;
         const data = flash?.toast as FlashToast | undefined;
 
-        if (!data) {
+        // The added-to-basket panel already confirms the add.
+        if (!data || flash?.addedToBasket) {
             return;
         }
 

@@ -165,3 +165,17 @@ it('does not repeat the panel on the next page', function () {
         ->where('flash.addedToBasket', null)
     );
 });
+
+it('sends the featured products for the empty basket', function () {
+    $featured = Product::factory()->featured()->create();
+    Product::factory()->create();
+
+    $this->get(route('cart.show'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('cart/CartPage')
+            ->has('cart.lines', 0)
+            ->has('featured', 1)
+            ->where('featured.0.id', $featured->id)
+        );
+});

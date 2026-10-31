@@ -172,3 +172,29 @@ it('shows the aisle in the breadcrumb and rates a product with the stars', funct
         ->keys('[aria-label="4 stars"]', ['ArrowRight', 'Enter'])
         ->waitForText('You rated this 5 out of 5.');
 });
+
+it('opens the added-to-basket panel and closes it with Escape', function () {
+    Product::factory()->create(['name' => 'Apple']);
+    visit('/products')->click('[aria-label="Add Apple to basket"]')
+        ->waitForText('Added to your basket')
+        ->keys('[role="dialog"]', 'Escape')
+        ->assertDontSee('Added to your basket');
+});
+
+it('disables placing the order when the wallet cannot cover it', function () {
+    $this->actingAs(User::factory()->create());
+    $product = Product::factory()->create(['name' => 'Apple', 'price' => 1000]);
+    ShippingMethod::factory()->pickup()->create();
+
+    visit('/products/'.$product->slug)->click('Add to basket')
+        ->waitForText('Added to your basket')
+        ->click('View basket and check out')
+        ->waitForText('You need $10.00 more.')
+        ->assertSee('Top up your wallet')
+        ->assertScript('document.querySelector("[data-test=checkout-button]").disabled', true);
+});
+
+it('shows the empty basket with a way back to the stall', function () {
+    visit('/cart')->assertSee('Your basket is empty')
+        ->assertSee('Browse the stall');
+});

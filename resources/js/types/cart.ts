@@ -11,6 +11,7 @@ export type Cart = {
     count: number;
     lines: CartLine[];
     subtotal: string;
+    subtotal_cents: number;
     total_quantity: number;
 };
 

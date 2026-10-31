@@ -3,6 +3,7 @@ import { useMediaQuery } from '@vueuse/core';
 import { ref, watch } from 'vue';
 import Breadcrumbs from '@/common/app/Breadcrumbs.vue';
 import FlashToast from '@/common/flash-toast/FlashToast.vue';
+import AddedToBasketPanel from '@/modules/cart/AddedToBasketPanel.vue';
 import Awning from '@/modules/layout/Awning.vue';
 import PhoneHeader from '@/modules/layout/PhoneHeader.vue';
 import PhoneMenu from '@/modules/layout/PhoneMenu.vue';
@@ -69,6 +70,7 @@ watch(isPhone, () => {
 
         <StoreFooter />
 
+        <AddedToBasketPanel />
         <FlashToast />
     </div>
 </template>
