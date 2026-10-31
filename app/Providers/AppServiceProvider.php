@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Cart\CartStore;
+use App\Cart\DatabaseCartStore;
+use App\Cart\SessionCartStore;
+use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +19,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(CartStore::class, fn (): CartStore => auth()->user() instanceof User
+            ? new DatabaseCartStore(auth()->user())
+            : new SessionCartStore(app('session.store')));
     }
 
     /**
