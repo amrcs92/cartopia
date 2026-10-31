@@ -12,8 +12,7 @@ import DialogTitle from '@/common/dialog/DialogTitle.vue';
 import Label from '@/common/label/Label.vue';
 import Select from '@/common/select/Select.vue';
 import { useCurrentUser } from '@/modules/auth/useCurrentUser';
-import { login } from '@/routes';
-import { store } from '@/routes/checkout';
+import { start, store } from '@/routes/checkout';
 import { show as showWallet } from '@/routes/wallet';
 import type { Cart, ShippingMethod } from '@/types';
 
@@ -138,7 +137,7 @@ function submit(): void {
                 {{ flashError }}
             </p>
             <Button class="w-full" as-child>
-                <Link :href="login()" data-test="login-to-checkout">
+                <Link :href="start()" data-test="login-to-checkout">
                     Log in to check out
                 </Link>
             </Button>

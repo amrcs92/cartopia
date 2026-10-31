@@ -99,3 +99,16 @@ it('validates the shipping method', function () {
 
     expect(Order::count())->toBe(0);
 });
+
+test('a guest following the checkout link returns to the cart after logging in', function () {
+    User::factory()->create(['email' => 'shopper@example.com']);
+
+    $this->get(route('checkout.start'))->assertRedirect(route('login'));
+
+    $this->post(route('login.store'), [
+        'email' => 'shopper@example.com',
+        'password' => 'password',
+    ])->assertRedirect(route('checkout.start'));
+
+    $this->get(route('checkout.start'))->assertRedirect(route('cart.show'));
+});

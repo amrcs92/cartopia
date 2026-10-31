@@ -3,6 +3,7 @@
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CartItemController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\CheckoutStartController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
@@ -24,6 +25,10 @@ Route::get('cart', [CartController::class, 'show'])->name('cart.show');
 Route::post('cart/items', [CartItemController::class, 'store'])->name('cart.items.store');
 Route::patch('cart/items/{product:id}', [CartItemController::class, 'update'])->name('cart.items.update');
 Route::delete('cart/items/{product:id}', [CartItemController::class, 'destroy'])->name('cart.items.destroy');
+
+Route::get('checkout/start', CheckoutStartController::class)
+    ->middleware('auth')
+    ->name('checkout.start');
 
 Route::post('checkout', [CheckoutController::class, 'store'])
     ->middleware(['auth', 'throttle:10,1'])
