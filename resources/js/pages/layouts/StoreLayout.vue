@@ -12,6 +12,7 @@ import {
 import { computed, ref } from 'vue';
 import Breadcrumbs from '@/common/app/Breadcrumbs.vue';
 import Badge from '@/common/badge/Badge.vue';
+import AppLogo from '@/common/brand/AppLogo.vue';
 import Button from '@/common/button/Button.vue';
 import DropdownMenu from '@/common/dropdown-menu/DropdownMenu.vue';
 import DropdownMenuItem from '@/common/dropdown-menu/DropdownMenuItem.vue';
@@ -64,11 +65,7 @@ function handleLogout(): void {
                     class="flex shrink-0 items-center gap-2"
                     aria-label="Cartopia home"
                 >
-                    <img
-                        src="/images/cartopia_logo.png"
-                        alt="Cartopia"
-                        class="h-9 w-auto"
-                    />
+                    <AppLogo />
                 </Link>
 
                 <form

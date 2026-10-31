@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { ArrowRight } from '@lucide/vue';
+import AppLogo from '@/common/brand/AppLogo.vue';
 import Button from '@/common/button/Button.vue';
 import ProductCard from '@/modules/products/ProductCard.vue';
 import { index as productsIndex } from '@/routes/products';
@@ -17,11 +18,7 @@ const props = defineProps<{
     <section
         class="flex flex-col items-center gap-6 rounded-xl border bg-muted/40 px-6 py-12 text-center sm:py-16"
     >
-        <img
-            src="/images/cartopia_logo.png"
-            alt="Cartopia"
-            class="h-16 w-auto sm:h-20"
-        />
+        <AppLogo />
         <div class="max-w-2xl space-y-3">
             <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">
                 Everyday essentials, delivered.
