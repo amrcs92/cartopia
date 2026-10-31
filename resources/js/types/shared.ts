@@ -2,7 +2,7 @@ import type { User } from './auth';
 import type { Aisle, Product } from './catalog';
 
 /**
- * What was just put in the basket (`flash.addedToBasket`), for the
+ * What was just put in the basket (the `addedToBasket` flash), for the
  * added-to-basket panel.
  */
 export type AddedToBasket = {
@@ -19,7 +19,6 @@ export type AddedToBasket = {
 export type Flash = {
     success: string | null;
     error: string | null;
-    addedToBasket: AddedToBasket | null;
 };
 
 export type SharedProps = {

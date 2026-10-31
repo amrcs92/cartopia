@@ -50,7 +50,6 @@ class HandleInertiaRequests extends Middleware
             'flash' => Inertia::always(fn (): array => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),
-                'addedToBasket' => $request->session()->get('addedToBasket'),
             ]),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             // Only sent when the phone menu or the footer asks for it; once

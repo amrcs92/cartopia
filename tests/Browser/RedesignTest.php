@@ -178,7 +178,23 @@ it('opens the added-to-basket panel and closes it with Escape', function () {
     visit('/products')->click('[aria-label="Add Apple to basket"]')
         ->waitForText('Added to your basket')
         ->keys('[role="dialog"]', 'Escape')
-        ->assertDontSee('Added to your basket');
+        ->wait(0.8)
+        ->assertNotPresent('[role="dialog"]');
+});
+
+it('does not reopen the added-to-basket panel when going back', function () {
+    Product::factory()->create(['name' => 'Apple']);
+    visit('/products')->click('[aria-label="Add Apple to basket"]')
+        ->waitForText('Added to your basket')
+        ->click('Keep shopping')
+        ->wait(0.8)
+        ->assertNotPresent('[role="dialog"]')
+        ->click('a:has-text("Apple")')
+        ->waitForText('Add to basket')
+        ->back()
+        ->waitForText('All products')
+        ->wait(0.8)
+        ->assertNotPresent('[role="dialog"]');
 });
 
 it('disables placing the order when the wallet cannot cover it', function () {

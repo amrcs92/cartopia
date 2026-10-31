@@ -13,7 +13,7 @@ it('shares null user and zero cart for guests', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->where('auth.user', null)
             ->where('cart.count', 0)
-            ->where('flash', ['success' => null, 'error' => null, 'addedToBasket' => null])
+            ->where('flash', ['success' => null, 'error' => null])
         );
 });
 

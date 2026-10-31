@@ -10,6 +10,7 @@ use App\Http\Requests\UpdateCartItemRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
+use Inertia\Inertia;
 
 class CartItemController extends Controller
 {
@@ -22,7 +23,10 @@ class CartItemController extends Controller
 
         $cart->add($product, $quantity);
 
-        return redirect()->back()->with('addedToBasket', $this->addedToBasket($cart, $product, $quantity));
+        // Inertia's native flash: delivered once, never kept in history state.
+        Inertia::flash('addedToBasket', $this->addedToBasket($cart, $product, $quantity));
+
+        return redirect()->back();
     }
 
     public function update(UpdateCartItemRequest $request, Cart $cart, Product $product): RedirectResponse

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { usePage } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { router } from '@inertiajs/vue3';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 import Icon from '@/common/icon/Icon.vue';
 import Sheet from '@/common/sheet/Sheet.vue';
 import IconButton from '@/common/stall/IconButton.vue';
@@ -10,26 +10,30 @@ import { addToCart } from '@/modules/cart/useCartActions';
 import { show as showCart } from '@/routes/cart';
 import type { AddedToBasket } from '@/types';
 
-// Opens whenever the add-to-basket redirect flashes `addedToBasket`. The last
-// payload is kept while the panel slides out (the flash is already gone by
-// then). Adding a suggestion flashes a fresh payload, so the panel updates in
-// place. `flash` can be missing (a not-found page has no shared props).
-const page = usePage();
-const added = computed(() => page.props.flash?.addedToBasket ?? null);
-
+// Opens when the add-to-basket redirect delivers its one-shot `addedToBasket`
+// flash (Inertia's native flash, seen through the router's `flash` event). It
+// is not kept in history state, so going Back never reopens the panel. The
+// last payload is kept while the panel slides out. Adding a suggestion
+// delivers a fresh payload, so the panel updates in place.
 const shown = ref<AddedToBasket | null>(null);
 const open = ref(false);
 
-watch(
-    added,
-    (value) => {
+let stopListening: (() => void) | undefined;
+
+onMounted(() => {
+    stopListening = router.on('flash', (event) => {
+        const value = (event as CustomEvent).detail?.flash?.addedToBasket as
+            | AddedToBasket
+            | undefined;
+
         if (value) {
             shown.value = value;
             open.value = true;
         }
-    },
-    { immediate: true },
-);
+    });
+});
+
+onBeforeUnmount(() => stopListening?.());
 
 function close(): void {
     open.value = false;
