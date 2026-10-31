@@ -274,6 +274,7 @@ it('rejects bad aisle input without a server error', function (array|string $ais
 })->with([
     'unknown slug' => [['nope'], 'aisle.0'],
     'not an array' => ['drinks', 'aisle'],
+    'nested array' => [[['x']], 'aisle.0'],
     'too many' => [array_fill(0, 21, 'drinks'), 'aisle'],
 ]);
 
@@ -311,4 +312,20 @@ it('leaves the current product out of its featured carousel', function () {
         ->has('featured', 2)
         ->where('featured', fn ($featured) => collect($featured)->pluck('id')->doesntContain($product->id))
     );
+});
+
+it('keeps the chosen sort when filtering to featured products', function () {
+    $dear = Product::factory()->featured()->create(['price' => 300]);
+    $cheap = Product::factory()->featured()->create(['price' => 100]);
+    $mid = Product::factory()->featured()->create(['price' => 200]);
+    Product::factory()->create(['price' => 50]);
+
+    $this->get(route('products.index', ['featured' => '1', 'sort' => 'price_asc']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('products.data', 3)
+            ->where('products.data.0.id', $cheap->id)
+            ->where('products.data.1.id', $mid->id)
+            ->where('products.data.2.id', $dear->id)
+        );
 });

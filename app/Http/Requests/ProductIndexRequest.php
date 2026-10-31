@@ -28,7 +28,7 @@ class ProductIndexRequest extends FormRequest
             'rating' => ['nullable', 'integer', 'between:1,5'],
             'sort' => ['nullable', Rule::in(Product::SORTS)],
             'aisle' => ['nullable', 'array', 'max:20'],
-            'aisle.*' => ['string', 'exists:categories,slug'],
+            'aisle.*' => ['bail', 'string', 'exists:categories,slug'],
             'rated' => ['nullable', 'boolean'],
             'featured' => ['nullable', 'boolean'],
         ];

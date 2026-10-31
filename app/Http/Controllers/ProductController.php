@@ -29,6 +29,7 @@ class ProductController extends Controller
             ->search($filters['q'])
             ->priceBetween($filters['min_price'], $filters['max_price'])
             ->minRating($filters['rating'])
+            ->reorder()
             ->sortBy($filters['sort'])
             ->paginate(self::PER_PAGE)
             ->withQueryString();
