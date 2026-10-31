@@ -8,6 +8,7 @@ use App\Exceptions\InsufficientBalance;
 use App\Http\Requests\CheckoutRequest;
 use App\Models\ShippingMethod;
 use Illuminate\Http\RedirectResponse;
+use Inertia\Inertia;
 
 class CheckoutController extends Controller
 {
@@ -23,6 +24,10 @@ class CheckoutController extends Controller
             return to_route('cart.show')->with('error', 'Your cart is empty.');
         }
 
-        return to_route('orders.show', $order)->with('success', 'Order placed.');
+        // Inertia's native flash: delivered once, never kept in history state, so
+        // the receipt banner does not come back when going Back.
+        Inertia::flash('orderPlaced', 'Order placed.');
+
+        return to_route('orders.show', $order);
     }
 }

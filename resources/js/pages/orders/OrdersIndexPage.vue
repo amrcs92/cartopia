@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
-import Button from '@/common/button/Button.vue';
+import { Head } from '@inertiajs/vue3';
+import Icon from '@/common/icon/Icon.vue';
 import Pagination from '@/common/pagination/Pagination.vue';
-import { formatOrderDate } from '@/modules/orders/formatOrderDate';
-import { show } from '@/routes/orders';
+import StallButton from '@/common/stall/StallButton.vue';
+import OrderRow from '@/modules/orders/OrderRow.vue';
 import { index as productsIndex } from '@/routes/products';
 import type { Order, Paginated } from '@/types';
 
@@ -16,46 +16,43 @@ const props = defineProps<{
     <Head title="Your orders" />
 
     <div class="space-y-6">
-        <h1 class="text-2xl font-semibold">Your orders</h1>
+        <h1 class="font-serif text-[32px] leading-tight text-ink lg:text-5xl">
+            Your orders
+        </h1>
 
         <div
             v-if="props.orders.data.length === 0"
-            class="space-y-4 rounded-xl border border-dashed p-10 text-center"
+            class="flex flex-col items-center gap-5 pt-6 text-center"
             data-test="no-orders"
         >
-            <p class="text-muted-foreground">You have no orders yet.</p>
-            <Button as-child>
-                <Link :href="productsIndex()">Start shopping</Link>
-            </Button>
+            <span
+                aria-hidden="true"
+                class="inline-flex size-28 items-center justify-center rounded-full border-[2.5px] border-outline bg-well text-ink"
+            >
+                <Icon name="basket" :size="56" />
+            </span>
+            <h2 class="font-serif text-[28px] leading-tight text-ink">
+                Nothing bagged yet.
+            </h2>
+            <p class="text-body">
+                Orders you place will be kept here, with the prices you paid.
+            </p>
+            <StallButton
+                as="link"
+                variant="marigold"
+                size="lg"
+                :href="productsIndex().url"
+            >
+                Browse the stall
+            </StallButton>
         </div>
 
-        <ul v-else class="divide-y rounded-xl border px-4">
-            <li
+        <ul v-else class="flex flex-col gap-5">
+            <OrderRow
                 v-for="order in props.orders.data"
                 :key="order.id"
-                class="flex flex-wrap items-center justify-between gap-2 py-4"
-                data-test="order-row"
-            >
-                <div>
-                    <Link
-                        :href="show(order.id)"
-                        class="font-medium hover:underline"
-                    >
-                        Order #{{ order.id }}
-                    </Link>
-                    <p class="text-sm text-muted-foreground">
-                        {{ formatOrderDate(order.placed_at) }} ·
-                        {{ order.items.length }}
-                        {{ order.items.length === 1 ? 'item' : 'items' }}
-                    </p>
-                </div>
-                <div class="text-right">
-                    <p class="font-semibold tabular-nums">{{ order.total }}</p>
-                    <p class="text-sm text-muted-foreground capitalize">
-                        {{ order.status }}
-                    </p>
-                </div>
-            </li>
+                :order="order"
+            />
         </ul>
 
         <Pagination :links="props.orders.meta.links" />

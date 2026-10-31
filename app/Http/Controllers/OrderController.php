@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\WalletTransactionType;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use Illuminate\Http\Request;
@@ -15,7 +16,7 @@ class OrderController extends Controller
     public function index(Request $request): Response
     {
         $orders = $request->user()->orders()
-            ->with(['shippingMethod', 'items.product'])
+            ->with(['shippingMethod', 'items.product.primaryImage'])
             ->latest()
             ->latest('id')
             ->paginate(self::PER_PAGE);
@@ -27,10 +28,14 @@ class OrderController extends Controller
 
     public function show(Order $order): Response
     {
-        $order->load(['shippingMethod', 'items.product']);
+        $order->load(['shippingMethod', 'items.product.primaryImage']);
 
         return Inertia::render('orders/OrderShowPage', [
             'order' => (new OrderResource($order))->resolve(),
+            'balance_after' => $order->walletTransactions()
+                ->where('type', WalletTransactionType::Purchase)
+                ->latest('id')
+                ->first()?->balance_after->format(),
         ]);
     }
 }

@@ -25,8 +25,13 @@ it('checks out and redirects to the order', function () {
         ->post(route('checkout.store'), ['shipping_method_id' => $ups->id]);
 
     $order = Order::sole();
-    $response->assertRedirect(route('orders.show', $order))
-        ->assertSessionHas('success', 'Order placed.');
+    $response->assertRedirect(route('orders.show', $order));
+
+    // Inertia's native flash: the receipt shows the banner once.
+    $this->get(route('orders.show', $order))
+        ->assertInertia(fn (Assert $page) => $page->hasFlash('orderPlaced', 'Order placed.'));
+    $this->get(route('orders.show', $order))
+        ->assertInertia(fn (Assert $page) => $page->missingFlash('orderPlaced'));
 
     expect($order->user_id)->toBe($user->id)
         ->and($order->total->cents())->toBe(1274);
