@@ -54,7 +54,7 @@ Requirements: Laragon with PHP 8.3, MySQL 8.4 and Node 22.
 6. Migrate and seed: `php artisan migrate --seed`
 7. Link public storage (product images): `php artisan storage:link`
 8. Build the front end: `npm run build`. This needs `php` on your `PATH`, because Wayfinder generates the route helpers at build time.
-9. Open <http://cartopia.test> (Laragon creates the virtual host automatically; reload the web server if needed).
+9. Open <https://cartopia.test> (Laragon creates the virtual host automatically; turn on SSL under Menu → Apache → SSL → Enabled and reload the web server if needed).
 
 For front-end development use `npm run dev` instead of building.
 
