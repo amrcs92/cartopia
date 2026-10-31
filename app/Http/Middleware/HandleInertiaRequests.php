@@ -3,6 +3,8 @@
 namespace App\Http\Middleware;
 
 use App\Cart\Cart;
+use App\Catalog\Aisles;
+use App\Http\Resources\AisleResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -51,6 +53,9 @@ class HandleInertiaRequests extends Middleware
                 'addedToBasket' => $request->session()->get('addedToBasket'),
             ]),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            // Only sent when the phone menu or the footer asks for it; once
+            // loaded, the client keeps it across visits instead of refetching.
+            'menuAisles' => Inertia::optional(fn (): array => AisleResource::collection(Aisles::all())->resolve())->once(),
         ];
     }
 

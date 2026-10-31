@@ -47,3 +47,14 @@ export type Paginated<T> = {
         total: number;
     };
 };
+
+/**
+ * An aisle (a product category) as served by AisleResource.
+ */
+export type Aisle = {
+    id: number;
+    name: string;
+    slug: string;
+    product_count: number;
+    image_url: string | null;
+};

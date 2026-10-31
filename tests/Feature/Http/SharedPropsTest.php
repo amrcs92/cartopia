@@ -1,6 +1,7 @@
 <?php
 
 use App\Cart\Cart;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
 use App\Support\Money;
@@ -58,5 +59,26 @@ it('shares flash messages', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->where('flash.success', 'Order placed.')
             ->where('flash.error', 'Your cart is empty.')
+        );
+});
+
+it('leaves the menu aisles out of a normal page load', function () {
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->missing('menuAisles'));
+});
+
+it('sends the menu aisles when the menu asks for them', function () {
+    $fruit = Category::factory()->create(['name' => 'Fruit', 'slug' => 'fruit']);
+    Product::factory()->inCategory($fruit)->create();
+    Category::factory()->create(['name' => 'Empty', 'slug' => 'empty']);
+
+    $this->get(route('home'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->reloadOnly('menuAisles', fn (Assert $reload) => $reload
+                ->has('menuAisles', 1)
+                ->where('menuAisles.0.slug', 'fruit')
+                ->where('menuAisles.0.name', 'Fruit')
+            )
         );
 });

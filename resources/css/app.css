@@ -14,7 +14,8 @@
     --font-serif: 'Young Serif', ui-serif, Georgia, serif;
     --font-chalk: Caveat, 'Comic Sans MS', cursive;
 
-    --breakpoint-lg: 980px;
+    /* 980px, in rem like the default breakpoints so `sm:` and `lg:` sort correctly */
+    --breakpoint-lg: 61.25rem;
 
     --ease-stall: cubic-bezier(0.22, 0.8, 0.24, 1);
 

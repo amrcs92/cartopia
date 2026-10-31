@@ -1,18 +1,23 @@
 <script setup lang="ts">
 import { DialogContent, DialogPortal } from 'reka-ui';
 import { watch } from 'vue';
+import type { HTMLAttributes } from 'vue';
 import IconButton from '@/common/stall/IconButton.vue';
 import { Sheet, SheetTitle } from '@/lib/shadcn/sheet';
 import SheetOverlay from '@/lib/shadcn/sheet/SheetOverlay.vue';
+import { cn } from '@/lib/utils';
 
 // A modal panel that slides in from the right or left, or rises from the
 // bottom, over a dimmed page. The dialog primitives trap focus and close it on
 // Escape or a scrim click (each emits `close`); focus then returns to whatever
 // was focused when it opened. `label` is the visible title and its name.
+// `class` reaches the panel (to change its width, say); the `band` slot sits
+// above the title row, edge to edge.
 const props = defineProps<{
     open: boolean;
     side: 'right' | 'left' | 'bottom';
     label: string;
+    class?: HTMLAttributes['class'];
 }>();
 
 const emit = defineEmits<{
@@ -63,10 +68,17 @@ const sides = {
             <SheetOverlay class="bg-chalkboard/60 duration-300 ease-stall" />
             <DialogContent
                 :aria-describedby="undefined"
-                class="fixed z-50 flex flex-col border-outline bg-surface text-ink outline-none data-[state=closed]:animate-out data-[state=open]:animate-in"
-                :class="[sides[props.side], 'duration-300 ease-stall']"
+                :class="
+                    cn(
+                        'fixed z-50 flex flex-col overflow-hidden border-outline bg-surface text-ink outline-none data-[state=closed]:animate-out data-[state=open]:animate-in',
+                        sides[props.side],
+                        'duration-300 ease-stall',
+                        props.class,
+                    )
+                "
                 @close-auto-focus="restoreFocus"
             >
+                <slot name="band" />
                 <div
                     class="flex items-center justify-between gap-4 border-b-[1.5px] border-line px-5 py-3"
                 >
