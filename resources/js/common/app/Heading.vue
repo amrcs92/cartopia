@@ -15,13 +15,13 @@ withDefaults(defineProps<Props>(), {
         <h2
             :class="
                 variant === 'small'
-                    ? 'mb-0.5 text-base font-medium'
-                    : 'text-xl font-semibold tracking-tight'
+                    ? 'mb-0.5 font-serif text-[22px] font-normal text-ink'
+                    : 'font-serif text-[28px] font-normal text-ink'
             "
         >
             {{ title }}
         </h2>
-        <p v-if="description" class="text-sm text-muted-foreground">
+        <p v-if="description" class="text-base text-body">
             {{ description }}
         </p>
     </header>

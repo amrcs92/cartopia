@@ -4,7 +4,7 @@ import { router } from '@inertiajs/vue3';
 import { usePasskeyVerify } from '@laravel/passkeys/vue';
 import { KeyRound } from '@lucide/vue';
 import InputError from '@/common/app/InputError.vue';
-import { Button } from '@/lib/shadcn/button';
+import Button from '@/common/button/Button.vue';
 import { Separator } from '@/lib/shadcn/separator';
 import { Spinner } from '@/lib/shadcn/spinner';
 import { index as productsIndex } from '@/routes/products';
@@ -51,7 +51,7 @@ const { verify, isLoading, error, isSupported } = usePasskeyVerify({
                 {{
                     isLoading
                         ? (props.loadingLabel ?? 'Authenticating...')
-                        : (props.label ?? 'Sign in with a passkey')
+                        : (props.label ?? 'Log in with a passkey')
                 }}
             </Button>
 
@@ -65,7 +65,7 @@ const { verify, isLoading, error, isSupported } = usePasskeyVerify({
                 <Separator class="w-full" />
             </div>
             <div class="relative flex justify-center text-xs uppercase">
-                <span class="bg-background px-2 text-muted-foreground">
+                <span class="bg-surface px-2 text-subtle">
                     {{ props.separator ?? 'Or continue with email' }}
                 </span>
             </div>

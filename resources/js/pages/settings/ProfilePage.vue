@@ -5,9 +5,9 @@ import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileCo
 import DeleteUser from '@/common/app/DeleteUser.vue';
 import Heading from '@/common/app/Heading.vue';
 import InputError from '@/common/app/InputError.vue';
-import { Button } from '@/lib/shadcn/button';
-import { Input } from '@/lib/shadcn/input';
-import { Label } from '@/lib/shadcn/label';
+import Button from '@/common/button/Button.vue';
+import Input from '@/common/input/Input.vue';
+import Label from '@/common/label/Label.vue';
 import { edit } from '@/routes/profile';
 
 defineOptions({
@@ -37,8 +37,6 @@ const user = computed(() => props.profile);
 
 <template>
     <Head title="Profile settings" />
-
-    <h1 class="sr-only">Profile settings</h1>
 
     <div class="flex flex-col space-y-6">
         <Heading

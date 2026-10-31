@@ -6,6 +6,7 @@ use App\Cart\Cart;
 use App\Catalog\Aisles;
 use App\Http\Resources\AisleResource;
 use App\Models\User;
+use Closure;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Middleware;
@@ -32,6 +33,16 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
+     * Report the URL exactly as requested. The default resolver goes through
+     * fullUrl(), which rewrites `aisle[]=x` into `aisle[0]=x` and would push
+     * that into the browser history.
+     */
+    public function urlResolver(): Closure
+    {
+        return fn (Request $request): string => $request->getRequestUri();
+    }
+
+    /**
      * Define the props that are shared by default.
      *
      * @see https://inertiajs.com/shared-data
@@ -47,11 +58,6 @@ class HandleInertiaRequests extends Middleware
                 'user' => fn (): ?array => $this->currentUser($request->user()),
             ],
             'cart' => fn (): array => ['count' => app(Cart::class)->count()],
-            'flash' => Inertia::always(fn (): array => [
-                'success' => $request->session()->get('success'),
-                'error' => $request->session()->get('error'),
-                'addedToBasket' => $request->session()->get('addedToBasket'),
-            ]),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             // Only sent when the phone menu or the footer asks for it; once
             // loaded, the client keeps it across visits instead of refetching.

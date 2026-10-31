@@ -6,7 +6,9 @@ use App\Catalog\Aisles;
 use App\Catalog\FeaturedProducts;
 use App\Http\Resources\AisleResource;
 use App\Http\Resources\ProductResource;
+use App\Http\Resources\ShippingMethodResource;
 use App\Models\Product;
+use App\Models\ShippingMethod;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -27,6 +29,7 @@ class HomeController extends Controller
             'counter' => ProductResource::collection($counter)->resolve(),
             'featured' => ProductResource::collection(FeaturedProducts::take())->resolve(),
             'aisles' => AisleResource::collection(Aisles::forHome())->resolve(),
+            'shippingMethods' => ShippingMethodResource::collection(ShippingMethod::query()->orderBy('id')->get())->resolve(),
         ]);
     }
 }

@@ -6,6 +6,7 @@ use App\Actions\RateProduct;
 use App\Http\Requests\RateProductRequest;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
+use Inertia\Inertia;
 
 class RatingController extends Controller
 {
@@ -13,6 +14,8 @@ class RatingController extends Controller
     {
         $rateProduct->handle($request->user(), $product, $request->integer('stars'));
 
-        return redirect()->back()->with('success', 'Thanks for rating!');
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Thanks for rating!']);
+
+        return redirect()->back();
     }
 }

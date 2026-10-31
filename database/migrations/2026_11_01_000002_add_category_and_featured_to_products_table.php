@@ -17,6 +17,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('products', function (Blueprint $table) {
+            // SQLite cannot drop a column that an index still covers.
+            $table->dropIndex(['is_featured']);
             $table->dropConstrainedForeignId('category_id');
             $table->dropColumn('is_featured');
         });

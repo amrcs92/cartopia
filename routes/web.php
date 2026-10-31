@@ -47,3 +47,9 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/settings.php';
+
+// Unmatched URLs never reach the web middleware group, so they would render
+// without the shared auth, basket and flash props. A fallback route runs them.
+// Aborting here sends it through the 404 hook in bootstrap/app.php, which
+// renders the Inertia page, or JSON for requests that expect JSON.
+Route::fallback(fn () => abort(404));

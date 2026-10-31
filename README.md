@@ -2,21 +2,19 @@
 
 [![CI](https://github.com/amrcs92/cartopia/actions/workflows/ci.yml/badge.svg)](https://github.com/amrcs92/cartopia/actions/workflows/ci.yml)
 
-Cartopia is a small online store with a virtual wallet. Browse and search a catalog, rate products, fill a cart (as a guest or signed in), and pay for orders from your balance. Top up the wallet whenever you like and review every order and ledger entry.
+Cartopia is a small online store with a virtual wallet. Browse and search a catalog, rate products, fill a basket (as a guest or logged in), and pay for orders from your balance. Top up the wallet whenever you like and review every order and ledger entry.
 
 It started in 2018 as a plain-PHP project and was rebuilt in 2026 as a Laravel showcase: modern idioms, a current front end, real tests and CI.
 
 ## Screenshots
 
-| Products                                   | Product detail                           |
-| ------------------------------------------ | ---------------------------------------- |
-| ![Products](docs/screenshots/products.png) | ![Product](docs/screenshots/product.png) |
-
-| Cart                               | Orders                                 |
-| ---------------------------------- | -------------------------------------- |
-| ![Cart](docs/screenshots/cart.png) | ![Orders](docs/screenshots/orders.png) |
-
-![Wallet](docs/screenshots/wallet.png)
+| Light                                                 | Dark                                                |
+| ----------------------------------------------------- | --------------------------------------------------- |
+| ![Home, light](docs/screenshots/home-light.png)       | ![Home, dark](docs/screenshots/home-dark.png)       |
+| ![Shop, light](docs/screenshots/shop-light.png)       | ![Shop, dark](docs/screenshots/shop-dark.png)       |
+| ![Product, light](docs/screenshots/product-light.png) | ![Product, dark](docs/screenshots/product-dark.png) |
+| ![Basket, light](docs/screenshots/basket-light.png)   | ![Basket, dark](docs/screenshots/basket-dark.png)   |
+| ![Wallet, light](docs/screenshots/wallet-light.png)   | ![Wallet, dark](docs/screenshots/wallet-dark.png)   |
 
 ## Stack
 
@@ -30,12 +28,16 @@ It started in 2018 as a plain-PHP project and was rebuilt in 2026 as a Laravel s
 ## Features
 
 - Product catalog with search, price and rating filters, sorting and pagination
+- Aisles (categories) with a filter for each, and a featured carousel on the home, shop and product pages
 - Product detail with image gallery and 1-5 star ratings (one rating per user and product)
-- Cart for guests (session) and users (database); a guest cart is merged into the account on login or registration
+- Basket for guests (session) and users (database); a guest basket is merged into the account on login or registration
+- An added-to-basket panel that confirms each addition and links to the basket
 - Checkout paid from the wallet balance, priced entirely on the server
 - Order history with price and name snapshots
 - Wallet top-ups ($5-$500) with an append-only transaction ledger
 - $100 signup bonus for new accounts
+- Light and dark themes, with a toggle in the header
+- A friendly not-found page that points back to the home page and the shop
 
 ## Setup (Laragon, Windows)
 
@@ -87,7 +89,7 @@ The original app (plain PHP, PDO, jQuery, Bootstrap 4 and a localStorage cart) i
 
 | 2018 defect                                      | 2026 fix                                                                                                                                                 |
 | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Checkout trusted client-side prices and totals   | The server rebuilds the cart from current database prices; the request carries no price, and order totals are computed in a `PlaceOrder` action          |
+| Checkout trusted client-side prices and totals   | The server rebuilds the basket from current database prices; the request carries no price, and order totals are computed in a `PlaceOrder` action        |
 | Balance updates had no transaction and no lock   | Every balance change goes through a `Wallet` service: one DB transaction, `lockForUpdate`, and a ledger row, so the balance always equals the ledger sum |
 | Orders were not linked to users                  | Orders belong to a user, are protected by an `OrderPolicy`, and snapshot item names and prices                                                           |
 | One shared fixed salt with SHA-512 for passwords | Laravel's hasher (bcrypt) with per-password salts, via Fortify                                                                                           |

@@ -3,6 +3,7 @@
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Rating;
+use App\Models\ShippingMethod;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -14,6 +15,8 @@ beforeEach(function () {
 it('shows the four newest products on the welcome page', function () {
     $products = Product::factory()->count(5)->withImages()->create();
     $newest = $products[4];
+    ShippingMethod::factory()->pickup()->create();
+    ShippingMethod::factory()->ups()->create();
 
     $this->get(route('home'))
         ->assertOk()
@@ -25,6 +28,7 @@ it('shows the four newest products on the welcome page', function () {
             ->where('counter.0.price', $newest->price->format())
             ->where('counter.0.image_url', Storage::disk('public')->url($newest->images()->first()->path))
             ->where('counter.3.id', $products[1]->id)
+            ->has('shippingMethods', 2)
         );
 });
 
@@ -327,5 +331,19 @@ it('keeps the chosen sort when filtering to featured products', function () {
             ->where('products.data.0.id', $cheap->id)
             ->where('products.data.1.id', $mid->id)
             ->where('products.data.2.id', $dear->id)
+        );
+});
+
+it('keeps array filters in bracket form in the pagination links', function () {
+    $fruit = Category::factory()->create(['slug' => 'fruit']);
+    Product::factory()->count(13)->inCategory($fruit)->create();
+
+    $this->get('/products?aisle%5B%5D=fruit')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('products.links.next', fn (string $url) => str_contains($url, 'aisle%5B%5D=fruit') && ! str_contains($url, 'aisle%5B0%5D'))
+            ->where('products.meta.links', fn ($links) => collect($links)
+                ->pluck('url')
+                ->filter()
+                ->every(fn (string $url) => str_contains($url, 'aisle%5B%5D=fruit') && ! str_contains($url, 'aisle%5B0%5D')))
         );
 });

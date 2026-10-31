@@ -11,6 +11,7 @@ export type Cart = {
     count: number;
     lines: CartLine[];
     subtotal: string;
+    subtotal_cents: number;
     total_quantity: number;
 };
 
@@ -18,4 +19,5 @@ export type ShippingMethod = {
     id: number;
     name: string;
     fee: string;
+    fee_cents: number;
 };

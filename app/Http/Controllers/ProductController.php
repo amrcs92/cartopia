@@ -6,6 +6,7 @@ use App\Catalog\Aisles;
 use App\Catalog\FeaturedProducts;
 use App\Http\Requests\ProductIndexRequest;
 use App\Http\Resources\AisleResource;
+use App\Http\Resources\ProductCollection;
 use App\Http\Resources\ProductDetailResource;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
@@ -35,7 +36,7 @@ class ProductController extends Controller
             ->withQueryString();
 
         return Inertia::render('products/ProductsIndexPage', [
-            'products' => ProductResource::collection($products),
+            'products' => new ProductCollection($products),
             'filters' => $request->rawFilters(),
             'aisles' => AisleResource::collection(Aisles::all())->resolve(),
             'featured' => ProductResource::collection(FeaturedProducts::take())->resolve(),

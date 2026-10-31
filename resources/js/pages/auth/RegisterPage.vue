@@ -3,9 +3,9 @@ import { Form, Head } from '@inertiajs/vue3';
 import InputError from '@/common/app/InputError.vue';
 import PasswordInput from '@/common/app/PasswordInput.vue';
 import TextLink from '@/common/app/TextLink.vue';
-import { Button } from '@/lib/shadcn/button';
-import { Input } from '@/lib/shadcn/input';
-import { Label } from '@/lib/shadcn/label';
+import StallButton from '@/common/stall/StallButton.vue';
+import Input from '@/common/input/Input.vue';
+import Label from '@/common/label/Label.vue';
 import { Spinner } from '@/lib/shadcn/spinner';
 import { login } from '@/routes';
 import { store } from '@/routes/register';
@@ -23,7 +23,7 @@ defineOptions({
 </script>
 
 <template>
-    <Head title="Register" />
+    <Head title="Sign up" />
 
     <Form
         v-bind="store.form()"
@@ -115,7 +115,9 @@ defineOptions({
                 <InputError :message="errors.password_confirmation" />
             </div>
 
-            <Button
+            <StallButton
+                variant="marigold"
+                size="lg"
                 type="submit"
                 class="mt-2 w-full"
                 tabindex="7"
@@ -124,7 +126,7 @@ defineOptions({
             >
                 <Spinner v-if="processing" />
                 Create account
-            </Button>
+            </StallButton>
         </div>
 
         <div class="text-center text-sm text-muted-foreground">

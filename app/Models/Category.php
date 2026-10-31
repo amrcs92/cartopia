@@ -4,9 +4,11 @@ namespace App\Models;
 
 use Database\Factories\CategoryFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 
@@ -38,18 +40,24 @@ class Category extends Model
     }
 
     /**
+     * The newest product in the aisle that has a photo. Eager-load it as
+     * `latestProductWithImage.primaryImage` for lists, so imageUrl() costs no
+     * query per aisle.
+     *
+     * @return HasOne<Product, $this>
+     */
+    public function latestProductWithImage(): HasOne
+    {
+        return $this->hasOne(Product::class)
+            ->ofMany(['id' => 'max'], fn (Builder $query) => $query->whereHas('primaryImage'));
+    }
+
+    /**
      * The aisle's own image, else the newest product photo in it, else null.
      */
     public function imageUrl(): ?string
     {
-        $path = $this->image_path
-            ?? $this->products()
-                ->whereHas('primaryImage')
-                ->with('primaryImage')
-                ->latest('id')
-                ->first()
-                ?->primaryImage
-                ?->path;
+        $path = $this->image_path ?? $this->latestProductWithImage?->primaryImage?->path;
 
         return $path === null ? null : Storage::disk('public')->url($path);
     }

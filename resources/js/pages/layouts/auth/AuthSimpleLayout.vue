@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import AppLogo from '@/common/brand/AppLogo.vue';
+import ThemeToggle from '@/common/theme/ThemeToggle.vue';
+import WhySignUp from '@/modules/auth/WhySignUp.vue';
 import { home } from '@/routes';
 
 defineProps<{
@@ -10,28 +12,37 @@ defineProps<{
 </script>
 
 <template>
-    <div
-        class="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10"
-    >
-        <div class="w-full max-w-sm">
-            <div class="flex flex-col gap-8">
-                <div class="flex flex-col items-center gap-4">
-                    <Link
-                        :href="home()"
-                        class="flex flex-col items-center gap-2 font-medium"
+    <div class="flex min-h-svh flex-col bg-paper text-ink">
+        <header
+            class="mx-auto flex w-full max-w-[1200px] items-center justify-between gap-4 px-4 py-4 sm:px-6"
+        >
+            <Link :href="home()" aria-label="Cartopia home" class="rounded-xl">
+                <AppLogo />
+            </Link>
+            <ThemeToggle variant="button" />
+        </header>
+
+        <main
+            class="mx-auto grid w-full max-w-[1100px] flex-1 content-start items-start gap-10 px-4 pt-4 pb-12 sm:px-6 lg:grid-cols-[minmax(0,30rem)_minmax(0,1fr)] lg:gap-14 lg:pt-10"
+        >
+            <section
+                class="rounded-[26px] border-[2.5px] border-outline bg-surface p-6 shadow-card sm:p-8"
+            >
+                <header class="mb-6 space-y-2">
+                    <h1
+                        v-if="title"
+                        class="font-serif text-[28px] leading-tight text-ink sm:text-[32px]"
                     >
-                        <AppLogo variant="mark" class="mb-1" />
-                        <span class="sr-only">{{ title }}</span>
-                    </Link>
-                    <div class="space-y-2 text-center">
-                        <h1 class="text-xl font-medium">{{ title }}</h1>
-                        <p class="text-center text-sm text-muted-foreground">
-                            {{ description }}
-                        </p>
-                    </div>
-                </div>
+                        {{ title }}
+                    </h1>
+                    <p v-if="description" class="text-base text-body">
+                        {{ description }}
+                    </p>
+                </header>
                 <slot />
-            </div>
-        </div>
+            </section>
+
+            <WhySignUp />
+        </main>
     </div>
 </template>

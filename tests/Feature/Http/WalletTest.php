@@ -16,8 +16,10 @@ it('tops up and records the ledger', function () {
 
     $this->actingAs($user)
         ->post(route('wallet.top-ups.store'), ['amount' => '25.50'])
-        ->assertRedirect(route('wallet.show'))
-        ->assertSessionHas('success', 'Added $25.50 to your balance.');
+        ->assertRedirect(route('wallet.show'));
+
+    $this->get(route('wallet.show'))->assertInertia(fn (Assert $page) => $page
+        ->hasFlash('toast', ['type' => 'success', 'message' => 'Added $25.50 to your balance.']));
 
     $row = WalletTransaction::query()->latest('id')->first();
 

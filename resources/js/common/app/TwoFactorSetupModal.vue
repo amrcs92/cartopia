@@ -1,14 +1,14 @@
 <script setup lang="ts">
+import DialogContent from '@/common/dialog/DialogContent.vue';
 import { Form } from '@inertiajs/vue3';
 import { useClipboard } from '@vueuse/core';
 import { Check, Copy, ScanLine } from '@lucide/vue';
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue';
 import AlertError from '@/common/app/AlertError.vue';
 import InputError from '@/common/app/InputError.vue';
-import { Button } from '@/lib/shadcn/button';
+import Button from '@/common/button/Button.vue';
 import {
     Dialog,
-    DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
@@ -222,7 +222,7 @@ watch(
                                     >
                                         <Check
                                             v-if="copied"
-                                            class="w-4 text-green-500"
+                                            class="w-4 text-green"
                                         />
                                         <Copy v-else class="w-4" />
                                     </button>

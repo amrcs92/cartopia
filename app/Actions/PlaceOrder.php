@@ -15,7 +15,7 @@ use App\Wallet\Wallet;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Prices the cart from the database, debits the wallet and snapshots the
+ * Prices the basket from the database, debits the wallet and snapshots the
  * order items in one transaction. Nothing the client sends is trusted.
  */
 class PlaceOrder
@@ -36,7 +36,7 @@ class PlaceOrder
             $summary = $cart->summary();
 
             if ($summary->isEmpty()) {
-                throw new EmptyCart('Your cart is empty.');
+                throw new EmptyCart('Your basket is empty.');
             }
 
             $fee = $method->fee;

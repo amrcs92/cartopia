@@ -14,6 +14,8 @@ export type Order = {
     total: string;
     shipping_method: string;
     placed_at: string;
+    /** Up to two product photo URLs (first two lines of the order). */
+    thumbnails: string[];
     items: OrderItem[];
 };
 

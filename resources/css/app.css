@@ -236,6 +236,18 @@
     }
 }
 
+/* Torn receipt edge: a zig-zag along the bottom of the paper slip. The #0000
+   and #000 are alpha stops of the mask, not colours. */
+.torn-edge {
+    mask: conic-gradient(
+            from -45deg at bottom,
+            #0000,
+            #000 1deg 89deg,
+            #0000 90deg
+        )
+        50% / 22px 100%;
+}
+
 @layer base {
     :focus-visible {
         outline: 3px solid var(--marigold);

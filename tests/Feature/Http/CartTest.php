@@ -122,11 +122,11 @@ it('flashes what was just added, with the basket summary', function () {
     $this->post(route('cart.items.store'), ['product_id' => $apple->id, 'quantity' => 2]);
 
     $this->get(route('products.index'))->assertInertia(fn (Assert $page) => $page
-        ->where('flash.addedToBasket.product.id', $apple->id)
-        ->where('flash.addedToBasket.quantity', 2)
-        ->where('flash.addedToBasket.line_total', '$0.60')
-        ->where('flash.addedToBasket.basket.count', 2)
-        ->where('flash.addedToBasket.basket.subtotal', '$0.60')
+        ->hasFlash('addedToBasket.product.id', $apple->id)
+        ->hasFlash('addedToBasket.quantity', 2)
+        ->hasFlash('addedToBasket.line_total', '$0.60')
+        ->hasFlash('addedToBasket.basket.count', 2)
+        ->hasFlash('addedToBasket.basket.subtotal', '$0.60')
     );
 });
 
@@ -137,9 +137,13 @@ it('suggests at most two featured products that are not already in the basket', 
     $this->post(route('cart.items.store'), ['product_id' => $added->id, 'quantity' => 1]);
 
     $this->get(route('products.index'))->assertInertia(fn (Assert $page) => $page
-        ->has('flash.addedToBasket.suggestions', 2)
-        ->where('flash.addedToBasket.suggestions.0.id', fn (int $id) => $id !== $added->id)
-        ->where('flash.addedToBasket.suggestions.1.id', fn (int $id) => $id !== $added->id)
+        ->hasFlash('addedToBasket.suggestions.1')
+        ->missingFlash('addedToBasket.suggestions.2')
+        ->tap(function (Assert $page) use ($added) {
+            $ids = array_column($page->toArray()['flash']['addedToBasket']['suggestions'], 'id');
+
+            expect($ids)->toHaveCount(2)->not->toContain($added->id);
+        })
     );
 });
 
@@ -151,7 +155,8 @@ it('suggests nothing when every featured product is already in the basket', func
     }
 
     $this->get(route('products.index'))->assertInertia(fn (Assert $page) => $page
-        ->has('flash.addedToBasket.suggestions', 0)
+        ->hasFlash('addedToBasket')
+        ->missingFlash('addedToBasket.suggestions.0')
     );
 });
 
@@ -162,6 +167,20 @@ it('does not repeat the panel on the next page', function () {
     $this->get(route('products.index'));
 
     $this->get(route('products.index'))->assertInertia(fn (Assert $page) => $page
-        ->where('flash.addedToBasket', null)
+        ->missingFlash('addedToBasket')
     );
+});
+
+it('sends the featured products for the empty basket', function () {
+    $featured = Product::factory()->featured()->create();
+    Product::factory()->create();
+
+    $this->get(route('cart.show'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('cart/CartPage')
+            ->has('cart.lines', 0)
+            ->has('featured', 1)
+            ->where('featured.0.id', $featured->id)
+        );
 });

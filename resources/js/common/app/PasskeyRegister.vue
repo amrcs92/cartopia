@@ -2,9 +2,9 @@
 import { usePasskeyRegister } from '@laravel/passkeys/vue';
 import { ref } from 'vue';
 import InputError from '@/common/app/InputError.vue';
-import { Button } from '@/lib/shadcn/button';
-import { Input } from '@/lib/shadcn/input';
-import { Label } from '@/lib/shadcn/label';
+import Button from '@/common/button/Button.vue';
+import Input from '@/common/input/Input.vue';
+import Label from '@/common/label/Label.vue';
 
 const emit = defineEmits<{
     success: [];

@@ -4,8 +4,8 @@ import SecurityController from '@/actions/App/Http/Controllers/Settings/Security
 import Heading from '@/common/app/Heading.vue';
 import InputError from '@/common/app/InputError.vue';
 import PasswordInput from '@/common/app/PasswordInput.vue';
-import { Button } from '@/lib/shadcn/button';
-import { Label } from '@/lib/shadcn/label';
+import Button from '@/common/button/Button.vue';
+import Label from '@/common/label/Label.vue';
 import { edit } from '@/routes/security';
 import type { Props as ManagePasskeysProps } from '@/common/app/ManagePasskeys.vue';
 import ManagePasskeys from '@/common/app/ManagePasskeys.vue';
@@ -34,8 +34,6 @@ defineOptions({
 
 <template>
     <Head title="Security settings" />
-
-    <h1 class="sr-only">Security settings</h1>
 
     <div class="space-y-6">
         <Heading

@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import Card from '@/common/card/Card.vue';
-import CardContent from '@/common/card/CardContent.vue';
-import CardHeader from '@/common/card/CardHeader.vue';
-import CardTitle from '@/common/card/CardTitle.vue';
 import Pagination from '@/common/pagination/Pagination.vue';
+import Chalkboard from '@/common/stall/Chalkboard.vue';
+import SectionHeading from '@/common/stall/SectionHeading.vue';
 import LedgerTable from '@/modules/wallet/LedgerTable.vue';
 import TopUpForm from '@/modules/wallet/TopUpForm.vue';
 import type { Paginated, WalletTransaction } from '@/types';
@@ -18,36 +16,38 @@ const props = defineProps<{
 <template>
     <Head title="Your wallet" />
 
-    <div class="space-y-6">
-        <h1 class="text-2xl font-semibold">Your wallet</h1>
+    <div class="space-y-8">
+        <h1 class="font-serif text-[32px] leading-tight text-ink lg:text-5xl">
+            Your wallet
+        </h1>
 
-        <div class="grid gap-6 md:grid-cols-2">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Balance</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p
-                        class="text-3xl font-semibold tabular-nums"
-                        data-test="wallet-balance"
-                    >
-                        {{ props.balance }}
-                    </p>
-                </CardContent>
-            </Card>
+        <div class="grid items-start gap-8 lg:grid-cols-2">
+            <Chalkboard>
+                <p class="text-[22px] text-chalk/80">Your balance</p>
+                <p
+                    class="text-[56px] leading-none text-marigold tabular-nums lg:text-[72px]"
+                    data-test="wallet-balance"
+                >
+                    {{ props.balance }}
+                </p>
+                <p class="mt-3 text-[22px] text-chalk/80">
+                    Pays at the till. Top up any time.
+                </p>
+            </Chalkboard>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Add credit</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <TopUpForm />
-                </CardContent>
-            </Card>
+            <section
+                aria-labelledby="add-credit"
+                class="flex flex-col gap-4 rounded-[26px] border-[2.5px] border-outline bg-surface p-5 shadow-card lg:p-6"
+            >
+                <h2 id="add-credit" class="font-serif text-[26px] text-ink">
+                    Add credit
+                </h2>
+                <TopUpForm />
+            </section>
         </div>
 
-        <section class="space-y-3">
-            <h2 class="text-lg font-semibold">Transaction history</h2>
+        <section class="space-y-4">
+            <SectionHeading title="Transaction history" />
             <LedgerTable :transactions="props.transactions.data" />
             <Pagination :links="props.transactions.meta.links" />
         </section>
