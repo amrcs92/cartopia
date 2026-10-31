@@ -14,13 +14,14 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/lib/shadcn/sidebar';
-import { dashboard } from '@/routes';
+import { home } from '@/routes';
+import { index as productsIndex } from '@/routes/products';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
     {
-        title: 'Dashboard',
-        href: dashboard(),
+        title: 'Products',
+        href: productsIndex(),
         icon: LayoutGrid,
     },
 ];
@@ -45,7 +46,7 @@ const footerNavItems: NavItem[] = [
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
-                        <Link :href="dashboard()">
+                        <Link :href="home()">
                             <AppLogo />
                         </Link>
                     </SidebarMenuButton>

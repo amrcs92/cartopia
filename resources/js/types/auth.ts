@@ -1,19 +1,17 @@
+/**
+ * The signed-in user as shared by HandleInertiaRequests (`auth.user`).
+ */
 export type User = {
     id: number;
     name: string;
     email: string;
+    balance: string;
+    is_admin: boolean;
     avatar?: string;
-    phone?: string | null;
-    address?: string | null;
-    email_verified_at: string | null;
-    two_factor_enabled?: boolean;
-    created_at: string;
-    updated_at: string;
-    [key: string]: unknown;
 };
 
 export type Auth = {
-    user: User;
+    user: User | null;
 };
 
 export type Passkey = {

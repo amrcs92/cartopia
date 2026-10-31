@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Inertia\Testing\AssertableInertia as Assert;
 
 test('profile page is displayed', function () {
     $user = User::factory()->create();
@@ -10,6 +11,23 @@ test('profile page is displayed', function () {
         ->get(route('profile.edit'));
 
     $response->assertOk();
+});
+
+test('profile page receives the editable profile fields', function () {
+    $user = User::factory()->create(['phone' => '0123', 'address' => '1 Corniche Rd']);
+
+    $this->actingAs($user)
+        ->get(route('profile.edit'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('settings/ProfilePage')
+            ->where('profile', [
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => '0123',
+                'address' => '1 Corniche Rd',
+                'email_verified' => true,
+            ])
+        );
 });
 
 test('profile information can be updated', function () {

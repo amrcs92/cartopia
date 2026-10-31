@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Form, Head, usePage } from '@inertiajs/vue3';
-import { Link } from '@inertiajs/vue3';
+import { Form, Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import DeleteUser from '@/common/app/DeleteUser.vue';
@@ -23,8 +22,21 @@ defineOptions({
     },
 });
 
-const page = usePage();
-const user = computed(() => page.props.auth.user);
+type Profile = {
+    name: string;
+    email: string;
+    phone: string | null;
+    address: string | null;
+    email_verified: boolean;
+};
+
+const props = defineProps<{
+    profile: Profile;
+    mustVerifyEmail: boolean;
+    status?: string | null;
+}>();
+
+const user = computed(() => props.profile);
 </script>
 
 <template>
@@ -99,7 +111,7 @@ const user = computed(() => page.props.auth.user);
                 <InputError class="mt-2" :message="errors.address" />
             </div>
 
-            <div v-if="page.props.mustVerifyEmail && !user.email_verified_at">
+            <div v-if="props.mustVerifyEmail && !user.email_verified">
                 <p class="-mt-4 text-sm text-muted-foreground">
                     Your email address is unverified.
                     <Link
@@ -112,7 +124,7 @@ const user = computed(() => page.props.auth.user);
                 </p>
 
                 <div
-                    v-if="page.props.status === 'verification-link-sent'"
+                    v-if="props.status === 'verification-link-sent'"
                     class="mt-2 text-sm font-medium text-green-600"
                 >
                     A new verification link has been sent to your email address.

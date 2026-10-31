@@ -7,6 +7,7 @@ import InputError from '@/common/app/InputError.vue';
 import { Button } from '@/lib/shadcn/button';
 import { Separator } from '@/lib/shadcn/separator';
 import { Spinner } from '@/lib/shadcn/spinner';
+import { index as productsIndex } from '@/routes/products';
 
 type Props = {
     routes?: {
@@ -30,7 +31,7 @@ const { verify, isLoading, error, isSupported } = usePasskeyVerify({
           }
         : {}),
     onSuccess: (response) => {
-        router.visit(response.redirect ?? '/dashboard');
+        router.visit(response.redirect ?? productsIndex());
     },
 });
 </script>
