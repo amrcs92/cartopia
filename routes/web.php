@@ -7,6 +7,8 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RatingController;
+use App\Http\Controllers\TopUpController;
+use App\Http\Controllers\WalletController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
@@ -32,6 +34,11 @@ Route::middleware('auth')->group(function () {
     Route::get('orders/{order}', [OrderController::class, 'show'])
         ->middleware('can:view,order')
         ->name('orders.show');
+
+    Route::get('wallet', [WalletController::class, 'show'])->name('wallet.show');
+    Route::post('wallet/top-ups', [TopUpController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('wallet.top-ups.store');
 });
 
 require __DIR__.'/settings.php';

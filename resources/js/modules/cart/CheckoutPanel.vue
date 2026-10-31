@@ -14,6 +14,7 @@ import Select from '@/common/select/Select.vue';
 import { useCurrentUser } from '@/modules/auth/useCurrentUser';
 import { login } from '@/routes';
 import { store } from '@/routes/checkout';
+import { show as showWallet } from '@/routes/wallet';
 import type { Cart, ShippingMethod } from '@/types';
 
 const props = defineProps<{
@@ -24,6 +25,9 @@ const props = defineProps<{
 const page = usePage();
 const user = useCurrentUser();
 const flashError = computed(() => page.props.flash.error);
+const balanceTooLow = computed(
+    () => flashError.value === 'Your balance is too low for this order.',
+);
 
 const form = useForm({
     shipping_method_id: props.shippingMethods[0]?.id ?? 0,
@@ -80,6 +84,14 @@ function submit(): void {
             >
                 {{ flashError }}
             </p>
+            <Link
+                v-if="balanceTooLow"
+                :href="showWallet()"
+                class="block text-sm font-medium underline"
+                data-test="top-up-link"
+            >
+                Top up your balance
+            </Link>
 
             <Button
                 class="w-full"

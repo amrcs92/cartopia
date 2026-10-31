@@ -16,3 +16,13 @@ export type Order = {
     placed_at: string;
     items: OrderItem[];
 };
+
+export type WalletTransaction = {
+    id: number;
+    type: string;
+    type_label: string;
+    amount: string;
+    balance_after: string;
+    description: string | null;
+    created_at: string;
+};

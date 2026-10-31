@@ -7,6 +7,7 @@ import {
     Settings,
     ShoppingCart,
     User,
+    Wallet,
 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import Breadcrumbs from '@/common/app/Breadcrumbs.vue';
@@ -24,6 +25,7 @@ import { show as showCart } from '@/routes/cart';
 import { index as ordersIndex } from '@/routes/orders';
 import { index as productsIndex } from '@/routes/products';
 import { edit as editProfile } from '@/routes/profile';
+import { show as showWallet } from '@/routes/wallet';
 import type { BreadcrumbItem } from '@/types';
 
 const { breadcrumbs = [] } = defineProps<{
@@ -152,7 +154,15 @@ function handleLogout(): void {
                                     Orders
                                 </Link>
                             </DropdownMenuItem>
-                            <!-- Wallet (Task 13) joins this menu with its route. -->
+                            <DropdownMenuItem as-child>
+                                <Link
+                                    :href="showWallet()"
+                                    class="flex w-full cursor-pointer items-center gap-2"
+                                >
+                                    <Wallet class="size-4" />
+                                    Wallet
+                                </Link>
+                            </DropdownMenuItem>
                             <DropdownMenuItem as-child>
                                 <Link
                                     :href="editProfile()"
