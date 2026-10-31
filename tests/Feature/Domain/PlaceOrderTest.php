@@ -80,3 +80,20 @@ it('rolls everything back when the balance is too low', function () {
         ->and($user->fresh()->balance->cents())->toBe(1000)
         ->and($user->walletTransactions()->where('type', WalletTransactionType::Purchase)->count())->toBe(0);
 });
+
+it('locks the user row before reading the cart', function () {
+    [$user, , , $ups] = checkoutFixture();
+
+    $queries = [];
+    DB::listen(function ($query) use (&$queries) {
+        $queries[] = $query->sql;
+    });
+
+    app(PlaceOrder::class)->handle($user, $ups);
+
+    $firstUsers = collect($queries)->search(fn ($sql) => str_contains($sql, '"users"') || str_contains($sql, '`users`'));
+    $firstCart = collect($queries)->search(fn ($sql) => preg_match('/(from|into) ["`]?(cart_items|carts)["`]?/i', $sql) === 1);
+
+    expect($firstUsers)->toBe(0)
+        ->and($firstCart)->toBeGreaterThan($firstUsers);
+});

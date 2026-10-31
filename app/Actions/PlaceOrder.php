@@ -29,6 +29,9 @@ class PlaceOrder
     public function handle(User $user, ShippingMethod $method): Order
     {
         return DB::transaction(function () use ($user, $method): Order {
+            // Serialise concurrent checkouts per user: lock first, read the cart after.
+            User::query()->whereKey($user->id)->lockForUpdate()->firstOrFail();
+
             $cart = Cart::forUser($user);
             $summary = $cart->summary();
 
