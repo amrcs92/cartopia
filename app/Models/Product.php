@@ -6,6 +6,8 @@ use App\Casts\MoneyCast;
 use App\Support\Money;
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -27,6 +29,10 @@ class Product extends Model
 {
     /** @use HasFactory<ProductFactory> */
     use HasFactory;
+
+    public const array SORTS = ['newest', 'price_asc', 'price_desc', 'rating'];
+
+    private const string AVG_STARS_SQL = '(select avg(stars) from ratings where ratings.product_id = products.id)';
 
     /**
      * @return array<string, string>
@@ -71,5 +77,74 @@ class Product extends Model
     public function cartItems(): HasMany
     {
         return $this->hasMany(CartItem::class);
+    }
+
+    /**
+     * @param  Builder<Product>  $query
+     */
+    #[Scope]
+    protected function search(Builder $query, ?string $term): void
+    {
+        if ($term === null || trim($term) === '') {
+            return;
+        }
+
+        $like = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $term).'%';
+
+        $query->where(function (Builder $q) use ($like): void {
+            $q->whereRaw("name LIKE ? ESCAPE '!'", [$like])
+                ->orWhereRaw("description LIKE ? ESCAPE '!'", [$like]);
+        });
+    }
+
+    /**
+     * @param  Builder<Product>  $query
+     */
+    #[Scope]
+    protected function priceBetween(Builder $query, ?int $minCents, ?int $maxCents): void
+    {
+        if ($minCents !== null) {
+            $query->where('price', '>=', $minCents);
+        }
+
+        if ($maxCents !== null) {
+            $query->where('price', '<=', $maxCents);
+        }
+    }
+
+    /**
+     * @param  Builder<Product>  $query
+     */
+    #[Scope]
+    protected function minRating(Builder $query, ?int $stars): void
+    {
+        if ($stars === null) {
+            return;
+        }
+
+        $query->whereRaw(self::AVG_STARS_SQL.' >= ?', [$stars]);
+    }
+
+    /**
+     * @param  Builder<Product>  $query
+     */
+    #[Scope]
+    protected function sortBy(Builder $query, ?string $sort): void
+    {
+        match ($sort) {
+            'price_asc' => $query->orderBy('price')->orderByDesc('id'),
+            'price_desc' => $query->orderByDesc('price')->orderByDesc('id'),
+            'rating' => $query->orderByRaw(self::AVG_STARS_SQL.' desc')->orderByDesc('id'),
+            default => $query->latest('id'),
+        };
+    }
+
+    /**
+     * @param  Builder<Product>  $query
+     */
+    #[Scope]
+    protected function withRatingStats(Builder $query): void
+    {
+        $query->withAvg('ratings', 'stars')->withCount('ratings');
     }
 }
