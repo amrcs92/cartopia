@@ -6,9 +6,12 @@
         "build": "vp build",
         "build:ssr": "vp build && vp build --ssr",
         "dev": "vp dev",
+        "lint": "vp lint",
+        "format:check": "vp fmt --check",
         "check": "vp check",
         "check:fix": "vp check --fix",
-        "types:check": "vue-tsc --noEmit"
+        "types:check": "vue-tsc --noEmit",
+        "types": "vue-tsc --noEmit"
     },
     "dependencies": {
         "@inertiajs/vite": "^3.0.0",

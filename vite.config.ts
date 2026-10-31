@@ -45,6 +45,8 @@ export default defineConfig({
     lint: {
         ignorePatterns: [
             'vendor/**',
+            'docs/**',
+            '.superpowers/**',
             'node_modules/**',
             'public/**',
             'bootstrap/ssr/**',
@@ -68,6 +70,8 @@ export default defineConfig({
         htmlWhitespaceSensitivity: 'css',
         ignorePatterns: [
             '.github/**',
+            'docs/**',
+            '.superpowers/**',
             'composer.json',
             'resources/js/lib/shadcn/*',
             'resources/views/mail/*',
