@@ -5,6 +5,7 @@ import { computed, ref } from 'vue';
 import Button from '@/common/button/Button.vue';
 import QuantityStepper from '@/modules/cart/QuantityStepper.vue';
 import { addToCart } from '@/modules/cart/useCartActions';
+import RatingInput from '@/modules/products/RatingInput.vue';
 import StarRating from '@/modules/products/StarRating.vue';
 import { index as productsIndex } from '@/routes/products';
 import type { ProductDetail } from '@/types';
@@ -86,12 +87,18 @@ const currentImage = computed(
                 {{ props.product.price }}
             </p>
 
-            <p
-                v-if="props.product.my_rating !== null"
-                class="text-sm text-muted-foreground"
-            >
-                You rated this {{ props.product.my_rating }} out of 5.
-            </p>
+            <div class="space-y-1">
+                <RatingInput
+                    :slug="props.product.slug"
+                    :my-rating="props.product.my_rating"
+                />
+                <p
+                    v-if="props.product.my_rating !== null"
+                    class="text-sm text-muted-foreground"
+                >
+                    You rated this {{ props.product.my_rating }} out of 5.
+                </p>
+            </div>
 
             <div class="flex flex-wrap items-center gap-3">
                 <QuantityStepper

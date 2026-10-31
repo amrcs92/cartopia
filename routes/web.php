@@ -6,12 +6,17 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\RatingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
 
 Route::get('products', [ProductController::class, 'index'])->name('products.index');
 Route::get('products/{product}', [ProductController::class, 'show'])->name('products.show');
+
+Route::put('products/{product}/rating', [RatingController::class, 'update'])
+    ->middleware('auth')
+    ->name('products.rating.update');
 
 Route::get('cart', [CartController::class, 'show'])->name('cart.show');
 Route::post('cart/items', [CartItemController::class, 'store'])->name('cart.items.store');
