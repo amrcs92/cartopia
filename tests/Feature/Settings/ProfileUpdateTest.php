@@ -25,7 +25,6 @@ test('profile page receives the editable profile fields', function () {
                 'email' => $user->email,
                 'phone' => '0123',
                 'address' => '1 Corniche Rd',
-                'email_verified' => true,
             ])
         );
 });
