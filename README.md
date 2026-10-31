@@ -24,7 +24,7 @@ It started in 2018 as a plain-PHP project and was rebuilt in 2026 as a Laravel s
 - **Front end:** Inertia 3, Vue 3 + TypeScript, Tailwind 4, shadcn-vue, Laravel Wayfinder, vite-plus
 - **Auth:** Laravel Fortify via the official Vue starter kit (login, registration, password reset, profile, optional two-factor and passkeys)
 - **Tests:** Pest 4, including browser tests (pest-plugin-browser with Playwright)
-- **Quality:** Pint, Larastan level 7, ESLint, Prettier, vue-tsc
+- **Quality:** Pint, Larastan level 7, Oxlint, Oxfmt, vue-tsc
 - **CI:** GitHub Actions
 
 ## Features
@@ -72,8 +72,8 @@ The admin account is used by the Filament admin panel, which is planned as the n
 ```bash
 composer lint:check      # Pint
 composer analyse         # Larastan level 7
-npm run lint             # ESLint
-npm run format:check     # Prettier
+npm run lint             # vp lint (Oxlint)
+npm run format:check     # vp fmt --check (Oxfmt)
 npm run types            # vue-tsc
 npm run build
 php artisan test         # or: vendor/bin/pest
