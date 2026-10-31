@@ -5,7 +5,9 @@ import { cn } from '@/lib/utils';
 import { press, pressTransition, sticker, stickerFill } from './press';
 
 // A button, or an Inertia link styled as one. A rendered <button> defaults to
-// type="button"; pass type="submit" for forms (attributes fall through).
+// type="button"; pass type="submit" for forms (attributes fall through). A
+// disabled link is an unfocusable span announced as a disabled link. Each
+// branch is a single root so class, aria-* and data-* reach it.
 const props = withDefaults(
     defineProps<{
         variant: 'marigold' | 'green' | 'outline' | 'quiet';
@@ -41,19 +43,21 @@ const classes = computed(() => {
 </script>
 
 <template>
-    <template v-if="props.as === 'link'">
-        <span
-            v-if="props.disabled"
-            role="link"
-            aria-disabled="true"
-            :class="classes"
-        >
-            <slot />
-        </span>
-        <Link v-else :href="props.href ?? ''" :class="classes">
-            <slot />
-        </Link>
-    </template>
+    <span
+        v-if="props.as === 'link' && props.disabled"
+        role="link"
+        aria-disabled="true"
+        :class="classes"
+    >
+        <slot />
+    </span>
+    <Link
+        v-else-if="props.as === 'link'"
+        :href="props.href ?? ''"
+        :class="classes"
+    >
+        <slot />
+    </Link>
     <button v-else type="button" :disabled="props.disabled" :class="classes">
         <slot />
     </button>
