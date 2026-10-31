@@ -2,7 +2,7 @@
 
 - **Date:** 2026-10-31
 - **Status:** Approved in brainstorming, awaiting written-spec review
-- **Sub-project:** 1 of 2 (Core store). Sub-project 2 (Filament admin panel) gets its own spec.
+- **Sub-project:** 1 of 4 (Core store). The order is 2 store redesign, 3 payments, 4 Filament admin panel; each gets its own spec.
 
 ## 1. Goal and context
 
@@ -26,11 +26,11 @@ The rewrite also fixes defects in the legacy app:
 - Order history
 - Search, filters, sorting and pagination
 - Balance top-up with a wallet transaction ledger
-- `is_admin` flag and a seeded admin (the Filament panel and its access gate are delivered in sub-project 2)
+- `is_admin` flag and a seeded admin (the Filament panel and its access gate are delivered in sub-project 4)
 
 ### Out of scope
 
-- The Filament admin panel UI (sub-project 2)
+- The Filament admin panel UI (sub-project 4)
 - Real payment gateways, since top-up is virtual credit
 - Email verification (off by default; a one-line change to enable)
 - Order cancellation and refunds
@@ -45,7 +45,7 @@ The rewrite also fixes defects in the legacy app:
 | Runtime | Laragon: PHP 8.3.36, MySQL 8.4.3, Node 22 |
 | Front end | Official Laravel **Vue starter kit**: Inertia, Vue 3, TypeScript, Tailwind 4, shadcn-vue |
 | Auth | The starter kit's built-in auth (login, register, password reset, profile settings) |
-| Admin | Filament, using its current Laravel 13-compatible release (sub-project 2) |
+| Admin | Filament, using its current Laravel 13-compatible release (sub-project 4) |
 | Tests | Pest, including Pest browser tests |
 | Quality | Pint, Larastan level 6, ESLint, Prettier, vue-tsc |
 | CI | GitHub Actions |
@@ -179,7 +179,7 @@ The listing query is `Product::with('primaryImage')->withRatingStats()->search()
 | `POST /wallet/top-ups` | `TopUpController@store` | `TopUpRequest`: `amount` in dollars, `decimal:0,2`, 5–500, converted to cents | `auth`, `throttle:10,1` |
 | Starter-kit auth and settings routes | kit controllers | kit requests + `phone` and `address` (nullable, string ≤100 / ≤200) | — |
 
-The `is_admin` flag and seeded admin ship in v1. The Filament panel gate (`User` implementing `FilamentUser`, with `canAccessPanel()` returning `is_admin`) is delivered together with the panel in sub-project 2.
+The `is_admin` flag and seeded admin ship in v1. The Filament panel gate (`User` implementing `FilamentUser`, with `canAccessPanel()` returning `is_admin`) is delivered together with the panel in sub-project 4.
 
 ### 5.2 Shared Inertia props (`HandleInertiaRequests`)
 
@@ -328,7 +328,7 @@ types/               SharedProps, Product, ProductDetail, CartLine, Order, Walle
 - The four legacy products (names, descriptions, prices and SKUs from `cartopia.sql`, converted to cents), each with its image.
 - Shipping methods: Pickup $0.00 and UPS $5.00.
 - The demo user from the README: `amrcs1992@gmail.com` with password `12345`, bcrypt-hashed, and a $100 `signup_bonus` ledger entry.
-- One admin user (`is_admin = true`) for sub-project 2.
+- One admin user (`is_admin = true`) for sub-project 4.
 - Legacy users, orders and ratings are **not** migrated. They were demo data, and the legacy password hashes are not portable.
 
 ## 10. Definition of done
