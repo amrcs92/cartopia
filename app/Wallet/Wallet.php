@@ -5,6 +5,7 @@ namespace App\Wallet;
 use App\Enums\WalletTransactionType;
 use App\Exceptions\InsufficientBalance;
 use App\Models\Order;
+use App\Models\Payment;
 use App\Models\User;
 use App\Models\WalletTransaction;
 use App\Support\Money;
@@ -17,11 +18,11 @@ use InvalidArgumentException;
  */
 class Wallet
 {
-    public function credit(User $user, Money $amount, WalletTransactionType $type, ?string $description = null): WalletTransaction
+    public function credit(User $user, Money $amount, WalletTransactionType $type, ?string $description = null, ?Order $order = null, ?Payment $payment = null): WalletTransaction
     {
         $this->assertPositive($amount);
 
-        return $this->apply($user, $amount, $type, $description, null);
+        return $this->apply($user, $amount, $type, $description, $order, $payment);
     }
 
     /**
@@ -31,15 +32,15 @@ class Wallet
     {
         $this->assertPositive($amount);
 
-        return $this->apply($user, Money::zero()->subtract($amount), $type, $description, $order);
+        return $this->apply($user, Money::zero()->subtract($amount), $type, $description, $order, null);
     }
 
     /**
      * @param  Money  $signed  Positive to credit, negative to debit.
      */
-    private function apply(User $user, Money $signed, WalletTransactionType $type, ?string $description, ?Order $order): WalletTransaction
+    private function apply(User $user, Money $signed, WalletTransactionType $type, ?string $description, ?Order $order, ?Payment $payment): WalletTransaction
     {
-        return DB::transaction(function () use ($user, $signed, $type, $description, $order): WalletTransaction {
+        return DB::transaction(function () use ($user, $signed, $type, $description, $order, $payment): WalletTransaction {
             $locked = User::query()->whereKey($user->getKey())->lockForUpdate()->firstOrFail();
 
             $newBalance = $locked->balance->add($signed);
@@ -54,6 +55,7 @@ class Wallet
                 'amount' => $signed,
                 'balance_after' => $newBalance,
                 'order_id' => $order?->id,
+                'payment_id' => $payment?->id,
                 'description' => $description,
             ]);
 

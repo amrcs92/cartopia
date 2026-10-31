@@ -88,4 +88,12 @@ class User extends Authenticatable implements PasskeyUser
     {
         return $this->hasMany(WalletTransaction::class);
     }
+
+    /**
+     * @return HasMany<Payment, $this>
+     */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
 }
