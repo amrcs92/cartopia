@@ -15,7 +15,7 @@ it('browses, carts, logs in, checks out and sees the order', function () {
 
     visit('/products')
         ->click('Add to cart')
-        ->waitForText('Added to cart.')
+        ->assertSeeIn('[data-test="cart-badge"]', '1')
         ->navigate('/cart')
         ->click('Log in to check out')
         ->waitForText('Log in to your account')

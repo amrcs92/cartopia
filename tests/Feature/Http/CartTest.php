@@ -11,7 +11,7 @@ it('adds to a guest session cart', function () {
     $this->from(route('products.index'))
         ->post(route('cart.items.store'), ['product_id' => $beer->id, 'quantity' => 2])
         ->assertRedirect(route('products.index'))
-        ->assertSessionHas('success', 'Added to cart.');
+        ->assertSessionMissing('success');
 
     expect(session('cart'))->toBe([$beer->id => 2]);
 
@@ -114,4 +114,54 @@ it('keeps the guest cart when a guest registers', function () {
 
     $user = User::where('email', 'new@example.com')->firstOrFail();
     expect($user->cart->items()->pluck('quantity', 'product_id')->all())->toBe([$beer->id => 2]);
+});
+
+it('flashes what was just added, with the basket summary', function () {
+    $apple = Product::factory()->create(['price' => 30]);
+
+    $this->post(route('cart.items.store'), ['product_id' => $apple->id, 'quantity' => 2]);
+
+    $this->get(route('products.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('flash.addedToBasket.product.id', $apple->id)
+        ->where('flash.addedToBasket.quantity', 2)
+        ->where('flash.addedToBasket.line_total', '$0.60')
+        ->where('flash.addedToBasket.basket.count', 2)
+        ->where('flash.addedToBasket.basket.subtotal', '$0.60')
+    );
+});
+
+it('suggests at most two featured products that are not already in the basket', function () {
+    $featured = Product::factory()->featured()->count(3)->create();
+    $added = $featured->first();
+
+    $this->post(route('cart.items.store'), ['product_id' => $added->id, 'quantity' => 1]);
+
+    $this->get(route('products.index'))->assertInertia(fn (Assert $page) => $page
+        ->has('flash.addedToBasket.suggestions', 2)
+        ->where('flash.addedToBasket.suggestions.0.id', fn (int $id) => $id !== $added->id)
+        ->where('flash.addedToBasket.suggestions.1.id', fn (int $id) => $id !== $added->id)
+    );
+});
+
+it('suggests nothing when every featured product is already in the basket', function () {
+    $featured = Product::factory()->featured()->count(2)->create();
+
+    foreach ($featured as $product) {
+        $this->post(route('cart.items.store'), ['product_id' => $product->id, 'quantity' => 1]);
+    }
+
+    $this->get(route('products.index'))->assertInertia(fn (Assert $page) => $page
+        ->has('flash.addedToBasket.suggestions', 0)
+    );
+});
+
+it('does not repeat the panel on the next page', function () {
+    $apple = Product::factory()->create();
+
+    $this->post(route('cart.items.store'), ['product_id' => $apple->id, 'quantity' => 1]);
+    $this->get(route('products.index'));
+
+    $this->get(route('products.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('flash.addedToBasket', null)
+    );
 });
