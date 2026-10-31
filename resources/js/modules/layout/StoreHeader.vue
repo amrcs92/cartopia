@@ -10,12 +10,13 @@ import { show as showCart } from '@/routes/cart';
 import { index as ordersIndex } from '@/routes/orders';
 import { index as productsIndex } from '@/routes/products';
 import { show as showWallet } from '@/routes/wallet';
+import AccountMenu from './AccountMenu.vue';
 import StallSearch from './StallSearch.vue';
 import { useStoreChrome } from './useStoreChrome';
 import type { StoreSection } from './useStoreChrome';
 
-// The desktop and tablet header: logo, search, the section links, the theme
-// button and the basket. The current section gets a surface background and a
+// The desktop and tablet header: logo, search, the section links, the account
+// menu (signed in), the theme button and the basket. The current section gets a surface background and a
 // marigold underline (and aria-current), the wallet chip turns marigold.
 const { user, basketCount, section } = useStoreChrome();
 
@@ -95,6 +96,7 @@ const basketClass = cn(
             </nav>
 
             <div class="flex items-center gap-3">
+                <AccountMenu v-if="user" :user="user" />
                 <ThemeToggle variant="button" />
                 <Link
                     :href="showCart()"

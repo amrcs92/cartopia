@@ -54,11 +54,6 @@ const headingClass = 'mb-3 font-serif text-[19px] font-normal text-chalk';
                             All products
                         </Link>
                     </li>
-                    <WhenVisible data="menuAisles" as="li" :buffer="200">
-                        <template #fallback>
-                            <span class="sr-only">Loading aisles</span>
-                        </template>
-                    </WhenVisible>
                     <li v-for="aisle in aisles" :key="aisle.id">
                         <Link
                             :href="
@@ -72,6 +67,8 @@ const headingClass = 'mb-3 font-serif text-[19px] font-normal text-chalk';
                         </Link>
                     </li>
                 </ul>
+                <!-- An empty marker: once it nears the viewport, the aisles load. -->
+                <WhenVisible data="menuAisles" :buffer="200" />
             </nav>
 
             <nav aria-labelledby="footer-account">

@@ -14,7 +14,8 @@ export type IconName =
     | 'delivery'
     | 'chevron-left'
     | 'chevron-right'
-    | 'check';
+    | 'check'
+    | 'user';
 
 type IconShape = {
     paths: string[];
@@ -54,4 +55,5 @@ export const icons: Record<IconName, IconShape> = {
     'chevron-left': { paths: ['M15 5l-7 7 7 7'] },
     'chevron-right': { paths: ['M9 5l7 7-7 7'] },
     check: { paths: ['M7 12.5l3.2 3L17 9'] },
+    user: { paths: ['M4.5 20a7.5 7.5 0 0 1 15 0'], circles: [[12, 8, 4]] },
 };
