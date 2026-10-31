@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\Rating;
 
@@ -79,4 +80,35 @@ it('exposes rating stats', function () {
 
     expect((float) $found->ratings_avg_stars)->toBe(4.5)
         ->and($found->ratings_count)->toBe(2);
+});
+
+it('lists only featured products, newest first', function () {
+    $old = Product::factory()->featured()->create();
+    Product::factory()->create();
+    $new = Product::factory()->featured()->create();
+
+    expect(Product::query()->featured()->pluck('id')->all())->toBe([$new->id, $old->id]);
+});
+
+it('filters by aisle slugs and ignores null or empty', function () {
+    $drinks = Category::factory()->create(['slug' => 'drinks']);
+    $dairy = Category::factory()->create(['slug' => 'dairy']);
+    $other = Category::factory()->create(['slug' => 'other']);
+    $a = Product::factory()->inCategory($drinks)->create();
+    $b = Product::factory()->inCategory($dairy)->create();
+    Product::factory()->inCategory($other)->create();
+    Product::factory()->create();
+
+    expect(Product::query()->inAisles(['drinks', 'dairy'])->orderBy('id')->pluck('id')->all())->toBe([$a->id, $b->id])
+        ->and(Product::query()->inAisles(null)->count())->toBe(4)
+        ->and(Product::query()->inAisles([])->count())->toBe(4);
+});
+
+it('keeps only products with at least one rating', function () {
+    $rated = Product::factory()->create();
+    Product::factory()->create();
+    Rating::factory()->for($rated)->create(['stars' => 3]);
+    Rating::factory()->for($rated)->create(['stars' => 4]);
+
+    expect(Product::query()->rated()->pluck('id')->all())->toBe([$rated->id]);
 });

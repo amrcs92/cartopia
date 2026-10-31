@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -35,5 +36,15 @@ class ProductFactory extends Factory
                 ProductImage::factory()->for($product)->create(['sort_order' => $i]);
             }
         });
+    }
+
+    public function featured(): static
+    {
+        return $this->state(['is_featured' => true]);
+    }
+
+    public function inCategory(Category $category): static
+    {
+        return $this->state(['category_id' => $category->id]);
     }
 }

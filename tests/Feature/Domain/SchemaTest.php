@@ -3,6 +3,7 @@
 use App\Enums\WalletTransactionType;
 use App\Models\Cart;
 use App\Models\CartItem;
+use App\Models\Category;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -12,6 +13,7 @@ use App\Models\User;
 use App\Models\WalletTransaction;
 use App\Support\Money;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Schema;
 
 it('casts money columns to Money', function () {
     $product = Product::factory()->create(['price' => 374])->fresh();
@@ -87,3 +89,17 @@ it('round-trips negative cents on wallet transactions', function () {
         ->and($tx->type->label())->toBe('Purchase')
         ->and($tx->created_at)->not->toBeNull();
 });
+
+it('has aisles and the featured flag on products', function () {
+    expect(Schema::hasColumns('categories', ['id', 'name', 'slug', 'image_path', 'created_at', 'updated_at']))->toBeTrue()
+        ->and(Schema::hasColumns('products', ['category_id', 'is_featured']))->toBeTrue();
+
+    $product = Product::factory()->create()->fresh();
+    expect($product->category_id)->toBeNull()
+        ->and($product->is_featured)->toBeFalse();
+});
+
+it('keeps aisle names unique', function () {
+    Category::factory()->create(['name' => 'Drinks', 'slug' => 'drinks']);
+    Category::factory()->create(['name' => 'Drinks', 'slug' => 'other']);
+})->throws(QueryException::class);
