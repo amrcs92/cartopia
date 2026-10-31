@@ -56,7 +56,7 @@ const props = defineProps<{
             </div>
         </div>
 
-        <div v-else class="space-y-6 max-sm:pb-24">
+        <div v-else class="space-y-6">
             <h1
                 class="font-serif text-[32px] leading-tight text-ink lg:text-5xl"
             >

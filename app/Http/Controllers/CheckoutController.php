@@ -19,9 +19,9 @@ class CheckoutController extends Controller
         try {
             $order = $placeOrder->handle($request->user(), $method);
         } catch (InsufficientBalance) {
-            return to_route('cart.show')->with('error', 'Your balance is too low for this order.');
+            return $this->refused('Your balance is too low for this order.');
         } catch (EmptyCart) {
-            return to_route('cart.show')->with('error', 'Your basket is empty.');
+            return $this->refused('Your basket is empty.');
         }
 
         // Inertia's native flash: delivered once, never kept in history state, so
@@ -29,5 +29,19 @@ class CheckoutController extends Controller
         Inertia::flash('orderPlaced', 'Order placed.');
 
         return to_route('orders.show', $order);
+    }
+
+    /**
+     * Back to the basket with a one-shot error: a toast, and the message for
+     * the inline spot above the total (`checkoutError`).
+     */
+    private function refused(string $message): RedirectResponse
+    {
+        Inertia::flash([
+            'toast' => ['type' => 'error', 'message' => $message],
+            'checkoutError' => $message,
+        ]);
+
+        return to_route('cart.show');
     }
 }

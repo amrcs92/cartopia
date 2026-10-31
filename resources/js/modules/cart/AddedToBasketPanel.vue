@@ -54,7 +54,7 @@ function close(): void {
                 data-test="added-item"
             >
                 <span
-                    class="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-surface"
+                    class="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-well"
                 >
                     <img
                         v-if="shown.product.image_url"

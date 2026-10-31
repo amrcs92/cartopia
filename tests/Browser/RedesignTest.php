@@ -1,9 +1,11 @@
 <?php
 
+use App\Cart\Cart;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ShippingMethod;
 use App\Models\User;
+use App\Support\Money;
 
 // The theme, menu and carousel arrow buttons are icon-only, so they are found
 // by their accessible names (aria-label); the plugin's click('text') matches
@@ -215,4 +217,43 @@ it('disables placing the order when the wallet cannot cover it', function () {
 it('shows the empty basket with a way back to the stall', function () {
     visit('/cart')->assertSee('Your basket is empty')
         ->assertSee('Browse the stall');
+});
+
+it('draws a visible focus ring around the quantity steppers', function () {
+    $user = User::factory()->create();
+    $product = Product::factory()->withImages()->create(['name' => 'Sparkling Water']);
+    Cart::forUser($user)->add($product, 2);
+    $this->actingAs($user);
+
+    $ringWidth = 'parseFloat(getComputedStyle(document.activeElement.parentElement).outlineWidth) > 0';
+
+    // Tab from the number field onto the "+" button: the wrapper gets the ring.
+    visit("/products/{$product->slug}")
+        ->keys('[aria-label="Quantity of Sparkling Water"]', 'Tab')
+        ->assertScript('document.activeElement.getAttribute("aria-label")', 'Increase quantity of Sparkling Water')
+        ->assertScript($ringWidth, true);
+
+    visit('/cart')
+        ->keys('[aria-label="Quantity of Sparkling Water"]', 'Tab')
+        ->assertScript('document.activeElement.getAttribute("aria-label")', 'Increase quantity of Sparkling Water')
+        ->assertScript($ringWidth, true);
+
+    visit('/products')
+        ->keys('[aria-label="Increase quantity of Sparkling Water"]', 'Tab')
+        ->assertScript('document.activeElement.getAttribute("aria-label")', 'Add Sparkling Water to basket')
+        ->assertScript($ringWidth, true);
+});
+
+it('clears the pinned checkout bar below the footer on a phone', function () {
+    $user = User::factory()->withBalance(Money::fromCents(50000))->create();
+    $product = Product::factory()->create();
+    ShippingMethod::factory()->pickup()->create();
+    Cart::forUser($user)->add($product, 1);
+    $this->actingAs($user);
+
+    visit('/cart')->resize(360, 800)
+        ->assertScript(
+            'document.documentElement.scrollHeight - document.querySelector("[data-test=checkout-bar]").offsetHeight >= 0 && (document.querySelector("footer").getBoundingClientRect().bottom + window.scrollY) <= document.documentElement.scrollHeight - document.querySelector("[data-test=checkout-bar]").offsetHeight',
+            true,
+        );
 });

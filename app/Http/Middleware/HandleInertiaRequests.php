@@ -58,10 +58,6 @@ class HandleInertiaRequests extends Middleware
                 'user' => fn (): ?array => $this->currentUser($request->user()),
             ],
             'cart' => fn (): array => ['count' => app(Cart::class)->count()],
-            'flash' => Inertia::always(fn (): array => [
-                'success' => $request->session()->get('success'),
-                'error' => $request->session()->get('error'),
-            ]),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             // Only sent when the phone menu or the footer asks for it; once
             // loaded, the client keeps it across visits instead of refetching.

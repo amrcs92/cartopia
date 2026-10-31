@@ -19,6 +19,7 @@ class Aisles
         return Category::query()
             ->has('products')
             ->withCount('products')
+            ->with('latestProductWithImage.primaryImage')
             ->orderByDesc('products_count')
             ->orderBy('name')
             ->limit(self::HOME_LIMIT)
@@ -35,6 +36,7 @@ class Aisles
         return Category::query()
             ->has('products')
             ->withCount('products')
+            ->with('latestProductWithImage.primaryImage')
             ->orderBy('name')
             ->get();
     }

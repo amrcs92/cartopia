@@ -4,12 +4,8 @@ import { computed, ref } from 'vue';
 import Icon from '@/common/icon/Icon.vue';
 import PriceTag from '@/common/stall/PriceTag.vue';
 import StallButton from '@/common/stall/StallButton.vue';
-import {
-    addToCart,
-    clampQuantity,
-    MAX_QUANTITY,
-    MIN_QUANTITY,
-} from '@/modules/cart/useCartActions';
+import QuantityStepper from '@/modules/cart/QuantityStepper.vue';
+import { addToCart } from '@/modules/cart/useCartActions';
 import FeaturedCarousel from '@/modules/products/FeaturedCarousel.vue';
 import RatingInput from '@/modules/products/RatingInput.vue';
 import StarRating from '@/modules/products/StarRating.vue';
@@ -31,24 +27,6 @@ const quantity = ref(1);
 const currentImage = computed(
     () => props.product.images[selected.value] ?? props.product.image_url,
 );
-
-function setQuantity(value: number): void {
-    quantity.value = clampQuantity(value);
-}
-
-function onQuantityInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-
-    if (input.value !== '') {
-        setQuantity(Number(input.value));
-    }
-
-    // Vue skips the patch when a clamped value equals the old one.
-    input.value = String(quantity.value);
-}
-
-const stepButton =
-    'inline-flex w-12 shrink-0 items-center justify-center text-ink transition-colors duration-200 ease-stall hover:bg-field disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent';
 </script>
 
 <template>
@@ -167,46 +145,11 @@ const stepButton =
                     </p>
 
                     <div class="flex w-full flex-wrap items-center gap-3">
-                        <div
-                            class="inline-flex h-[58px] items-stretch overflow-hidden rounded-2xl border-[2.5px] border-outline bg-surface"
-                        >
-                            <button
-                                type="button"
-                                :class="stepButton"
-                                :disabled="quantity <= MIN_QUANTITY"
-                                :aria-label="`Decrease quantity of ${props.product.name}`"
-                                @click="setQuantity(quantity - 1)"
-                            >
-                                <span
-                                    aria-hidden="true"
-                                    class="text-2xl leading-none font-bold"
-                                    >&minus;</span
-                                >
-                            </button>
-                            <input
-                                :value="quantity"
-                                type="number"
-                                inputmode="numeric"
-                                :min="MIN_QUANTITY"
-                                :max="MAX_QUANTITY"
-                                :aria-label="`Quantity of ${props.product.name}`"
-                                class="w-12 [appearance:textfield] bg-transparent text-center text-lg font-extrabold text-ink tabular-nums [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                                @change="onQuantityInput"
-                            />
-                            <button
-                                type="button"
-                                :class="stepButton"
-                                :disabled="quantity >= MAX_QUANTITY"
-                                :aria-label="`Increase quantity of ${props.product.name}`"
-                                @click="setQuantity(quantity + 1)"
-                            >
-                                <span
-                                    aria-hidden="true"
-                                    class="text-2xl leading-none font-bold"
-                                    >+</span
-                                >
-                            </button>
-                        </div>
+                        <QuantityStepper
+                            v-model="quantity"
+                            :label="props.product.name"
+                            size="lg"
+                        />
                         <StallButton
                             variant="marigold"
                             size="lg"

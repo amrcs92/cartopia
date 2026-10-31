@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Link, useForm, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { router, useForm, usePage } from '@inertiajs/vue3';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import InputError from '@/common/app/InputError.vue';
 import Icon from '@/common/icon/Icon.vue';
 import OptionCard from '@/common/stall/OptionCard.vue';
@@ -24,7 +24,30 @@ const props = defineProps<{
 
 const page = usePage();
 const user = useCurrentUser();
-const flashError = computed(() => page.props.flash?.error ?? null);
+
+// The refusal (low balance, empty basket) arrives as Inertia's one-shot
+// `checkoutError` flash: read when the page opens and on the router's `flash`
+// event, and never replayed by Back/Forward.
+const flashError = ref<string | null>(
+    (page.flash as { checkoutError?: string } | undefined)?.checkoutError ??
+        null,
+);
+
+let stopListening: (() => void) | undefined;
+
+onMounted(() => {
+    stopListening = router.on('flash', (event) => {
+        const value = (event as CustomEvent).detail?.flash?.checkoutError as
+            | string
+            | undefined;
+
+        if (value) {
+            flashError.value = value;
+        }
+    });
+});
+
+onBeforeUnmount(() => stopListening?.());
 
 const form = useForm({
     shipping_method_id: props.shippingMethods[0]?.id ?? 0,

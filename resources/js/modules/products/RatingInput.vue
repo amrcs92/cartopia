@@ -35,7 +35,7 @@ function rate(value: number): void {
     router.put(
         update(props.slug),
         { stars: value },
-        { preserveScroll: true, only: ['product', 'flash'] },
+        { preserveScroll: true, only: ['product'] },
     );
 }
 

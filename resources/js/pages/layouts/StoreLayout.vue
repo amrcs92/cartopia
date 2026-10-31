@@ -24,10 +24,15 @@ const menuOpen = ref(false);
 watch(isPhone, () => {
     menuOpen.value = false;
 });
+// On a phone the checkout bar is pinned over the bottom of the screen; the
+// root's bottom padding (only while the bar is on the page) keeps the
+// footer's last row clear of it.
 </script>
 
 <template>
-    <div class="flex min-h-screen flex-col bg-paper text-ink">
+    <div
+        class="flex min-h-screen flex-col bg-paper text-ink max-sm:has-[[data-test=checkout-bar]]:pb-20"
+    >
         <a
             href="#main"
             class="sr-only z-50 rounded-xl bg-surface px-4 py-2 font-bold text-ink focus:not-sr-only focus:absolute focus:top-3 focus:left-3"

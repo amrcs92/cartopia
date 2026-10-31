@@ -37,7 +37,7 @@ function step(by: number): void {
 }
 
 const stepper =
-    'inline-flex w-11 shrink-0 items-center justify-center text-ink transition-colors duration-200 ease-stall hover:bg-field disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent';
+    'inline-flex w-11 shrink-0 focus-visible:outline-none items-center justify-center text-ink transition-colors duration-200 ease-stall hover:bg-field disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent';
 </script>
 
 <template>
@@ -55,7 +55,7 @@ const stepper =
         v-else
         role="group"
         :aria-label="`Quantity and basket for ${props.productName}`"
-        class="inline-flex h-12 items-stretch overflow-hidden rounded-xl border-[2.5px] border-outline bg-surface shadow-press"
+        class="inline-flex h-12 items-stretch overflow-hidden rounded-xl border-[2.5px] border-outline bg-surface shadow-press has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-marigold has-[:focus-visible]:outline-solid"
     >
         <button
             type="button"
@@ -87,7 +87,7 @@ const stepper =
         </button>
         <button
             type="button"
-            class="inline-flex w-14 shrink-0 items-center justify-center border-l-[2.5px] border-outline bg-marigold text-on-marigold transition-colors duration-200 ease-stall hover:bg-marigold/90"
+            class="inline-flex w-14 shrink-0 items-center justify-center border-l-[2.5px] border-outline bg-marigold text-on-marigold transition-colors duration-200 ease-stall hover:bg-marigold/90 focus-visible:outline-none"
             :aria-label="`Add ${props.productName} to basket`"
             @click="emit('add')"
         >

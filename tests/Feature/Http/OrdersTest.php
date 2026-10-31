@@ -46,12 +46,13 @@ it('shows the users own order with items', function () {
             ->has('order.items.0.product_slug'));
 });
 
-it('forbids viewing another users order', function () {
+it('answers 404 for another users order', function () {
     $order = Order::factory()->create();
 
     $this->actingAs(User::factory()->create())
         ->get(route('orders.show', $order))
-        ->assertForbidden();
+        ->assertNotFound()
+        ->assertInertia(fn (Assert $page) => $page->component('errors/NotFoundPage'));
 });
 
 it('redirects guests to login', function () {

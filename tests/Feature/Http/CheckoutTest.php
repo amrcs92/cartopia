@@ -56,8 +56,12 @@ it('flashes an error on insufficient balance', function () {
 
     $this->actingAs($user)
         ->post(route('checkout.store'), ['shipping_method_id' => $ups->id])
-        ->assertRedirect(route('cart.show'))
-        ->assertSessionHas('error', 'Your balance is too low for this order.');
+        ->assertRedirect(route('cart.show'));
+
+    $this->get(route('cart.show'))->assertInertia(fn (Assert $page) => $page
+        ->hasFlash('checkoutError', 'Your balance is too low for this order.')
+        ->hasFlash('toast', ['type' => 'error', 'message' => 'Your balance is too low for this order.']));
+    $this->get(route('cart.show'))->assertInertia(fn (Assert $page) => $page->missingFlash('checkoutError'));
 
     expect(Order::count())->toBe(0)
         ->and(Cart::forUser($user)->summary()->lines)->toHaveCount(2)
@@ -77,8 +81,10 @@ it('places only one order on double submit', function () {
     $this->actingAs($user)->post(route('checkout.store'), ['shipping_method_id' => $ups->id]);
     $this->actingAs($user)
         ->post(route('checkout.store'), ['shipping_method_id' => $ups->id])
-        ->assertRedirect(route('cart.show'))
-        ->assertSessionHas('error', 'Your basket is empty.');
+        ->assertRedirect(route('cart.show'));
+
+    $this->get(route('cart.show'))->assertInertia(fn (Assert $page) => $page
+        ->hasFlash('checkoutError', 'Your basket is empty.'));
 
     expect(Order::count())->toBe(1);
 });

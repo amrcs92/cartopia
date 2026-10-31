@@ -333,3 +333,17 @@ it('keeps the chosen sort when filtering to featured products', function () {
             ->where('products.data.2.id', $dear->id)
         );
 });
+
+it('keeps array filters in bracket form in the pagination links', function () {
+    $fruit = Category::factory()->create(['slug' => 'fruit']);
+    Product::factory()->count(13)->inCategory($fruit)->create();
+
+    $this->get('/products?aisle%5B%5D=fruit')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('products.links.next', fn (string $url) => str_contains($url, 'aisle%5B%5D=fruit') && ! str_contains($url, 'aisle%5B0%5D'))
+            ->where('products.meta.links', fn ($links) => collect($links)
+                ->pluck('url')
+                ->filter()
+                ->every(fn (string $url) => str_contains($url, 'aisle%5B%5D=fruit') && ! str_contains($url, 'aisle%5B0%5D')))
+        );
+});

@@ -13,7 +13,6 @@ it('shares null user and zero cart for guests', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->where('auth.user', null)
             ->where('cart.count', 0)
-            ->where('flash', ['success' => null, 'error' => null])
         );
 });
 
@@ -51,15 +50,6 @@ it("counts a guest's session cart", function () {
     $this->withSession(['cart' => [$product->id => 4]])
         ->get(route('home'))
         ->assertInertia(fn (Assert $page) => $page->where('cart.count', 4));
-});
-
-it('shares flash messages', function () {
-    $this->withSession(['success' => 'Order placed.', 'error' => 'Your basket is empty.'])
-        ->get(route('home'))
-        ->assertInertia(fn (Assert $page) => $page
-            ->where('flash.success', 'Order placed.')
-            ->where('flash.error', 'Your basket is empty.')
-        );
 });
 
 it('leaves the menu aisles out of a normal page load', function () {

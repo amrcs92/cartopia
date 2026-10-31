@@ -13,8 +13,11 @@ it("saves the viewer's rating and updates the average", function () {
     $this->actingAs($viewer)
         ->from(route('products.show', $product))
         ->put(route('products.rating.update', $product), ['stars' => 5])
-        ->assertRedirect(route('products.show', $product))
-        ->assertSessionHas('success', 'Thanks for rating!');
+        ->assertRedirect(route('products.show', $product));
+
+    $this->actingAs($viewer)->get(route('products.show', $product))
+        ->assertInertia(fn (Assert $page) => $page
+            ->hasFlash('toast', ['type' => 'success', 'message' => 'Thanks for rating!']));
 
     $this->actingAs($viewer)->get(route('products.show', $product))
         ->assertInertia(fn (Assert $page) => $page

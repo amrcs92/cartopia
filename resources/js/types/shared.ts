@@ -16,11 +16,6 @@ export type AddedToBasket = {
     suggestions: Product[];
 };
 
-export type Flash = {
-    success: string | null;
-    error: string | null;
-};
-
 export type SharedProps = {
     name: string;
     auth: {
@@ -29,7 +24,6 @@ export type SharedProps = {
     cart: {
         count: number;
     };
-    flash: Flash;
     sidebarOpen: boolean;
     /** Sent only on request (a partial reload), for the phone menu and footer. */
     menuAisles?: Aisle[];
