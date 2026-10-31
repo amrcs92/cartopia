@@ -28,6 +28,7 @@ class CartResource extends JsonResource
                 'line_total' => $line->lineTotal->format(),
             ], $this->lines),
             'subtotal' => $this->subtotal->format(),
+            'subtotal_cents' => $this->subtotal->cents(),
             'total_quantity' => $this->totalQuantity(),
         ];
     }
