@@ -1,6 +1,8 @@
 export type Product = {
     id: number;
     name: string;
+    /** A shorter name for the home page's price board; null to use `name`. */
+    short_name: string | null;
     slug: string;
     price: string;
     image_url: string | null;

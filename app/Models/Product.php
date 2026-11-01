@@ -20,6 +20,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $category_id
  * @property bool $is_featured
  * @property string $name
+ * @property string|null $short_name A shorter name for tight spots, such as the home page's price board
  * @property string $slug
  * @property string $description
  * @property Money $price
@@ -27,7 +28,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['category_id', 'is_featured', 'name', 'slug', 'description', 'price', 'sku'])]
+#[Fillable(['category_id', 'is_featured', 'name', 'short_name', 'slug', 'description', 'price', 'sku'])]
 class Product extends Model
 {
     /** @use HasFactory<ProductFactory> */

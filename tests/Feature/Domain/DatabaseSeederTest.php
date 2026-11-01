@@ -41,6 +41,8 @@ it('seeds the legacy catalog, shipping, demo and admin users', function () {
     ])->and(Product::query()->where('is_featured', false)->count())->toBe(0);
 
     expect(Product::query()->where('slug', 'water')->value('description'))->toContain("St Ann's Spring")
+        ->and(Product::query()->where('slug', 'monster-energy-drink')->value('short_name'))->toBe('Monster Energy')
+        ->and(Product::query()->where('slug', 'apple')->value('short_name'))->toBeNull()
         ->and(Product::query()->where('slug', 'monster-energy-drink')->value('description'))->toContain('160 mg of caffeine')
         ->and(Product::query()->where('slug', 'apple')->value('description'))->toContain('"health is wealth."')
         ->and(ShippingMethod::query()->count())->toBe(2);

@@ -117,7 +117,7 @@ const walletPoints = [
                             <span
                                 class="min-w-0 text-[27px] leading-[1.05] wrap-anywhere lg:text-[34px]"
                             >
-                                {{ product.name }}
+                                {{ product.short_name ?? product.name }}
                             </span>
                             <span
                                 aria-hidden="true"
