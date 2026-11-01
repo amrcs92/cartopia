@@ -731,16 +731,16 @@ Start with `git switch -c payments/phase-3-split` from phase 2's branch.
 - Test: `tests/Unit/Payments/PaymentWordingTest.php`
 
 - [ ] **Step 1: Write the failing tests** for the split column of spec section 7.3, with wallet 210 and card 224:
-  - **`placedMessage`:** "Order placed. $2.10 came from your wallet and your card was charged $2.24." For PayPal: "Order placed. $2.10 came from your wallet and your PayPal payment of $2.24 was approved."
+  - **`placedMessage`:** "Order placed. $2.10 came from your wallet and your Stripe payment of $2.24 was approved." For PayPal: "Order placed. $2.10 came from your wallet and your PayPal payment of $2.24 was approved."
   - **`paidWith`:** "Cartopia wallet $2.10 + Visa ending in 4242 $2.24".
-  - **`slipLines`:** with a balance after of 0: `[['Paid from wallet', '-$2.10'], ['Charged to card', '$2.24'], ['Wallet balance after', '$0.00']]`, in label and value form.
-  - **`tag`:** "Wallet + card" and "Wallet + PayPal".
+  - **`slipLines`:** with a balance after of 0: `[['Paid from wallet', '-$2.10'], ['Paid through Stripe', '$2.24'], ['Wallet balance after', '$0.00']]`, in label and value form.
+  - **`tag`:** "Wallet + Stripe" and "Wallet + PayPal".
 - [ ] **Step 2: Run the tests.** They should fail.
 - [ ] **Step 3: Implement the wording.** `LedgerTable` shows `release` rows as credits, with the "up" icon and the tint the canvas uses for incoming money.
 - [ ] **Step 4: Run the tests again, then `npm run types`.** Both should pass.
 - [ ] **Step 5: Commit and push:** "Word split payments on receipts, orders and the ledger".
 
-### Task 22: The "Use my balance" switch
+### Task 22: The "My $X balance" switch card
 
 **Files:**
 - Modify:
@@ -756,11 +756,11 @@ Start with `git switch -c payments/phase-3-split` from phase 2's branch.
 
 - [ ] **Step 1: Implement the switch to Task 19's approved mockup and spec section 7.1:**
   - The wallet card has the three states.
-  - The switch is a real `<input type="checkbox" role="switch">` with a visible label: "Use my $2.10 balance", or "Use $3.84 of your balance" under the 50-cent rule.
-  - The note, the "Wallet $X · Card $Y" line under the total, and `buttonLabel(method, hostedCents)` follow the spec.
+  - The switch card matches the approved Basket: wallet + card split mockup (spec section 7.1): a wallet icon in a marigold tile, the title "My $2.10 balance" (always the whole balance), the note "Switch on, then pay the rest with Stripe or PayPal below.", and a sticker-style switch on the right. The switch is a real `<input type="checkbox" role="switch">` whose accessible name is "Use my $2.10 balance".
+  - The "Wallet $X · Stripe $Y" (or "PayPal") line under the total shows the real shares, and `buttonLabel(method, hostedCents)` follows the spec.
 - [ ] **Step 2: Add the browser journeys:**
-  - **`it('splits a short wallet with the card')`:** a balance of 500 and Garden Peas at 1000 with pickup. See "Use my $5.00 balance", press "Pay $5.00 by card", and see "Order placed. $5.00 came from your wallet and your card was charged $5.00." and "Wallet balance after $0.00".
-  - **`it('lets the card pay everything')`:** uncheck the switch, and the button reads "Pay $10.00 by card".
+  - **`it('splits a short wallet with the card')`:** a balance of 500 and Garden Peas at 1000 with pickup. See "My $5.00 balance", press "Pay $5.00 with Stripe", and see "Order placed. $5.00 came from your wallet and your Stripe payment of $5.00 was approved." and "Wallet balance after $0.00".
+  - **`it('lets the card pay everything')`:** uncheck the switch, and the button reads "Pay $10.00 with Stripe".
 - [ ] **Step 3: Run `npm run types`, `npm run lint`, `npm run build` and the browser suite.** All should pass. Compare the result against the mockups in light and dark, and at 360px.
 - [ ] **Step 4: Commit and push:** "Let a short wallet pay part of the order".
 
@@ -789,7 +789,7 @@ Start with `git switch -c payments/phase-4-top-ups` from phase 3's branch.
 **Interfaces:**
 - Produces:
   - `StartTopUpPayment::handle(User $user, Money $amount, PaymentMethod $method): StartedPayment` uses `PaymentRequest::single('Cartopia wallet top-up', ...)` with the description "Cartopia wallet top-up".
-  - The `CompletePayment` top-up branch credits with the type `TopUp`, the description "Top-up by card" or "Top-up by PayPal", and `payment:`.
+  - The `CompletePayment` top-up branch credits with the type `TopUp`, the description "Top-up with Stripe" or "Top-up with PayPal", and `payment:`.
 
 - [ ] **Step 1: Write the failing tests:**
   - **`it('sends a top-up to the provider')`:** posting `amount=25` and `payment_method=paypal` redirects to the fake's return URL. A pending top-up payment of 2500 exists, with no order. The balance is unchanged.
@@ -813,7 +813,7 @@ Start with `git switch -c payments/phase-4-top-ups` from phase 3's branch.
   - Remove the comment about free credit.
 - [ ] **Step 2: Rewrite the browser tests**, with the fake bound:
   - The quick amount $25 gives "Continue to pay $25.00".
-  - Filling in 20 and pressing the button gives the toast "Added $20.00 to your wallet.", the balance $120.00, and the ledger row "Top-up by card".
+  - Filling in 20 and pressing the button gives the toast "Added $20.00 to your wallet.", the balance $120.00, and the ledger row "Top-up with Stripe".
   - The test that checks the toast doesn't come back when going Back keeps its intent, with the new text.
 - [ ] **Step 3: Run `npm run types`, `npm run lint`, `npm run build` and the browser suite.** All should pass.
 - [ ] **Step 4: Commit and push:** "Choose how to pay on the wallet page".
@@ -884,7 +884,7 @@ Start with `git switch -c payments/phase-5-emails` from phase 4's branch.
   - Both are queued after commit.
 
 - [ ] **Step 1: Write the failing tests:**
-  - **`it('queues one top-up receipt')`:** two returns give one queued email. The render contains "$25.00", "Top-up by card" (or the PayPal wording), the reference, and the new balance.
+  - **`it('queues one top-up receipt')`:** two returns give one queued email. The render contains "$25.00", "Top-up with Stripe" (or the PayPal wording), the reference, and the new balance.
   - **`it('emails when a payment expires or is denied while the shopper is away')`:**
     - `payments:expire-stale`, the Stripe expired webhook and the PayPal denied webhook each queue one `PaymentProblemMail`.
     - The split case's render contains "$2.10" returned and "Your basket is still there.".
