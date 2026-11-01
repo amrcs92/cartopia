@@ -101,8 +101,12 @@ it('splits a short wallet with Stripe', function () {
         ->assertSee('My $5.00 balance')
         ->assertSee('Wallet $5.00 · Stripe $5.00')
         ->press('Pay $5.00 with Stripe')
-        ->waitForText('Order placed. $5.00 came from your wallet and your Stripe payment of $5.00 was approved.')
-        ->waitForText('Wallet balance after')
+        // The toast lasts 4 seconds and can be gone by the time the page has loaded
+        // on a busy machine, so wait for the receipt, which stays. The toast wording
+        // is covered in PaymentWordingTest.
+        ->waitForText('Paid through Stripe')
+        ->assertSee('Paid from wallet')
+        ->assertSee('Wallet balance after')
         ->assertSee('$0.00')
         ->assertNoJavaScriptErrors();
 
