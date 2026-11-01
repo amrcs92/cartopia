@@ -10,7 +10,7 @@ import { index as productsIndex } from '@/routes/products';
 import type { Cart, Product, ShippingMethod } from '@/types';
 
 // The basket: line items beside an order summary with the shipping choice,
-// "Pay with" and the total. With nothing in it, a way back to the stall and
+// "Pay with" and the total. With nothing in it, a way back to the shop and
 // the featured carousel. On phones the checkout bar is pinned to the bottom,
 // so the page leaves room for it.
 const props = defineProps<{
@@ -40,7 +40,7 @@ const props = defineProps<{
                     Your basket is empty
                 </h1>
                 <p class="text-body">
-                    Nothing in here yet. Have a look at what is on the stall.
+                    Nothing in here yet. Have a look at what is in the shop.
                 </p>
                 <StallButton
                     as="link"
@@ -48,7 +48,7 @@ const props = defineProps<{
                     size="lg"
                     :href="productsIndex().url"
                 >
-                    Browse the stall
+                    Browse the shop
                 </StallButton>
             </div>
             <div class="w-full pt-6">

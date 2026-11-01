@@ -65,7 +65,7 @@ const walletPoints = [
                         as="link"
                         :href="productsIndex.url()"
                     >
-                        Browse the stall
+                        Browse the shop
                     </StallButton>
                     <Link
                         v-if="!user"

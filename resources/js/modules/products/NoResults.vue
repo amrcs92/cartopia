@@ -43,7 +43,7 @@ const tints = ['bg-tint-1', 'bg-tint-2', 'bg-tint-3'] as const;
                 id="no-results-heading"
                 class="font-serif text-[26px] leading-tight font-normal text-ink sm:text-[32px]"
             >
-                Nothing on the stall matches that
+                No products match that
             </h2>
             <ul
                 class="flex max-w-[460px] list-disc flex-col gap-1.5 pl-5 text-left text-base leading-[1.6] text-body sm:text-[17px]"

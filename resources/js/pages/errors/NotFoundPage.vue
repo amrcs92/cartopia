@@ -18,7 +18,7 @@ import { index as productsIndex } from '@/routes/products';
                     Closed
                 </p>
                 <p class="mt-2 text-[32px] leading-tight lg:text-[42px]">
-                    This stall has packed up for the day
+                    This page has packed up for the day
                 </p>
             </Chalkboard>
         </div>

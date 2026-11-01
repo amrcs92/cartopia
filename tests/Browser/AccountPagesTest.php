@@ -18,7 +18,7 @@ it('offers Sign up next to Log in for guests', function () {
 
 it('renders the not-found page for an unknown URL, with the store chrome', function () {
     visit('/no-such-page')
-        ->assertSee('This stall has packed up for the day')
+        ->assertSee('This page has packed up for the day')
         ->assertSee("We can't find that page")
         ->assertSee('Browse the shop')
         ->assertSee('Log in')
