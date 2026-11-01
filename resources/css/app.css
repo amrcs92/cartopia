@@ -50,6 +50,9 @@
     --color-announce: var(--announce);
     --color-announce-ink: var(--announce-ink);
     --color-stripe: var(--stripe);
+    --color-brand-stripe: var(--brand-stripe);
+    --color-brand-paypal: var(--brand-paypal);
+    --color-brand-paypal-light: var(--brand-paypal-light);
     --color-chalkboard: var(--chalkboard);
     --color-wood: var(--wood);
     --color-chalk: var(--chalk);
@@ -151,6 +154,9 @@
     --announce: #1a2b21;
     --announce-ink: #f4f1e6;
     --stripe: #ffffff;
+    --brand-stripe: #635bff;
+    --brand-paypal: #003087;
+    --brand-paypal-light: #009cde;
     --tint-1: #ffe4d6;
     --tint-2: #dcebf5;
     --tint-3: #fce7b0;
@@ -222,6 +228,9 @@
     --announce: #f5b42e;
     --announce-ink: #14201a;
     --stripe: #e9e3d0;
+    --brand-stripe: #a39dff;
+    --brand-paypal: #8fb4ff;
+    --brand-paypal-light: #009cde;
     --tint-1: #3a2620;
     --tint-2: #1e2e3a;
     --tint-3: #3a3220;
