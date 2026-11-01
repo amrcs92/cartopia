@@ -3,7 +3,7 @@
 namespace App\Actions;
 
 use App\Cart\Cart;
-use App\Cart\CartLine;
+use App\Cart\PricedBasket;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentPurpose;
@@ -25,7 +25,7 @@ use App\Support\Money;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Prices the basket like PlaceOrder, then creates an unpaid order and a
+ * Prices the basket the way PlaceOrder does (PricedBasket), then creates an unpaid order and a
  * pending payment and opens it with the provider, all in one transaction:
  * if the provider refuses, nothing is kept. The basket is left alone.
  */
@@ -46,14 +46,8 @@ class StartOrderPayment
             // Serialise concurrent checkouts per user: lock first, read the cart after.
             User::query()->whereKey($user->id)->lockForUpdate()->firstOrFail();
 
-            $summary = Cart::forUser($user)->summary();
-
-            if ($summary->isEmpty()) {
-                throw new EmptyCart('Your basket is empty.');
-            }
-
-            $fee = $method->fee;
-            $total = $summary->subtotal->add($fee);
+            $basket = PricedBasket::of(Cart::forUser($user), $method);
+            $total = $basket->total;
 
             if ($total->cents() < PaymentGateways::MIN_CENTS) {
                 throw new AmountTooSmall('The total is below the minimum card or PayPal payment.');
@@ -62,21 +56,15 @@ class StartOrderPayment
             $order = Order::create([
                 'user_id' => $user->id,
                 'shipping_method_id' => $method->id,
-                'subtotal' => $summary->subtotal,
-                'shipping_fee' => $fee,
+                'subtotal' => $basket->subtotal(),
+                'shipping_fee' => $basket->fee,
                 'total' => $total,
                 'status' => OrderStatus::AwaitingPayment,
                 'payment_method' => $paymentMethod,
                 'wallet_amount' => Money::zero(),
             ]);
 
-            $items = $order->items()->createMany(array_map(fn (CartLine $line): array => [
-                'product_id' => $line->product->id,
-                'product_name' => $line->product->name,
-                'unit_price' => $line->unitPrice,
-                'quantity' => $line->quantity,
-                'line_total' => $line->lineTotal,
-            ], $summary->lines));
+            $items = $order->items()->createMany($basket->itemAttributes());
 
             $payment = Payment::create([
                 'user_id' => $user->id,
