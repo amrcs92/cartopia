@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
     /**
      * The legacy Cartopia catalog.
      *
-     * @var list<array{name: string, slug: string, aisle: string, price: int, sku: string, image: string, description: string}>
+     * @var list<array{name: string, short_name?: string, slug: string, aisle: string, price: int, sku: string, image: string, description: string}>
      */
     private const array PRODUCTS = [
         [
@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
         ],
         [
             'name' => 'Monster Energy Drink',
+            'short_name' => 'Monster Energy',
             'slug' => 'monster-energy-drink',
             'aisle' => 'drinks',
             'price' => 200,
@@ -94,6 +95,7 @@ class DatabaseSeeder extends Seeder
                 'category_id' => $aisles[$data['aisle']]->id,
                 'is_featured' => true,
                 'name' => $data['name'],
+                'short_name' => $data['short_name'] ?? null,
                 'slug' => $data['slug'],
                 'description' => $data['description'],
                 'price' => Money::fromCents($data['price']),

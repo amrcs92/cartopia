@@ -25,6 +25,7 @@ it('shows the four newest products on the welcome page', function () {
             ->has('counter', 4)
             ->where('counter.0.id', $newest->id)
             ->where('counter.0.slug', $newest->slug)
+            ->where('counter.0.short_name', null)
             ->where('counter.0.price', $newest->price->format())
             ->where('counter.0.image_url', Storage::disk('public')->url($newest->images()->first()->path))
             ->where('counter.3.id', $products[1]->id)
