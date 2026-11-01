@@ -76,13 +76,12 @@ class StartOrderPayment
                 'currency' => 'usd',
             ]);
 
-            // Task 11 switches these to the payments.return and payments.cancel routes.
             $request = new PaymentRequest(
                 array_values($items->map(fn (OrderItem $item): PaymentLine => new PaymentLine($item->product_name, $item->unit_price, $item->quantity))->all()),
                 $order->shipping_fee,
                 "Cartopia order #{$order->id}",
-                url("/payments/{$payment->id}/return"),
-                url("/payments/{$payment->id}/cancel"),
+                route('payments.return', $payment),
+                route('payments.cancel', $payment),
             );
 
             // Called inside the transaction, so a provider error rolls everything back.

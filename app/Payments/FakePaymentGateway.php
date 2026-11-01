@@ -67,9 +67,9 @@ class FakePaymentGateway implements PaymentGateway
 
         $this->started[] = [$payment, $request];
 
-        $page = $this->redirectToCancel ? 'cancel' : 'return';
+        $route = $this->redirectToCancel ? 'payments.cancel' : 'payments.return';
 
-        return new StartedPayment("fake_{$payment->id}", url("/payments/{$payment->id}/{$page}"));
+        return new StartedPayment("fake_{$payment->id}", route($route, $payment));
     }
 
     public function confirm(Payment $payment): PaymentOutcome

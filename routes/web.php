@@ -6,6 +6,8 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CheckoutStartController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PaymentCancelController;
+use App\Http\Controllers\PaymentReturnController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\TopUpController;
@@ -39,6 +41,13 @@ Route::middleware('auth')->group(function () {
     Route::get('orders/{order}', [OrderController::class, 'show'])
         ->middleware('can:view,order')
         ->name('orders.show');
+
+    Route::get('payments/{payment}/return', PaymentReturnController::class)
+        ->middleware('can:view,payment')
+        ->name('payments.return');
+    Route::get('payments/{payment}/cancel', PaymentCancelController::class)
+        ->middleware('can:view,payment')
+        ->name('payments.cancel');
 
     Route::get('wallet', [WalletController::class, 'show'])->name('wallet.show');
     Route::post('wallet/top-ups', [TopUpController::class, 'store'])
