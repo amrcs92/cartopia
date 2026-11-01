@@ -37,7 +37,7 @@ it('queues one top-up receipt', function () {
     app(CompletePayment::class)->handle($payment->fresh(), $outcome);
 
     Mail::assertQueued(TopUpReceiptMail::class, 1);
-    Mail::assertQueued(TopUpReceiptMail::class, fn (TopUpReceiptMail $mail) => $mail->hasTo($payment->user->email));
+    Mail::assertQueued(TopUpReceiptMail::class, fn (TopUpReceiptMail $mail) => $mail->hasTo($payment->user->email) && $mail->afterCommit === true);
 });
 
 it('renders the top-up receipt', function (PaymentMethod $method, string $paidWith) {

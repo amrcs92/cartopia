@@ -54,7 +54,7 @@ it('emails when a payment expires or is denied while the shopper is away', funct
     $webhook = splitPayment();
     stripeExpiredFor($webhook);
     Mail::assertQueued(PaymentProblemMail::class, 2);
-    Mail::assertQueued(PaymentProblemMail::class, fn (PaymentProblemMail $mail) => $mail->hasTo($webhook->user->email));
+    Mail::assertQueued(PaymentProblemMail::class, fn (PaymentProblemMail $mail) => $mail->hasTo($webhook->user->email) && $mail->afterCommit === true);
 
     $paypal = splitPayment(PaymentMethod::PayPal);
     $this->mock(PayPalWebhookVerifier::class, fn ($m) => $m->shouldReceive('verify')->andReturn(true));

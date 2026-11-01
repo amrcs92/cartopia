@@ -21,7 +21,6 @@
     .btn { background-color: #F5B42E !important; color: #14201A !important; border-color: #E9E3D0 !important; }
     .badge { background-color: #F5B42E !important; color: #14201A !important; border-color: #E9E3D0 !important; }
     .chip { background-color: #223029 !important; color: #8FD3AE !important; }
-    .chip { background-color: #223029 !important; color: #8FD3AE !important; }
 }
 @media (max-width: 480px) {
     .pad { padding: 20px !important; }

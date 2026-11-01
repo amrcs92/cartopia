@@ -38,7 +38,7 @@ it('queues a receipt for a wallet order', function () {
     $this->actingAs($user)->post(route('checkout.store'), ['shipping_method_id' => $ups->id, 'payment_method' => 'wallet']);
 
     Mail::assertQueued(OrderReceiptMail::class, 1);
-    Mail::assertQueued(OrderReceiptMail::class, fn (OrderReceiptMail $mail) => $mail->hasTo($user->email));
+    Mail::assertQueued(OrderReceiptMail::class, fn (OrderReceiptMail $mail) => $mail->hasTo($user->email) && $mail->afterCommit === true);
 });
 
 it('queues one receipt for a card order despite duplicate settles', function () {

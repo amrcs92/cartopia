@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\Order;
+use App\Enums\PaymentPurpose;
 use App\Models\Payment;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -26,8 +26,7 @@ class PaymentProblemMail extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
-        $order = $this->payment->order;
-        $what = $order instanceof Order ? "Order #{$order->id}" : "Top-up of {$this->payment->amount->format()}";
+        $what = $this->payment->purpose === PaymentPurpose::Order ? "Order #{$this->payment->order_id}" : "Top-up of {$this->payment->amount->format()}";
 
         return new Envelope(subject: "Payment Not Completed – Cartopia {$what}");
     }
@@ -53,7 +52,7 @@ class PaymentProblemMail extends Mailable implements ShouldQueue
     {
         $order = $this->payment->order;
 
-        if ($order instanceof Order) {
+        if ($this->payment->purpose === PaymentPurpose::Order && $order !== null) {
             $ticks = ['Nothing was charged.'];
             if ($order->wallet_amount->cents() > 0) {
                 $ticks[] = "{$order->wallet_amount->format()} has been restored to your wallet.";
