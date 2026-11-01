@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Order;
 use App\Models\Payment;
 use App\Payments\Exceptions\PaymentProviderRejected;
 use App\Payments\Exceptions\PaymentProviderUnavailable;
@@ -148,22 +149,56 @@ it('expires a session on cancel', function () {
 it('reports a session that was already paid when cancelling', function () {
     $payment = stripePayment();
     $this->stripe
-        ->queue(400, ['error' => ['type' => 'invalid_request_error', 'message' => 'Only Checkout Sessions with a status of `open` can be expired. This Checkout Session has a status of `complete`.']])
+        ->queue(400, ['error' => ['type' => 'invalid_request_error', 'message' => 'Refused.']])
         ->queue(200, paidSessionBody());
 
     $outcome = $this->gateway->cancel($payment);
 
     expect($outcome)->toBeInstanceOf(Succeeded::class)
         ->and($outcome->providerPaymentId)->toBe('pi_123')
-        ->and($this->stripe->requests)->toHaveCount(2);
+        ->and($this->stripe->requests)->toHaveCount(2)
+        ->and($this->stripe->last()['params']['expand'])->toBe(['payment_intent.latest_charge']);
 });
 
-it('rejects other bad requests on cancel', function () {
+it('reports an already expired session as cancelled', function () {
     $payment = stripePayment();
-    $this->stripe->queue(400, ['error' => ['type' => 'invalid_request_error', 'message' => 'No such checkout.session']]);
+    $this->stripe
+        ->queue(400, ['error' => ['type' => 'invalid_request_error', 'message' => 'Refused.']])
+        ->queue(200, sessionBody(['status' => 'expired']));
+
+    expect($this->gateway->cancel($payment))->toBeInstanceOf(Cancelled::class);
+});
+
+it('rejects a refused expire when the session is still open', function () {
+    $payment = stripePayment();
+    $this->stripe
+        ->queue(400, ['error' => ['type' => 'invalid_request_error', 'message' => 'Refused.']])
+        ->queue(200, sessionBody());
 
     $this->gateway->cancel($payment);
 })->throws(PaymentProviderRejected::class);
+
+it('rejects a refused expire when the session cannot be retrieved', function () {
+    $payment = stripePayment();
+    $this->stripe
+        ->queue(400, ['error' => ['type' => 'invalid_request_error', 'message' => 'No such checkout.session']])
+        ->queue(404, ['error' => ['type' => 'invalid_request_error', 'message' => 'No such checkout.session']]);
+
+    $this->gateway->cancel($payment);
+})->throws(PaymentProviderRejected::class);
+
+it('sends the order id for an order payment', function () {
+    $order = Order::factory()->create();
+    $payment = Payment::factory()->forOrder($order)->stripe()->withReference('cs_test_1')->create();
+    $this->stripe->queue(200, sessionBody());
+
+    $this->gateway->start($payment, PaymentRequest::single('Order', Money::fromCents(1274), 'Order', 'https://cartopia.test/r', 'https://cartopia.test/c'));
+
+    $metadata = $this->stripe->last()['params']['metadata'];
+    expect($metadata['order_id'])->toBe((string) $order->id)
+        ->and($metadata['purpose'])->toBe('order')
+        ->and($metadata['payment_id'])->toBe((string) $payment->id);
+});
 
 it('maps outages', function () {
     $payment = stripePayment();

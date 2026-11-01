@@ -71,12 +71,15 @@ class StripeGateway implements PaymentGateway
 
     public function confirm(Payment $payment): PaymentOutcome
     {
-        $session = $this->call($payment, fn (): Session => $this->client->checkout->sessions->retrieve(
+        return $this->outcome($this->retrieve($payment));
+    }
+
+    private function retrieve(Payment $payment): Session
+    {
+        return $this->call($payment, fn (): Session => $this->client->checkout->sessions->retrieve(
             (string) $payment->provider_reference,
             ['expand' => self::EXPAND],
         ));
-
-        return $this->outcome($session);
     }
 
     public function cancel(Payment $payment): PaymentOutcome
@@ -88,13 +91,18 @@ class StripeGateway implements PaymentGateway
                 ['idempotency_key' => "payment-{$payment->id}-cancel"],
             ));
         } catch (PaymentProviderRejected $e) {
-            $previous = $e->getPrevious();
-
-            if ($previous instanceof InvalidRequestException && $this->isAlreadyComplete($previous)) {
-                return $this->confirm($payment);
+            if (! $e->getPrevious() instanceof InvalidRequestException) {
+                throw $e;
             }
 
-            throw $e;
+            // Stripe refused to expire the session. Its status, not the error text, says why.
+            $session = $this->retrieve($payment);
+
+            if ($session->status === 'open') {
+                throw $e;
+            }
+
+            return $this->outcome($session);
         }
 
         return new Cancelled;
@@ -148,14 +156,6 @@ class StripeGateway implements PaymentGateway
             $card?->brand,
             $card?->last4,
         );
-    }
-
-    private function isAlreadyComplete(InvalidRequestException $e): bool
-    {
-        $message = strtolower((string) $e->getError()?->message);
-
-        return $e->getHttpStatus() === 400
-            && (str_contains($message, 'complete') || str_contains($message, 'can be expired'));
     }
 
     /**
