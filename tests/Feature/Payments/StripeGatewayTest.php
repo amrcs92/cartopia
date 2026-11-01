@@ -100,7 +100,7 @@ it('creates a checkout session', function () {
         ->and($sent['params']['success_url'])->toBe('https://cartopia.test/return')
         ->and($sent['params']['cancel_url'])->toBe('https://cartopia.test/cancel')
         ->and(abs($sent['params']['expires_at'] - (now()->getTimestamp() + 1800)))->toBeLessThanOrEqual(1)
-        ->and($this->stripe->header('Idempotency-Key'))->toBe('payment-42-start')
+        ->and($this->stripe->header('Idempotency-Key'))->toBe("payment-42-{$payment->created_at->getTimestamp()}-start")
         ->and($started->reference)->toBe('cs_test_1')
         ->and($started->redirectUrl)->toBe('https://checkout.stripe.com/c/pay/cs_test_1');
 });
@@ -159,7 +159,7 @@ it('expires a session on cancel', function () {
 
     expect($this->gateway->cancel($payment))->toBeInstanceOf(Cancelled::class)
         ->and($this->stripe->last()['url'])->toEndWith('/v1/checkout/sessions/cs_test_1/expire')
-        ->and($this->stripe->header('Idempotency-Key'))->toBe('payment-42-cancel');
+        ->and($this->stripe->header('Idempotency-Key'))->toBe("payment-42-{$payment->created_at->getTimestamp()}-cancel");
 });
 
 it('reports a session that was already paid when cancelling', function () {

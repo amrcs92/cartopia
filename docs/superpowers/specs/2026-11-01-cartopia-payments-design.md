@@ -185,13 +185,13 @@ Uses the official `stripe/stripe-php` SDK through a `StripeClient` built from `s
   - `success_url` and `cancel_url` from the request
   - `expires_at` set to now plus 30 minutes, Stripe's minimum
 
-  The request sends the idempotency key `payment-{id}-start`. It returns the session id and its `url`.
+  The request sends the idempotency key `payment-{id}-{createdAt}-start`. It returns the session id and its `url`.
 - **confirm:** retrieves the session with `expand: ['payment_intent.latest_charge']`.
   - `status: complete` with `payment_status: paid` gives `Succeeded`. The PaymentIntent id and the charge's `payment_method_details.card.brand` and `last4` are read from it.
   - `open` gives `StillPending`.
   - `expired` gives `Cancelled`.
 - **lookup:** the same read as confirm.
-- **cancel:** expires the session (idempotency key `payment-{id}-cancel`). If Stripe refuses because the session is already complete, it confirms instead and returns that outcome.
+- **cancel:** expires the session (idempotency key `payment-{id}-{createdAt}-cancel`). If Stripe refuses because the session is already complete, it confirms instead and returns that outcome.
 - **Webhook verification:** `\Stripe\Webhook::constructEvent` with `services.stripe.webhook_secret`.
 - **Live-key guard:** the constructor throws a `LogicException` if the secret starts with `sk_live_` or `rk_live_`.
 
@@ -205,8 +205,8 @@ Uses Laravel's HTTP client against PayPal's Orders v2 REST API. The base URL is 
   - one purchase unit: `custom_id` set to the payment id, an amount whose breakdown holds `item_total` and `shipping`, and `items` from the request
   - `payment_source.paypal.experience_context` holding the return and cancel URLs, `brand_name: Cartopia`, `user_action: PAY_NOW` and `shipping_preference: NO_SHIPPING`
 
-  The header `PayPal-Request-Id: payment-{id}-start` is sent. It returns the order id and the `payer-action` link.
-- **confirm:** `POST /v2/checkout/orders/{id}/capture` with `PayPal-Request-Id: payment-{id}-capture`.
+  The header `PayPal-Request-Id: payment-{id}-{createdAt}-start` is sent. It returns the order id and the `payer-action` link.
+- **confirm:** `POST /v2/checkout/orders/{id}/capture` with `PayPal-Request-Id: payment-{id}-{createdAt}-capture`.
   - A capture with status `COMPLETED` gives `Succeeded`, with the capture id and amount.
   - A capture with status `PENDING` (held by PayPal) gives `StillPending` with the capture id. `PAYMENT.CAPTURE.COMPLETED` settles it later.
   - `INSTRUMENT_DECLINED` and other declines give `Declined`.
@@ -395,7 +395,7 @@ Database constraints back the lock up:
 
 ### 6.2 Calls to the providers
 
-- Every Stripe request that writes sends an `Idempotency-Key`, and every PayPal create or capture sends a `PayPal-Request-Id`. Both are built from the payment id and the step (`payment-42-start`, `payment-42-capture`). A retry after a timeout gets the first answer back instead of a second session or a second charge.
+- Every Stripe request that writes sends an `Idempotency-Key`, and every PayPal create or capture sends a `PayPal-Request-Id`. Both are built from the payment id, its creation time as a Unix timestamp, and the step: `payment-{id}-{createdAt}-{step}`, such as `payment-42-1793000000-start` or `payment-42-1793000000-capture`. A retry after a timeout gets the first answer back instead of a second session or a second charge. The creation time keeps keys apart when a reset dev database hands out the same ids again, since Stripe and PayPal keep keys for a day or more.
 - Cartopia never calls `confirm` for a payment that isn't pending. For a closed payment it only calls `lookup`, which reads and changes nothing.
 - PayPal's `ORDER_ALREADY_CAPTURED` is read as the existing capture.
 

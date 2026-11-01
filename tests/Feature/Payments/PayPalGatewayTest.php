@@ -101,7 +101,7 @@ it('creates an order', function () {
         $unit = $r['purchase_units'][0];
 
         return $r->hasHeader('Authorization', 'Bearer tok-123')
-            && $r->hasHeader('PayPal-Request-Id', 'payment-42-start')
+            && $r->hasHeader('PayPal-Request-Id', 'payment-42-'.paypalPayment()->created_at->getTimestamp().'-start')
             && $r['intent'] === 'CAPTURE'
             && $unit['custom_id'] === '42'
             && $unit['amount']['currency_code'] === 'USD'
@@ -157,7 +157,7 @@ it('captures a completed payment', function () {
         ->and($outcome->currency)->toBe('usd');
 
     Http::assertSent(fn (Request $r) => str_ends_with($r->url(), '/capture')
-        && $r->hasHeader('PayPal-Request-Id', 'payment-42-capture'));
+        && $r->hasHeader('PayPal-Request-Id', 'payment-42-'.paypalPayment()->created_at->getTimestamp().'-capture'));
 });
 
 it('reads a held capture as pending', function () {

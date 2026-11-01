@@ -63,7 +63,7 @@ class PayPalGateway implements PaymentGateway
         }
 
         $response = $this->call($payment, fn (PendingRequest $http): Response => $http
-            ->withHeaders(['PayPal-Request-Id' => "payment-{$payment->id}-start"])
+            ->withHeaders(['PayPal-Request-Id' => $payment->idempotencyKey('start')])
             ->post('/v2/checkout/orders', [
                 'intent' => 'CAPTURE',
                 'purchase_units' => [[
@@ -111,7 +111,7 @@ class PayPalGateway implements PaymentGateway
         }
 
         $response = $this->call($payment, fn (PendingRequest $http): Response => $http
-            ->withHeaders(['PayPal-Request-Id' => "payment-{$payment->id}-capture"])
+            ->withHeaders(['PayPal-Request-Id' => $payment->idempotencyKey('capture')])
             ->withBody('{}', 'application/json')
             ->post("/v2/checkout/orders/{$payment->provider_reference}/capture"), [422]);
 

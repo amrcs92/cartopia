@@ -14,6 +14,7 @@ use App\Payments\PaymentGateways;
 use App\Payments\PaymentRequest;
 use App\Payments\SplitPlan;
 use App\Support\Money;
+use Illuminate\Support\Carbon;
 
 function paymentRequestFor(Payment $payment): PaymentRequest
 {
@@ -188,4 +189,13 @@ it('returns queued lookup outcomes and failures in order', function () {
     expect($fake->lookup($payment))->toEqual(new Succeeded("fake_pay_{$payment->id}", $payment->amount, 'usd', 'visa', '4242'))
         ->and(fn () => $fake->lookup($payment))->toThrow(PaymentProviderUnavailable::class)
         ->and($fake->lookup($payment))->toBeInstanceOf(Cancelled::class);
+});
+
+it('keys provider requests by the payment id, its creation time and the step', function () {
+    // The creation time keeps keys apart when a reset database hands out the same ids again.
+    $before = Payment::factory()->make(['id' => 7, 'created_at' => Carbon::createFromTimestamp(1793000000)]);
+    $after = Payment::factory()->make(['id' => 7, 'created_at' => Carbon::createFromTimestamp(1793086400)]);
+
+    expect($before->idempotencyKey('start'))->toBe('payment-7-1793000000-start')
+        ->and($after->idempotencyKey('start'))->toBe('payment-7-1793086400-start');
 });

@@ -73,7 +73,7 @@ class StripeGateway implements PaymentGateway
             'success_url' => $request->returnUrl,
             'cancel_url' => $request->cancelUrl,
             'expires_at' => now()->addMinutes(30)->getTimestamp(),
-        ], ['idempotency_key' => "payment-{$payment->id}-start"]));
+        ], ['idempotency_key' => $payment->idempotencyKey('start')]));
 
         return new StartedPayment((string) $session->id, (string) $session->url);
     }
@@ -105,7 +105,7 @@ class StripeGateway implements PaymentGateway
             $this->call($payment, fn (): Session => $this->client->checkout->sessions->expire(
                 (string) $payment->provider_reference,
                 [],
-                ['idempotency_key' => "payment-{$payment->id}-cancel"],
+                ['idempotency_key' => $payment->idempotencyKey('cancel')],
             ));
         } catch (PaymentProviderRejected $e) {
             if (! $e->getPrevious() instanceof InvalidRequestException) {

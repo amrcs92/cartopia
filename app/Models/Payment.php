@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use LogicException;
 
 /**
  * @property int $id
@@ -69,6 +70,20 @@ class Payment extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    /**
+     * The Stripe Idempotency-Key or PayPal-Request-Id for one step (start,
+     * cancel or capture). The creation time keeps keys apart when a reset
+     * database hands out the same ids again.
+     */
+    public function idempotencyKey(string $step): string
+    {
+        if ($this->created_at === null) {
+            throw new LogicException("Payment {$this->id} has no creation time for an idempotency key.");
+        }
+
+        return "payment-{$this->id}-{$this->created_at->getTimestamp()}-{$step}";
     }
 
     public function isPending(): bool
