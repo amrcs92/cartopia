@@ -5,8 +5,11 @@ namespace App\Providers;
 use App\Cart\CartStore;
 use App\Cart\DatabaseCartStore;
 use App\Cart\SessionCartStore;
+use App\Enums\PaymentMethod;
 use App\Models\User;
+use App\Payments\PaymentGateway;
 use App\Payments\PaymentGateways;
+use App\Payments\StripeGateway;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -24,8 +27,10 @@ class AppServiceProvider extends ServiceProvider
             ? new DatabaseCartStore(auth()->user())
             : new SessionCartStore(app('session.store')));
 
-        // Tasks 5 and 6 add the 'stripe' and 'paypal' factories.
-        $this->app->singleton(PaymentGateways::class, fn (): PaymentGateways => new PaymentGateways([]));
+        // Task 6 adds the 'paypal' factory.
+        $this->app->singleton(PaymentGateways::class, fn (): PaymentGateways => new PaymentGateways([
+            PaymentMethod::Stripe->value => fn (): PaymentGateway => new StripeGateway((string) config('services.stripe.secret')),
+        ]));
     }
 
     /**
