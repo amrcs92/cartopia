@@ -4,7 +4,9 @@ use App\Cart\Cart;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
+use App\Enums\WalletTransactionType;
 use App\Models\User;
+use App\Models\WalletTransaction;
 use App\Payments\Exceptions\PaymentProviderUnavailable;
 use App\Payments\Outcomes\Declined;
 use App\Payments\Outcomes\StillPending;
@@ -191,4 +193,40 @@ it('completes after logging in again', function () {
         ->assertRedirect(route('orders.show', $payment->order));
 
     expect($payment->fresh()->status)->toBe(PaymentStatus::Succeeded);
+});
+
+it('never cancels a payment whose capture PayPal is holding', function () {
+    [$user, $payment] = startedOrderPayment(PaymentMethod::PayPal);
+    $payment->update(['provider_payment_id' => 'CAP1']);
+
+    $this->actingAs($user)
+        ->get(route('payments.cancel', $payment))
+        ->assertRedirect(route('cart.show'));
+
+    $this->get(route('cart.show'))->assertInertia(fn (Assert $page) => $page
+        ->hasFlash('checkoutError', "We're still waiting for the payment to be confirmed. Check your orders in a minute."));
+
+    expect($payment->fresh()->status)->toBe(PaymentStatus::Pending)
+        ->and($payment->order->fresh()->status)->toBe(OrderStatus::AwaitingPayment)
+        ->and(WalletTransaction::query()->where('type', WalletTransactionType::Release)->exists())->toBeFalse()
+        ->and($this->fake->cancelled)->toBeEmpty();
+});
+
+it('keeps a payment pending when cancel finds it still pending at the provider', function () {
+    [$user, $payment] = startedOrderPayment();
+    $this->fake->willCancelWith(new StillPending);
+
+    $this->actingAs($user)->get(route('payments.cancel', $payment))->assertRedirect(route('cart.show'));
+
+    expect($payment->fresh()->status)->toBe(PaymentStatus::Pending)
+        ->and($payment->order->fresh()->status)->toBe(OrderStatus::AwaitingPayment);
+});
+
+it('closes a payment as cancelled when cancel finds it declined', function () {
+    [$user, $payment] = startedOrderPayment();
+    $this->fake->willCancelWith(new Declined('INSTRUMENT_DECLINED'));
+
+    $this->actingAs($user)->get(route('payments.cancel', $payment));
+
+    expect($payment->fresh()->status)->toBe(PaymentStatus::Cancelled);
 });

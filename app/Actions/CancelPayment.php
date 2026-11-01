@@ -6,6 +6,8 @@ use App\Enums\PaymentStatus;
 use App\Models\Payment;
 use App\Payments\Exceptions\PaymentProviderRejected;
 use App\Payments\Exceptions\PaymentProviderUnavailable;
+use App\Payments\Outcomes\Cancelled;
+use App\Payments\Outcomes\Declined;
 use App\Payments\Outcomes\Succeeded;
 use App\Payments\PaymentGateways;
 use Illuminate\Support\Facades\DB;
@@ -32,17 +34,20 @@ class CancelPayment
         return DB::transaction(function () use ($payment): Payment {
             $locked = Payment::query()->whereKey($payment->id)->lockForUpdate()->firstOrFail();
 
-            if (! $locked->isPending()) {
+            // A capture id means PayPal holds the money: it can't be cancelled from here,
+            // and its webhook settles it. The shopper sees the still-waiting message.
+            if (! $locked->isPending() || $locked->provider_payment_id !== null) {
                 return $locked;
             }
 
             $outcome = $this->gateways->for($locked->method)->cancel($locked);
 
-            if ($outcome instanceof Succeeded) {
-                return $this->completePayment->handle($locked, $outcome);
-            }
-
-            return $this->closePayment->handle($locked, PaymentStatus::Cancelled, notify: false);
+            return match (true) {
+                $outcome instanceof Succeeded => $this->completePayment->handle($locked, $outcome),
+                $outcome instanceof Cancelled, $outcome instanceof Declined => $this->closePayment->handle($locked, PaymentStatus::Cancelled, notify: false),
+                // Still pending at the provider (a Stripe session complete but not yet paid): leave it open.
+                default => $locked,
+            };
         });
     }
 }
