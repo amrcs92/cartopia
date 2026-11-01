@@ -19,7 +19,7 @@ final class PaymentWording
 
         return match ($order->payment_method) {
             PaymentMethod::Wallet => "Order placed. {$order->total->format()} was paid from your wallet.",
-            PaymentMethod::Stripe => "Order placed. Your card was charged {$hosted}.",
+            PaymentMethod::Stripe => "Order placed. Your Stripe payment of {$hosted} was approved.",
             PaymentMethod::PayPal => "Order placed. Your PayPal payment of {$hosted} was approved.",
         };
     }
@@ -71,7 +71,7 @@ final class PaymentWording
             PaymentMethod::Wallet => $balanceAfter === null
                 ? []
                 : [['label' => 'Wallet balance after', 'value' => $balanceAfter->format()]],
-            PaymentMethod::Stripe => [['label' => 'Charged to card', 'value' => $hosted]],
+            PaymentMethod::Stripe => [['label' => 'Paid through Stripe', 'value' => $hosted]],
             PaymentMethod::PayPal => [['label' => 'Paid through PayPal', 'value' => $hosted]],
         };
     }
@@ -80,7 +80,7 @@ final class PaymentWording
     {
         return match ($order->payment_method) {
             PaymentMethod::Wallet => 'Paid with wallet',
-            PaymentMethod::Stripe => 'Paid by card',
+            PaymentMethod::Stripe => 'Paid with Stripe',
             PaymentMethod::PayPal => 'Paid with PayPal',
         };
     }

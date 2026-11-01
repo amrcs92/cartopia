@@ -31,8 +31,8 @@ it('allows one payment per provider reference', function () {
 it('credits a payment to the ledger only once', function () {
     $payment = Payment::factory()->topUp(2500)->stripe()->create();
     $wallet = app(Wallet::class);
-    $wallet->credit($payment->user, Money::fromCents(2500), WalletTransactionType::TopUp, 'Top-up by card', payment: $payment);
-    $wallet->credit($payment->user, Money::fromCents(2500), WalletTransactionType::TopUp, 'Top-up by card', payment: $payment);
+    $wallet->credit($payment->user, Money::fromCents(2500), WalletTransactionType::TopUp, 'Top-up with Stripe', payment: $payment);
+    $wallet->credit($payment->user, Money::fromCents(2500), WalletTransactionType::TopUp, 'Top-up with Stripe', payment: $payment);
 })->throws(QueryException::class);
 
 it('reads existing orders as wallet orders', function () {
@@ -92,7 +92,7 @@ it('backfills wallet_amount for existing orders when the columns are added', fun
 
 it('links a credit to its payment', function () {
     $payment = Payment::factory()->topUp(2500)->stripe()->create();
-    $tx = app(Wallet::class)->credit($payment->user, Money::fromCents(2500), WalletTransactionType::TopUp, 'Top-up by card', payment: $payment);
+    $tx = app(Wallet::class)->credit($payment->user, Money::fromCents(2500), WalletTransactionType::TopUp, 'Top-up with Stripe', payment: $payment);
 
     expect($tx->payment_id)->toBe($payment->id)
         ->and($tx->payment->is($payment))->toBeTrue();

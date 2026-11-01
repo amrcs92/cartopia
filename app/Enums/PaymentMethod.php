@@ -20,7 +20,7 @@ enum PaymentMethod: string
     {
         return match ($this) {
             self::Wallet => 'Wallet',
-            self::Stripe => 'Card',
+            self::Stripe => 'Stripe',
             self::PayPal => 'PayPal',
         };
     }

@@ -175,11 +175,11 @@ it('says how a card order was paid on the receipt and in the list', function () 
     $this->actingAs($user)
         ->get(route('orders.show', $order))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('order.payment.tag', 'Paid by card')
+            ->where('order.payment.tag', 'Paid with Stripe')
             ->where('order.payment.paid_with', 'Visa ending in 4242, through Stripe')
             ->where('order.payment.reference.short', 'Stripe payment pi_3Q8xK…7Kd2')
-            ->where('order.payment.slip_lines.0.label', 'Charged to card'));
+            ->where('order.payment.slip_lines.0.label', 'Paid through Stripe'));
 
     $this->get(route('orders.index'))
-        ->assertInertia(fn (Assert $page) => $page->where('orders.data.0.payment.tag', 'Paid by card'));
+        ->assertInertia(fn (Assert $page) => $page->where('orders.data.0.payment.tag', 'Paid with Stripe'));
 });

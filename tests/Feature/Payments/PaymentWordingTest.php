@@ -48,7 +48,7 @@ it('shows a short payment id whole and gives none without an id', function () {
 });
 
 it('writes the end of the slip', function () {
-    expect(PaymentWording::slipLines(hostedOrder(PaymentMethod::Stripe), null))->toBe([['label' => 'Charged to card', 'value' => '$2.90']])
+    expect(PaymentWording::slipLines(hostedOrder(PaymentMethod::Stripe), null))->toBe([['label' => 'Paid through Stripe', 'value' => '$2.90']])
         ->and(PaymentWording::slipLines(hostedOrder(PaymentMethod::PayPal), null))->toBe([['label' => 'Paid through PayPal', 'value' => '$2.90']]);
 
     $wallet = Order::factory()->make(['payment_method' => PaymentMethod::Wallet]);
@@ -58,7 +58,7 @@ it('writes the end of the slip', function () {
 
 it('tags each order', function () {
     expect(PaymentWording::tag(hostedOrder(PaymentMethod::Wallet)))->toBe('Paid with wallet')
-        ->and(PaymentWording::tag(hostedOrder(PaymentMethod::Stripe)))->toBe('Paid by card')
+        ->and(PaymentWording::tag(hostedOrder(PaymentMethod::Stripe)))->toBe('Paid with Stripe')
         ->and(PaymentWording::tag(hostedOrder(PaymentMethod::PayPal)))->toBe('Paid with PayPal');
 });
 

@@ -8,7 +8,7 @@ use App\Enums\WalletTransactionType;
 
 it('labels payment methods the way shoppers say them', function () {
     expect(PaymentMethod::Wallet->label())->toBe('Wallet')
-        ->and(PaymentMethod::Stripe->label())->toBe('Card')
+        ->and(PaymentMethod::Stripe->label())->toBe('Stripe')
         ->and(PaymentMethod::PayPal->label())->toBe('PayPal')
         ->and(PaymentMethod::hosted())->toBe([PaymentMethod::Stripe, PaymentMethod::PayPal])
         ->and(PaymentMethod::Wallet->isHosted())->toBeFalse();

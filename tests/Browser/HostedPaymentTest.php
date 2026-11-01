@@ -35,7 +35,7 @@ function openBasketWithPeas(): mixed
         ->waitForText('How do you want it?');
 }
 
-it('pays by card and shows the card receipt', function () {
+it('pays with Stripe and shows the Stripe receipt', function () {
     PaymentGateways::fake();
     $user = hostedShopper();
     $this->actingAs($user);
@@ -43,8 +43,8 @@ it('pays by card and shows the card receipt', function () {
     openBasketWithPeas()
         ->click('UPS')
         ->click(payCard('stripe'))
-        ->press('Pay $15.00 by card')
-        ->waitForText('Your card was charged $15.00.')
+        ->press('Pay $15.00 with Stripe')
+        ->waitForText('Your Stripe payment of $15.00 was approved.')
         ->assertSee('Visa ending in 4242, through Stripe')
         ->assertNoJavaScriptErrors();
 
@@ -74,7 +74,7 @@ it('cancels and keeps the basket', function () {
     openBasketWithPeas()
         ->click('UPS')
         ->click(payCard('stripe'))
-        ->press('Pay $15.00 by card')
+        ->press('Pay $15.00 with Stripe')
         ->waitForText('Payment cancelled. Nothing was charged.')
         ->assertSee('Garden Peas')
         ->assertNoJavaScriptErrors();
@@ -87,6 +87,6 @@ it('defaults to card when the wallet is short', function () {
     openBasketWithPeas()
         ->click('UPS')
         ->assertChecked('[data-test="pay-stripe"]')
-        ->assertSee('Pay $15.00 by card')
+        ->assertSee('Pay $15.00 with Stripe')
         ->assertNoJavaScriptErrors();
 });
