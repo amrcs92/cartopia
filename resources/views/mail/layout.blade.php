@@ -20,6 +20,8 @@
     .outline { border-color: #E9E3D0 !important; }
     .btn { background-color: #F5B42E !important; color: #14201A !important; border-color: #E9E3D0 !important; }
     .badge { background-color: #F5B42E !important; color: #14201A !important; border-color: #E9E3D0 !important; }
+    .chip { background-color: #223029 !important; color: #8FD3AE !important; }
+    .chip { background-color: #223029 !important; color: #8FD3AE !important; }
 }
 @media (max-width: 480px) {
     .pad { padding: 20px !important; }
@@ -48,7 +50,7 @@
 <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
 <td style="vertical-align:middle;padding-right:12px;">
 <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-<td class="badge outline" align="center" width="36" height="36" style="width:36px;height:36px;border-radius:999px;border:2px solid #1A2B21;background-color:#F5B42E;color:#1A2B21;font-size:18px;font-weight:700;line-height:36px;">&#10003;</td>
+<td class="@yield('badgeClass', 'badge outline')" align="center" width="36" height="36" style="width:36px;height:36px;border-radius:999px;border:2px solid #1A2B21;@yield('badgeStyle', 'background-color:#F5B42E;color:#1A2B21;')font-size:18px;font-weight:700;line-height:36px;">@yield('glyph', '&#10003;')</td>
 </tr></table>
 </td>
 <td class="ink" style="vertical-align:middle;font-family:Georgia,'Times New Roman',serif;font-weight:400;font-size:28px;line-height:1.2;color:#1A2B21;">@yield('title')</td>

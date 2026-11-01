@@ -52,14 +52,17 @@ it('queues one receipt for a card order despite duplicate settles', function () 
     Mail::assertQueued(OrderReceiptMail::class, 1);
 });
 
-it('sends nothing when the order rolls back', function () {
+it('queues nothing when checkout fails before the order is placed', function () {
     [$user, $ups] = checkoutSetup(100);
 
     $this->actingAs($user)->post(route('checkout.store'), ['shipping_method_id' => $ups->id, 'payment_method' => 'wallet']);
+    expect($user->fresh()->balance->cents())->toBe(100)
+        ->and(Order::query()->count())->toBe(0);
 
     $this->fake->failToStart();
     [$other, $method] = checkoutSetup();
     $this->actingAs($other)->post(route('checkout.store'), ['shipping_method_id' => $method->id, 'payment_method' => 'stripe']);
+    expect(Payment::query()->where('status', 'pending')->count())->toBe(0);
 
     Mail::assertNothingQueued();
 });

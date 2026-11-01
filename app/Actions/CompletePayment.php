@@ -10,6 +10,7 @@ use App\Enums\PaymentStatus;
 use App\Enums\WalletTransactionType;
 use App\Exceptions\InsufficientBalance;
 use App\Mail\OrderReceiptMail;
+use App\Mail\TopUpReceiptMail;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Payments\Outcomes\Succeeded;
@@ -76,6 +77,9 @@ class CompletePayment
 
         // wallet_transactions.payment_id is unique: the database backstop against a double credit.
         $this->wallet->credit($payment->user, $payment->amount, WalletTransactionType::TopUp, "Top-up with {$provider}", payment: $payment);
+
+        // Only reached by the settle that flips the status, so a duplicate queues nothing.
+        Mail::to($payment->user)->queue(new TopUpReceiptMail($payment));
     }
 
     private function placeOrder(Payment $payment, bool $closedMeanwhile): void
