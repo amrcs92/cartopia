@@ -35,7 +35,7 @@ const props = defineProps<{
                 {{ props.order.shipping_method }}
             </p>
             <div class="mt-2 flex flex-wrap items-center gap-2">
-                <Chip tone="tint-3">Paid with wallet</Chip>
+                <Chip tone="tint-3">{{ props.order.payment.tag }}</Chip>
                 <StatusChip class="capitalize">{{
                     props.order.status
                 }}</StatusChip>

@@ -1,8 +1,10 @@
 <?php
 
+use App\Enums\PaymentMethod;
 use App\Enums\WalletTransactionType;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Payment;
 use App\Models\Product;
 use App\Models\User;
 use App\Support\Money;
@@ -23,6 +25,21 @@ it('lists only the users own orders, newest first', function () {
             ->has('orders.data', 2)
             ->where('orders.data.0.id', $new->id)
             ->where('orders.data.1.id', $old->id));
+});
+
+it('hides orders that are not placed', function () {
+    $user = User::factory()->create();
+    $placed = Order::factory()->for($user)->create();
+    $awaiting = Order::factory()->for($user)->awaitingPayment()->create();
+    Order::factory()->for($user)->cancelled()->create();
+
+    $this->actingAs($user)
+        ->get(route('orders.index'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('orders.data', 1)
+            ->where('orders.data.0.id', $placed->id));
+
+    $this->get(route('orders.show', $awaiting))->assertNotFound();
 });
 
 it('shows the users own order with items', function () {
@@ -131,4 +148,38 @@ it('shows the wallet balance after the order on the receipt', function () {
     $bare = Order::factory()->for($user)->create();
     $this->get(route('orders.show', $bare))
         ->assertInertia(fn (Assert $page) => $page->where('balance_after', null));
+});
+
+it('says how a wallet order was paid on the receipt', function () {
+    $user = User::factory()->create();
+    $order = Order::factory()->for($user)->create();
+
+    $this->actingAs($user)
+        ->get(route('orders.show', $order))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('order.payment.method', 'wallet')
+            ->where('order.payment.paid_with', 'Cartopia wallet')
+            ->where('order.payment.reference', null)
+            ->where('order.payment.tag', 'Paid with wallet'));
+});
+
+it('says how a card order was paid on the receipt and in the list', function () {
+    $user = User::factory()->create();
+    $order = Order::factory()->for($user)->create(['payment_method' => PaymentMethod::Stripe, 'wallet_amount' => 0]);
+    Payment::factory()->forOrder($order)->stripe()->succeeded()->create([
+        'provider_payment_id' => 'pi_3Q8xKLMNOP7Kd2',
+        'card_brand' => 'visa',
+        'card_last4' => '4242',
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('orders.show', $order))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('order.payment.tag', 'Paid by card')
+            ->where('order.payment.paid_with', 'Visa ending in 4242, through Stripe')
+            ->where('order.payment.reference.short', 'Stripe payment pi_3Q8xK…7Kd2')
+            ->where('order.payment.slip_lines.0.label', 'Charged to card'));
+
+    $this->get(route('orders.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('orders.data.0.payment.tag', 'Paid by card'));
 });

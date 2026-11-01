@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { router, useForm, usePage } from '@inertiajs/vue3';
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import InputError from '@/common/app/InputError.vue';
 import Icon from '@/common/icon/Icon.vue';
 import OptionCard from '@/common/stall/OptionCard.vue';
@@ -9,6 +9,9 @@ import { useCurrentUser } from '@/modules/auth/useCurrentUser';
 import { formatCents } from '@/modules/cart/money';
 import PayWithOptions from '@/modules/cart/PayWithOptions.vue';
 import { feeLabel, isPickup } from '@/modules/home/shipping';
+import { buttonLabel, MIN_HOSTED_CENTS } from '@/modules/payments/methods';
+import type { HostedMethod } from '@/modules/payments/methods';
+import { usePaymentMethods } from '@/modules/payments/usePaymentMethods';
 import { start, store } from '@/routes/checkout';
 import type { Cart, ShippingMethod } from '@/types';
 
@@ -49,8 +52,36 @@ onMounted(() => {
 
 onBeforeUnmount(() => stopListening?.());
 
-const form = useForm({
+const methods = usePaymentMethods();
+
+// The wallet when it covers the total; otherwise the first hosted method.
+function defaultChoice(total: number): 'wallet' | HostedMethod | null {
+    return (user.value?.balance_cents ?? 0) >= total
+        ? 'wallet'
+        : (methods.value[0] ?? null);
+}
+
+function choiceIsValid(
+    choice: 'wallet' | HostedMethod | null,
+    total: number,
+): boolean {
+    if (choice === 'wallet') {
+        return (user.value?.balance_cents ?? 0) >= total;
+    }
+
+    return (
+        choice !== null &&
+        methods.value.includes(choice) &&
+        total >= MIN_HOSTED_CENTS
+    );
+}
+
+const form = useForm<{
+    shipping_method_id: number;
+    payment_method: 'wallet' | HostedMethod | null;
+}>({
     shipping_method_id: props.shippingMethods[0]?.id ?? 0,
+    payment_method: null,
 });
 
 const method = computed(() =>
@@ -62,11 +93,25 @@ const totalCents = computed(
 );
 const total = computed(() => formatCents(totalCents.value));
 
-const walletTooLow = computed(
-    () => (user.value?.balance_cents ?? 0) < totalCents.value,
-);
+form.payment_method = defaultChoice(totalCents.value);
+
+// A new shipping fee changes the total: pick a fresh default only when the
+// current choice stopped being possible, so the shopper's own pick stands.
+watch(totalCents, (value) => {
+    if (!choiceIsValid(form.payment_method, value)) {
+        form.payment_method = defaultChoice(value);
+    }
+});
+
 const canOrder = computed(
-    () => !form.processing && method.value !== undefined && !walletTooLow.value,
+    () =>
+        !form.processing &&
+        method.value !== undefined &&
+        choiceIsValid(form.payment_method, totalCents.value),
+);
+
+const buttonText = computed(() =>
+    buttonLabel(form.payment_method ?? 'wallet', totalCents.value),
 );
 
 function submit(): void {
@@ -126,9 +171,11 @@ function submit(): void {
             </fieldset>
 
             <PayWithOptions
+                v-model="form.payment_method"
                 :balance="user.balance"
                 :balance-cents="user.balance_cents"
                 :total-cents="totalCents"
+                :methods="methods"
             />
 
             <p
@@ -160,7 +207,7 @@ function submit(): void {
                 data-test="checkout-button"
                 @click="submit"
             >
-                Place order and pay {{ total }}
+                {{ buttonText }}
             </StallButton>
 
             <div

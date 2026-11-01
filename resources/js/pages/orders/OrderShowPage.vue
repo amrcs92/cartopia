@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import Icon from '@/common/icon/Icon.vue';
 import StallButton from '@/common/stall/StallButton.vue';
 import StatusChip from '@/common/stall/StatusChip.vue';
 import OrderBanner from '@/modules/orders/OrderBanner.vue';
@@ -14,6 +15,16 @@ const props = defineProps<{
     order: Order;
     balance_after: string | null;
 }>();
+
+const methodIcon = {
+    wallet: 'wallet',
+    stripe: 'card',
+    paypal: 'external-link',
+} as const;
+
+// The wallet line keeps a stable hook for tests.
+const lineTestId = (label: string) =>
+    label === 'Wallet balance after' ? 'balance-after' : undefined;
 </script>
 
 <template>
@@ -98,17 +109,41 @@ const props = defineProps<{
                             {{ props.order.total }}
                         </dd>
                     </div>
-                    <div class="flex justify-between pt-2 text-body">
-                        <dt>Paid with</dt>
-                        <dd>Wallet</dd>
+                    <div class="flex justify-between gap-4 pt-2 text-body">
+                        <dt class="shrink-0 whitespace-nowrap">Paid with</dt>
+                        <dd class="min-w-0 text-right">
+                            <Icon
+                                :name="methodIcon[props.order.payment.method]"
+                                :size="18"
+                                class="mr-2 inline-block align-text-top"
+                            />{{ props.order.payment.paid_with }}
+                        </dd>
                     </div>
                     <div
-                        v-if="props.balance_after"
+                        v-if="props.order.payment.reference"
+                        class="flex justify-between gap-4 text-body"
+                    >
+                        <dt class="shrink-0 whitespace-nowrap">Payment ref.</dt>
+                        <dd
+                            class="min-w-0 text-right"
+                            :title="props.order.payment.reference.full"
+                            :aria-label="props.order.payment.reference.full"
+                            data-test="payment-ref"
+                        >
+                            {{ props.order.payment.reference.short }}
+                        </dd>
+                    </div>
+                    <div
+                        v-for="line in props.order.payment.slip_lines"
+                        :key="line.label"
                         class="flex justify-between text-body"
                     >
-                        <dt>Wallet balance afterwards</dt>
-                        <dd class="tabular-nums" data-test="balance-after">
-                            {{ props.balance_after }}
+                        <dt>{{ line.label }}</dt>
+                        <dd
+                            class="tabular-nums"
+                            :data-test="lineTestId(line.label)"
+                        >
+                            {{ line.value }}
                         </dd>
                     </div>
                 </dl>

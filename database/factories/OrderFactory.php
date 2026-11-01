@@ -42,4 +42,13 @@ class OrderFactory extends Factory
             'wallet_amount' => 0,
         ]);
     }
+
+    public function cancelled(): static
+    {
+        return $this->state([
+            'status' => OrderStatus::Cancelled,
+            'payment_method' => PaymentMethod::Stripe,
+            'wallet_amount' => 0,
+        ]);
+    }
 }

@@ -3,8 +3,9 @@
 namespace App\Actions;
 
 use App\Cart\Cart;
-use App\Cart\CartLine;
+use App\Cart\PricedBasket;
 use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
 use App\Enums\WalletTransactionType;
 use App\Exceptions\EmptyCart;
 use App\Exceptions\InsufficientBalance;
@@ -33,31 +34,21 @@ class PlaceOrder
             User::query()->whereKey($user->id)->lockForUpdate()->firstOrFail();
 
             $cart = Cart::forUser($user);
-            $summary = $cart->summary();
-
-            if ($summary->isEmpty()) {
-                throw new EmptyCart('Your basket is empty.');
-            }
-
-            $fee = $method->fee;
-            $total = $summary->subtotal->add($fee);
+            $basket = PricedBasket::of($cart, $method);
+            $total = $basket->total;
 
             $order = Order::create([
                 'user_id' => $user->id,
                 'shipping_method_id' => $method->id,
-                'subtotal' => $summary->subtotal,
-                'shipping_fee' => $fee,
+                'subtotal' => $basket->subtotal(),
+                'shipping_fee' => $basket->fee,
                 'total' => $total,
                 'status' => OrderStatus::Placed,
+                'payment_method' => PaymentMethod::Wallet,
+                'wallet_amount' => $total,
             ]);
 
-            $order->items()->createMany(array_map(fn (CartLine $line): array => [
-                'product_id' => $line->product->id,
-                'product_name' => $line->product->name,
-                'unit_price' => $line->unitPrice,
-                'quantity' => $line->quantity,
-                'line_total' => $line->lineTotal,
-            ], $summary->lines));
+            $order->items()->createMany($basket->itemAttributes());
 
             $this->wallet->debit($user, $total, WalletTransactionType::Purchase, "Order #{$order->id}", $order);
 
