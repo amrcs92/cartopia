@@ -5,7 +5,12 @@ namespace App\Providers;
 use App\Cart\CartStore;
 use App\Cart\DatabaseCartStore;
 use App\Cart\SessionCartStore;
+use App\Enums\PaymentMethod;
 use App\Models\User;
+use App\Payments\PaymentGateway;
+use App\Payments\PaymentGateways;
+use App\Payments\PayPalGateway;
+use App\Payments\StripeGateway;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +27,14 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(CartStore::class, fn (): CartStore => auth()->user() instanceof User
             ? new DatabaseCartStore(auth()->user())
             : new SessionCartStore(app('session.store')));
+
+        // Built on demand, like the registry's factory, so tests can swap it and no credentials are read until used.
+        $this->app->bind(PayPalGateway::class, fn (): PayPalGateway => new PayPalGateway((string) config('services.paypal.client_id'), (string) config('services.paypal.secret')));
+
+        $this->app->singleton(PaymentGateways::class, fn (): PaymentGateways => new PaymentGateways([
+            PaymentMethod::Stripe->value => fn (): PaymentGateway => new StripeGateway((string) config('services.stripe.secret')),
+            PaymentMethod::PayPal->value => fn (): PaymentGateway => new PayPalGateway((string) config('services.paypal.client_id'), (string) config('services.paypal.secret')),
+        ]));
     }
 
     /**

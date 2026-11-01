@@ -8,6 +8,7 @@ enum WalletTransactionType: string
     case TopUp = 'top_up';
     case Purchase = 'purchase';
     case AdminAdjustment = 'admin_adjustment';
+    case Release = 'release';
 
     public function label(): string
     {
@@ -16,6 +17,7 @@ enum WalletTransactionType: string
             self::TopUp => 'Top-up',
             self::Purchase => 'Purchase',
             self::AdminAdjustment => 'Adjustment',
+            self::Release => 'Returned',
         };
     }
 }

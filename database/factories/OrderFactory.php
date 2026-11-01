@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
 use App\Models\Order;
 use App\Models\ShippingMethod;
 use App\Models\User;
@@ -28,6 +29,17 @@ class OrderFactory extends Factory
             'shipping_fee' => $fee,
             'total' => $subtotal + $fee,
             'status' => OrderStatus::Placed,
+            'payment_method' => PaymentMethod::Wallet,
+            'wallet_amount' => fn (array $attributes) => $attributes['total'],
         ];
+    }
+
+    public function awaitingPayment(): static
+    {
+        return $this->state([
+            'status' => OrderStatus::AwaitingPayment,
+            'payment_method' => PaymentMethod::Stripe,
+            'wallet_amount' => 0,
+        ]);
     }
 }

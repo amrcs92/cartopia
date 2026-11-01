@@ -103,3 +103,23 @@ it('keeps aisle names unique', function () {
     Category::factory()->create(['name' => 'Drinks', 'slug' => 'drinks']);
     Category::factory()->create(['name' => 'Drinks', 'slug' => 'other']);
 })->throws(QueryException::class);
+
+it('has the payments table with its indexes', function () {
+    expect(Schema::hasColumns('payments', [
+        'id', 'user_id', 'purpose', 'order_id', 'method', 'status', 'amount', 'currency',
+        'provider_reference', 'provider_payment_id', 'card_brand', 'card_last4', 'completed_at',
+        'created_at', 'updated_at',
+    ]))->toBeTrue()
+        ->and(Schema::hasColumns('orders', ['payment_method', 'wallet_amount']))->toBeTrue()
+        ->and(Schema::hasColumn('wallet_transactions', 'payment_id'))->toBeTrue();
+
+    $indexes = collect(Schema::getIndexes('payments'));
+    $unique = $indexes->firstWhere(fn (array $index) => $index['unique'] && $index['columns'] === ['method', 'provider_reference']);
+    $status = $indexes->firstWhere(fn (array $index) => $index['columns'] === ['status', 'created_at']);
+    $user = $indexes->firstWhere(fn (array $index) => $index['columns'] === ['user_id']);
+
+    expect($unique)->not->toBeNull()
+        ->and($status)->not->toBeNull()
+        ->and($user)->not->toBeNull()
+        ->and(collect(Schema::getIndexes('wallet_transactions'))->contains(fn (array $index) => $index['unique'] && $index['columns'] === ['payment_id']))->toBeTrue();
+});
