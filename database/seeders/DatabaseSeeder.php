@@ -31,13 +31,13 @@ class DatabaseSeeder extends Seeder
             'description' => 'Delicious and crunchy, apple fruit is one of the most popular and favorite fruits among the health conscious, fitness lovers who firmly believe in the concept of "health is wealth." This wonderful fruit indeed packed with rich phytonutrients that in the real sense indispensable for optimal health and wellness. Certain antioxidants in apples have health promoting and disease prevention properties, and thereby, truly justifying the adage, "an apple a day keeps the doctor away."',
         ],
         [
-            'name' => 'Beer',
-            'slug' => 'beer',
+            'name' => 'Monster Energy Drink',
+            'slug' => 'monster-energy-drink',
             'aisle' => 'drinks',
             'price' => 200,
             'sku' => '73310304118423',
-            'image' => 'heineken_beer.jpg',
-            'description' => 'Heineken Lager Beer, or simply Heineken is a pale lager beer with 5% alcohol by volume produced by the Dutch brewing company Heineken International. Heineken is well known for its signature green bottle and red star.',
+            'image' => 'monster-energy-drink.png',
+            'description' => 'Monster Energy is an energy drink launched in 2002 by Hansen Natural, now Monster Beverage Corporation of Corona, California. Each 16 fl oz (473 ml) can of the original green Monster holds 160 mg of caffeine, with taurine, panax ginseng, L-carnitine and B vitamins. Monster is well known for its black can and green clawed "M" logo.',
         ],
         [
             'name' => 'Water',

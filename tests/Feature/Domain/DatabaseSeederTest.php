@@ -14,7 +14,7 @@ it('seeds the legacy catalog, shipping, demo and admin users', function () {
 
     $expected = [
         'apple' => [30, 'apple.jpg'],
-        'beer' => [200, 'heineken_beer.jpg'],
+        'monster-energy-drink' => [200, 'monster-energy-drink.png'],
         'water' => [100, 'water_bottle.jpg'],
         'cheese-triangle' => [374, 'cheese-traingles.jpg'],
     ];
@@ -36,11 +36,12 @@ it('seeds the legacy catalog, shipping, demo and admin users', function () {
         ->all();
     expect($aisles)->toBe([
         'fruit-and-veg' => ['Fruit and veg', ['apple']],
-        'drinks' => ['Drinks', ['beer', 'water']],
+        'drinks' => ['Drinks', ['monster-energy-drink', 'water']],
         'dairy' => ['Dairy', ['cheese-triangle']],
     ])->and(Product::query()->where('is_featured', false)->count())->toBe(0);
 
     expect(Product::query()->where('slug', 'water')->value('description'))->toContain("St Ann's Spring")
+        ->and(Product::query()->where('slug', 'monster-energy-drink')->value('description'))->toContain('160 mg of caffeine')
         ->and(Product::query()->where('slug', 'apple')->value('description'))->toContain('"health is wealth."')
         ->and(ShippingMethod::query()->count())->toBe(2);
 
