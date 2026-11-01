@@ -91,6 +91,19 @@ it('defaults to card when the wallet is short', function () {
         ->assertNoJavaScriptErrors();
 });
 
+it('preselects no way to pay when the wallet is short and the total is below the minimum', function () {
+    PaymentGateways::fake();
+    $this->actingAs(User::factory()->create());
+    Product::factory()->withImages()->create(['name' => 'Garden Peas', 'price' => 30]);
+    ShippingMethod::factory()->pickup()->create();
+
+    openBasketWithPeas()
+        ->assertNotChecked('[data-test="pay-stripe"]')
+        ->assertNotChecked('[data-test="pay-paypal"]')
+        ->assertNotChecked('[data-test="pay-wallet"]')
+        ->assertNoJavaScriptErrors();
+});
+
 it('splits a short wallet with Stripe', function () {
     PaymentGateways::fake();
     $user = hostedShopper(500);

@@ -54,11 +54,14 @@ onBeforeUnmount(() => stopListening?.());
 
 const methods = usePaymentMethods();
 
-// The wallet when it covers the total; otherwise the first hosted method.
+// The wallet when it covers the total; otherwise the first hosted method, but
+// nothing below the hosted minimum, where those cards are disabled.
 function defaultChoice(total: number): 'wallet' | HostedMethod | null {
-    return (user.value?.balance_cents ?? 0) >= total
-        ? 'wallet'
-        : (methods.value[0] ?? null);
+    if ((user.value?.balance_cents ?? 0) >= total) {
+        return 'wallet';
+    }
+
+    return total >= MIN_HOSTED_CENTS ? (methods.value[0] ?? null) : null;
 }
 
 function choiceIsValid(
