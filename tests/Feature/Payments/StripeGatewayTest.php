@@ -14,6 +14,7 @@ use App\Support\Money;
 use Stripe\ApiRequestor;
 use Stripe\Event;
 use Stripe\Exception\SignatureVerificationException;
+use Stripe\HttpClient\CurlClient;
 use Tests\Support\FakeStripeHttpClient;
 
 beforeEach(function () {
@@ -99,7 +100,7 @@ it('creates a checkout session', function () {
         ->and($sent['params']['success_url'])->toBe('https://cartopia.test/return')
         ->and($sent['params']['cancel_url'])->toBe('https://cartopia.test/cancel')
         ->and(abs($sent['params']['expires_at'] - (now()->getTimestamp() + 1800)))->toBeLessThanOrEqual(1)
-        ->and($this->stripe->header('Idempotency-Key'))->toBe('payment-42-start')
+        ->and($this->stripe->header('Idempotency-Key'))->toBe("payment-42-{$payment->created_at->getTimestamp()}-start")
         ->and($started->reference)->toBe('cs_test_1')
         ->and($started->redirectUrl)->toBe('https://checkout.stripe.com/c/pay/cs_test_1');
 });
@@ -137,13 +138,28 @@ it('reads open and expired sessions', function () {
     expect($this->gateway->confirm($payment))->toBeInstanceOf(Cancelled::class);
 });
 
+it('looks up a session without changing it', function () {
+    $payment = stripePayment();
+    $this->stripe
+        ->queue(200, paidSessionBody())
+        ->queue(200, sessionBody())
+        ->queue(200, sessionBody(['status' => 'expired']));
+
+    expect($this->gateway->lookup($payment))->toEqual(new Succeeded('pi_123', Money::fromCents(1274), 'usd', 'visa', '4242'))
+        ->and($this->gateway->lookup($payment))->toBeInstanceOf(StillPending::class)
+        ->and($this->gateway->lookup($payment))->toBeInstanceOf(Cancelled::class)
+        ->and(array_column($this->stripe->requests, 'method'))->toBe(['get', 'get', 'get'])
+        ->and($this->stripe->last()['url'])->toEndWith('/v1/checkout/sessions/cs_test_1')
+        ->and($this->stripe->last()['params']['expand'])->toBe(['payment_intent.latest_charge']);
+});
+
 it('expires a session on cancel', function () {
     $payment = stripePayment();
     $this->stripe->queue(200, sessionBody(['status' => 'expired']));
 
     expect($this->gateway->cancel($payment))->toBeInstanceOf(Cancelled::class)
         ->and($this->stripe->last()['url'])->toEndWith('/v1/checkout/sessions/cs_test_1/expire')
-        ->and($this->stripe->header('Idempotency-Key'))->toBe('payment-42-cancel');
+        ->and($this->stripe->header('Idempotency-Key'))->toBe("payment-42-{$payment->created_at->getTimestamp()}-cancel");
 });
 
 it('reports a session that was already paid when cancelling', function () {
@@ -223,6 +239,15 @@ it('maps bad credentials to a rejection without leaking the secret', function ()
     }
 });
 
+it('gives Stripe ten seconds and five to connect', function () {
+    $http = CurlClient::instance()->setTimeout(80)->setConnectTimeout(30);
+
+    new StripeGateway('sk_test_secret');
+
+    expect($http->getTimeout())->toBe(10)
+        ->and($http->getConnectTimeout())->toBe(5);
+});
+
 it('refuses live keys', function (string $key) {
     new StripeGateway($key);
 })->with(['sk_live_x', 'rk_live_x'])->throws(LogicException::class);
@@ -241,3 +266,20 @@ it('verifies a webhook signature', function () {
     expect(fn () => StripeGateway::verifyWebhook($payload, $signature, null))->toThrow(UnexpectedValueException::class);
     expect(fn () => StripeGateway::verifyWebhook($payload, $signature, ''))->toThrow(UnexpectedValueException::class);
 });
+
+it('looks up a session Stripe no longer knows as not paid', function () {
+    $payment = stripePayment();
+    $this->stripe->queue(404, ['error' => ['type' => 'invalid_request_error', 'code' => 'resource_missing', 'message' => 'No such checkout.session']]);
+
+    expect($this->gateway->lookup($payment))->toBeInstanceOf(Cancelled::class);
+});
+
+it('still rejects a lookup Stripe refuses for another reason', function (int $status, array $error) {
+    $payment = stripePayment();
+    $this->stripe->queue($status, ['error' => $error]);
+
+    expect(fn () => $this->gateway->lookup($payment))->toThrow(PaymentProviderRejected::class);
+})->with([
+    'not found, other code' => [404, ['type' => 'invalid_request_error', 'message' => 'Not found']],
+    'bad key' => [401, ['type' => 'invalid_request_error', 'message' => 'Invalid API Key']],
+]);

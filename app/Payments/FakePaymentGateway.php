@@ -8,6 +8,7 @@ use App\Payments\Exceptions\PaymentProviderUnavailable;
 use App\Payments\Outcomes\Cancelled;
 use App\Payments\Outcomes\PaymentOutcome;
 use App\Payments\Outcomes\Succeeded;
+use Throwable;
 
 class FakePaymentGateway implements PaymentGateway
 {
@@ -20,8 +21,14 @@ class FakePaymentGateway implements PaymentGateway
     /** @var list<int> */
     public array $cancelled = [];
 
+    /** @var list<int> */
+    public array $lookedUp = [];
+
     /** @var list<PaymentOutcome> */
     private array $confirmOutcomes = [];
+
+    /** @var list<PaymentOutcome|Throwable> */
+    private array $lookupOutcomes = [];
 
     private ?PaymentOutcome $cancelOutcome = null;
 
@@ -32,6 +39,17 @@ class FakePaymentGateway implements PaymentGateway
     public function willConfirm(PaymentOutcome ...$outcomes): static
     {
         array_push($this->confirmOutcomes, ...$outcomes);
+
+        return $this;
+    }
+
+    /**
+     * Queues what the next lookups answer; a Throwable is thrown instead.
+     * Once the queue is empty, a lookup reports nothing paid.
+     */
+    public function willLookUp(PaymentOutcome|Throwable ...$outcomes): static
+    {
+        array_push($this->lookupOutcomes, ...$outcomes);
 
         return $this;
     }
@@ -80,6 +98,14 @@ class FakePaymentGateway implements PaymentGateway
             return array_shift($this->confirmOutcomes);
         }
 
+        return $this->paid($payment);
+    }
+
+    /**
+     * What the fake answers for a payment that went through.
+     */
+    public function paid(Payment $payment): Succeeded
+    {
         $isCard = $payment->method === PaymentMethod::Stripe;
 
         return new Succeeded(
@@ -89,6 +115,19 @@ class FakePaymentGateway implements PaymentGateway
             $isCard ? 'visa' : null,
             $isCard ? '4242' : null,
         );
+    }
+
+    public function lookup(Payment $payment): PaymentOutcome
+    {
+        $this->lookedUp[] = $payment->id;
+
+        $next = array_shift($this->lookupOutcomes) ?? new Cancelled;
+
+        if ($next instanceof Throwable) {
+            throw $next;
+        }
+
+        return $next;
     }
 
     public function cancel(Payment $payment): PaymentOutcome

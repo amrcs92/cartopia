@@ -853,7 +853,7 @@ Start with `git switch -c payments/phase-5-emails` from phase 4's branch.
 - Consumes: `PaymentWording` (`paidWith`, `reference`, `slipLines`) and the order's `Purchase` ledger row for the balance after.
 - Produces:
   - `OrderReceiptMail(Order $order) implements ShouldQueue`. The constructor calls `$this->afterCommit()`.
-  - The subject is "Your Cartopia receipt for order #{id}".
+  - The subject is "Your Cartopia Order #{id} Is Confirmed!". The title, intro, rows, button and footer are the spec section 8.1 approved wording, verbatim.
   - The view is `mail.order-receipt` and the text view `mail.order-receipt-text`.
   - It is queued with `Mail::to($order->user)->queue(new OrderReceiptMail($order))`.
 
@@ -880,15 +880,16 @@ Start with `git switch -c payments/phase-5-emails` from phase 4's branch.
 **Interfaces:**
 - Produces:
   - `TopUpReceiptMail(Payment $payment)`, with the subject "You added {amount} to your Cartopia wallet".
-  - `PaymentProblemMail(Payment $payment)`, with the subject "Your Cartopia order #{id} wasn't paid" or "Your {amount} top-up wasn't paid".
+  - `PaymentProblemMail(Payment $payment)`, with the subject "Payment Not Completed – Cartopia Order #{id}" or "Payment Not Completed – Cartopia Top-up of {amount}".
+  - The titles, intros, rows, ticks and buttons are the spec section 8.1 approved wording, verbatim.
   - Both are queued after commit.
 
 - [ ] **Step 1: Write the failing tests:**
-  - **`it('queues one top-up receipt')`:** two returns give one queued email. The render contains "$25.00", "Top-up with Stripe" (or the PayPal wording), the reference, and the new balance.
+  - **`it('queues one top-up receipt')`:** two returns give one queued email. The render contains "$25.00", the `paidWith` text ("Visa ending in 4242, through Stripe" or the PayPal wording), the reference, and the new balance.
   - **`it('emails when a payment expires or is denied while the shopper is away')`:**
     - `payments:expire-stale`, the Stripe expired webhook and the PayPal denied webhook each queue one `PaymentProblemMail`.
-    - The split case's render contains "$2.10" returned and "Your basket is still there.".
-    - The top-up case contains "Your $25.00 top-up wasn't paid" in the subject.
+    - The split case's render contains "$2.10 has been restored to your wallet." and "Your basket is still there.".
+    - The top-up case has the subject "Payment Not Completed – Cartopia Top-up of $25.00".
   - **`it('does not email for a cancel or a decline the shopper saw')`:** the cancel route and a declined return queue nothing.
 - [ ] **Step 2: Run the tests.** They should fail.
 - [ ] **Step 3: Build the templates** to the approved mockups, and add the triggers.

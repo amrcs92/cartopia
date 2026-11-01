@@ -23,6 +23,11 @@ class PayPalGateway implements PaymentGateway
     /** Fixed in code so a live host can never be reached. */
     public const string BASE_URL = 'https://api-m.sandbox.paypal.com';
 
+    /** Seconds. Calls run under row locks, so they must end well inside InnoDB's 50-second lock wait. */
+    public const int TIMEOUT = 10;
+
+    public const int CONNECT_TIMEOUT = 5;
+
     private const string TOKEN_KEY = 'paypal.token';
 
     /** PayPal's own issue codes for a refused payment. */
@@ -58,7 +63,7 @@ class PayPalGateway implements PaymentGateway
         }
 
         $response = $this->call($payment, fn (PendingRequest $http): Response => $http
-            ->withHeaders(['PayPal-Request-Id' => "payment-{$payment->id}-start"])
+            ->withHeaders(['PayPal-Request-Id' => $payment->idempotencyKey('start')])
             ->post('/v2/checkout/orders', [
                 'intent' => 'CAPTURE',
                 'purchase_units' => [[
@@ -99,8 +104,14 @@ class PayPalGateway implements PaymentGateway
 
     public function confirm(Payment $payment): PaymentOutcome
     {
+        // A capture exists already (held by PayPal): read it. Posting the capture again
+        // with the same request id could only replay the old answer.
+        if ($payment->provider_payment_id !== null) {
+            return $this->outcome($this->getOrder($payment));
+        }
+
         $response = $this->call($payment, fn (PendingRequest $http): Response => $http
-            ->withHeaders(['PayPal-Request-Id' => "payment-{$payment->id}-capture"])
+            ->withHeaders(['PayPal-Request-Id' => $payment->idempotencyKey('capture')])
             ->withBody('{}', 'application/json')
             ->post("/v2/checkout/orders/{$payment->provider_reference}/capture"), [422]);
 
@@ -111,8 +122,7 @@ class PayPalGateway implements PaymentGateway
         $issue = (string) $response->json('details.0.issue');
 
         if ($issue === 'ORDER_ALREADY_CAPTURED') {
-            return $this->outcome($this->call($payment, fn (PendingRequest $http): Response => $http
-                ->get("/v2/checkout/orders/{$payment->provider_reference}")));
+            return $this->outcome($this->getOrder($payment));
         }
 
         if ($issue === 'ORDER_NOT_APPROVED') {
@@ -124,6 +134,27 @@ class PayPalGateway implements PaymentGateway
         }
 
         throw new PaymentProviderRejected("PayPal rejected the capture for payment {$payment->id}, code ".($issue !== '' ? $issue : 'none').'.');
+    }
+
+    /**
+     * Reads the order and its capture, if any. Never captures. An order PayPal
+     * doesn't know (404) took no money, so it reads as cancelled and the stale
+     * job can close the payment.
+     */
+    public function lookup(Payment $payment): PaymentOutcome
+    {
+        $response = $this->getOrder($payment, [404]);
+
+        return $response->status() === 404 ? new Cancelled : $this->outcome($response);
+    }
+
+    /**
+     * @param  list<int>  $allow
+     */
+    private function getOrder(Payment $payment, array $allow = []): Response
+    {
+        return $this->call($payment, fn (PendingRequest $http): Response => $http
+            ->get("/v2/checkout/orders/{$payment->provider_reference}"), $allow);
     }
 
     /**
@@ -147,7 +178,7 @@ class PayPalGateway implements PaymentGateway
             return $cached;
         }
 
-        $response = $this->send($payment, fn (): Response => Http::baseUrl(self::BASE_URL)
+        $response = $this->send($payment, fn (): Response => $this->http()
             ->withBasicAuth($this->clientId, $this->secret)
             ->asForm()
             ->post('/v1/oauth2/token', ['grant_type' => 'client_credentials']));
@@ -206,8 +237,13 @@ class PayPalGateway implements PaymentGateway
     private function call(Payment $payment, Closure $callback, array $allow = []): Response
     {
         return $this->send($payment, fn (): Response => $callback(
-            Http::baseUrl(self::BASE_URL)->withToken($this->token($payment))->acceptJson()->asJson(),
+            $this->http()->withToken($this->token($payment))->acceptJson()->asJson(),
         ), $allow);
+    }
+
+    private function http(): PendingRequest
+    {
+        return Http::baseUrl(self::BASE_URL)->timeout(self::TIMEOUT)->connectTimeout(self::CONNECT_TIMEOUT);
     }
 
     /**

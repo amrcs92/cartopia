@@ -101,7 +101,7 @@ it('creates an order', function () {
         $unit = $r['purchase_units'][0];
 
         return $r->hasHeader('Authorization', 'Bearer tok-123')
-            && $r->hasHeader('PayPal-Request-Id', 'payment-42-start')
+            && $r->hasHeader('PayPal-Request-Id', 'payment-42-'.paypalPayment()->created_at->getTimestamp().'-start')
             && $r['intent'] === 'CAPTURE'
             && $unit['custom_id'] === '42'
             && $unit['amount']['currency_code'] === 'USD'
@@ -157,7 +157,7 @@ it('captures a completed payment', function () {
         ->and($outcome->currency)->toBe('usd');
 
     Http::assertSent(fn (Request $r) => str_ends_with($r->url(), '/capture')
-        && $r->hasHeader('PayPal-Request-Id', 'payment-42-capture'));
+        && $r->hasHeader('PayPal-Request-Id', 'payment-42-'.paypalPayment()->created_at->getTimestamp().'-capture'));
 });
 
 it('reads a held capture as pending', function () {
@@ -192,6 +192,22 @@ it('reads an order that was already captured', function () {
     Http::assertSent(fn (Request $r) => $r->method() === 'GET' && $r->url() === PAYPAL.'/v2/checkout/orders/ORDER1');
 });
 
+it('reads a held capture instead of capturing again', function () {
+    $payment = paypalPayment();
+    $payment->update(['provider_payment_id' => 'CAP1']);
+    Http::fake(paypalToken() + [
+        PAYPAL.'/v2/checkout/orders/ORDER1/capture' => Http::response(captureBody('PENDING'), 201),
+        PAYPAL.'/v2/checkout/orders/ORDER1' => Http::response(captureBody()),
+    ]);
+
+    $outcome = $this->gateway->confirm($payment);
+
+    expect($outcome)->toBeInstanceOf(Succeeded::class)
+        ->and($outcome->providerPaymentId)->toBe('CAP1');
+
+    Http::assertNotSent(fn (Request $r) => str_ends_with($r->url(), '/capture'));
+});
+
 it('reads an unapproved order as pending', function () {
     Http::fake(paypalToken() + [PAYPAL.'/v2/checkout/orders/ORDER1/capture' => Http::response(['details' => [['issue' => 'ORDER_NOT_APPROVED']]], 422)]);
 
@@ -200,6 +216,27 @@ it('reads an unapproved order as pending', function () {
     expect($outcome)->toBeInstanceOf(StillPending::class)
         ->and($outcome->providerPaymentId)->toBeNull();
 });
+
+it('looks up an order without capturing it', function (?string $status, string $outcome, ?string $captureId) {
+    $body = $status === null ? ['id' => 'ORDER1', 'status' => 'APPROVED', 'purchase_units' => [[]]] : captureBody($status);
+    Http::fake(paypalToken() + [PAYPAL.'/v2/checkout/orders/ORDER1' => Http::response($body)]);
+
+    $result = $this->gateway->lookup(paypalPayment());
+
+    expect($result)->toBeInstanceOf($outcome);
+
+    if ($result instanceof Succeeded || $result instanceof StillPending) {
+        expect($result->providerPaymentId)->toBe($captureId);
+    }
+
+    Http::assertSent(fn (Request $r) => $r->method() === 'GET' && $r->url() === PAYPAL.'/v2/checkout/orders/ORDER1');
+    Http::assertNotSent(fn (Request $r) => $r->method() === 'POST' && ! str_ends_with($r->url(), '/token'));
+})->with([
+    'captured' => ['COMPLETED', Succeeded::class, 'CAP1'],
+    'held' => ['PENDING', StillPending::class, 'CAP1'],
+    'declined' => ['DECLINED', Declined::class, null],
+    'never captured' => [null, StillPending::class, null],
+]);
 
 it('maps outages', function () {
     Http::fake(paypalToken() + [PAYPAL.'/v2/checkout/orders/ORDER1/capture' => fn () => throw new ConnectionException('timeout')]);
@@ -228,6 +265,24 @@ it('keeps the secret and token out of error messages', function () {
     }
 });
 
+it('gives PayPal ten seconds and five to connect', function () {
+    $timeouts = [];
+    Http::fake(function (Request $r, array $options) use (&$timeouts) {
+        $timeouts[$r->url()] = [$options['timeout'] ?? null, $options['connect_timeout'] ?? null];
+
+        return str_ends_with($r->url(), '/token')
+            ? Http::response(['access_token' => 'tok-123', 'expires_in' => 3600])
+            : Http::response(captureBody(), 201);
+    });
+
+    $this->gateway->confirm(paypalPayment());
+
+    expect($timeouts)->toBe([
+        PAYPAL.'/v1/oauth2/token' => [10, 5],
+        PAYPAL.'/v2/checkout/orders/ORDER1/capture' => [10, 5],
+    ]);
+});
+
 it('cancels without calling PayPal', function () {
     Http::fake();
 
@@ -235,3 +290,22 @@ it('cancels without calling PayPal', function () {
 
     Http::assertNothingSent();
 });
+
+it('looks up an order PayPal no longer knows as not paid', function () {
+    Http::fake(paypalToken() + [PAYPAL.'/v2/checkout/orders/ORDER1' => Http::response([
+        'name' => 'RESOURCE_NOT_FOUND',
+        'details' => [['issue' => 'INVALID_RESOURCE_ID']],
+    ], 404)]);
+
+    expect($this->gateway->lookup(paypalPayment()))->toBeInstanceOf(Cancelled::class);
+});
+
+it('still rejects or fails a lookup PayPal refuses for another reason', function (int $status, string $exception) {
+    Http::fake(paypalToken() + [PAYPAL.'/v2/checkout/orders/ORDER1' => Http::response(['name' => 'NOT_AUTHORIZED'], $status)]);
+
+    expect(fn () => $this->gateway->lookup(paypalPayment()))->toThrow($exception);
+})->with([
+    'forbidden' => [403, PaymentProviderRejected::class],
+    'unprocessable' => [422, PaymentProviderRejected::class],
+    'server error' => [500, PaymentProviderUnavailable::class],
+]);

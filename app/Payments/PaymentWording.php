@@ -45,6 +45,14 @@ final class PaymentWording
     }
 
     /**
+     * How a top-up was paid; a top-up has no order, so the method is the payment's own.
+     */
+    public static function topUpPaidWith(Payment $payment): string
+    {
+        return $payment->method === PaymentMethod::Stripe ? self::stripeCard($payment) : 'PayPal';
+    }
+
+    /**
      * @return array{short: string, full: string}|null
      */
     public static function reference(Payment $payment): ?array

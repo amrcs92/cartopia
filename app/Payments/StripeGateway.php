@@ -18,6 +18,7 @@ use Stripe\Exception\ApiConnectionException;
 use Stripe\Exception\ApiErrorException;
 use Stripe\Exception\InvalidRequestException;
 use Stripe\Exception\SignatureVerificationException;
+use Stripe\HttpClient\CurlClient;
 use Stripe\StripeClient;
 use Stripe\Webhook;
 use UnexpectedValueException;
@@ -26,6 +27,11 @@ class StripeGateway implements PaymentGateway
 {
     private const array EXPAND = ['payment_intent.latest_charge'];
 
+    /** Seconds. Calls run under row locks, so they must end well inside InnoDB's 50-second lock wait. */
+    private const int TIMEOUT = 10;
+
+    private const int CONNECT_TIMEOUT = 5;
+
     private readonly StripeClient $client;
 
     public function __construct(string $secret)
@@ -33,6 +39,9 @@ class StripeGateway implements PaymentGateway
         if (str_starts_with($secret, 'sk_live_') || str_starts_with($secret, 'rk_live_')) {
             throw new LogicException('Cartopia only uses Stripe in test mode; live keys are refused.');
         }
+
+        // The SDK's shared client, so a test's ApiRequestor::setHttpClient() still takes over.
+        CurlClient::instance()->setTimeout(self::TIMEOUT)->setConnectTimeout(self::CONNECT_TIMEOUT);
 
         $this->client = new StripeClient($secret);
     }
@@ -64,14 +73,36 @@ class StripeGateway implements PaymentGateway
             'success_url' => $request->returnUrl,
             'cancel_url' => $request->cancelUrl,
             'expires_at' => now()->addMinutes(30)->getTimestamp(),
-        ], ['idempotency_key' => "payment-{$payment->id}-start"]));
+        ], ['idempotency_key' => $payment->idempotencyKey('start')]));
 
         return new StartedPayment((string) $session->id, (string) $session->url);
     }
 
+    /**
+     * Reading the session is all confirm does for Stripe: the money moved on Stripe's page.
+     */
     public function confirm(Payment $payment): PaymentOutcome
     {
         return $this->outcome($this->retrieve($payment));
+    }
+
+    /**
+     * The same read as confirm. A session Stripe doesn't know took no money, so it
+     * reads as cancelled and the stale job can close the payment.
+     */
+    public function lookup(Payment $payment): PaymentOutcome
+    {
+        try {
+            return $this->confirm($payment);
+        } catch (PaymentProviderRejected $e) {
+            $previous = $e->getPrevious();
+
+            if ($previous instanceof InvalidRequestException && $previous->getStripeCode() === 'resource_missing') {
+                return new Cancelled;
+            }
+
+            throw $e;
+        }
     }
 
     private function retrieve(Payment $payment): Session
@@ -88,7 +119,7 @@ class StripeGateway implements PaymentGateway
             $this->call($payment, fn (): Session => $this->client->checkout->sessions->expire(
                 (string) $payment->provider_reference,
                 [],
-                ['idempotency_key' => "payment-{$payment->id}-cancel"],
+                ['idempotency_key' => $payment->idempotencyKey('cancel')],
             ));
         } catch (PaymentProviderRejected $e) {
             if (! $e->getPrevious() instanceof InvalidRequestException) {

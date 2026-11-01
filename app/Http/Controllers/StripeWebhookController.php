@@ -47,7 +47,8 @@ class StripeWebhookController extends Controller
 
         try {
             if ($event->type === 'checkout.session.completed') {
-                $settlePayment->handle($payment, notifyOnFailure: true);
+                // Also reaches a payment closed meanwhile: Stripe is asked, read-only, whether it was paid.
+                $settlePayment->handle($payment, notifyOnFailure: true, moneyMoved: true);
             } else {
                 $closePayment->handle($payment, PaymentStatus::Expired, notify: true);
             }

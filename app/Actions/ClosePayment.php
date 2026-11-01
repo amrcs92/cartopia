@@ -6,10 +6,12 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentPurpose;
 use App\Enums\PaymentStatus;
 use App\Enums\WalletTransactionType;
+use App\Mail\PaymentProblemMail;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Wallet\Wallet;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use InvalidArgumentException;
 
 /**
@@ -26,7 +28,7 @@ class ClosePayment
             throw new InvalidArgumentException("A payment cannot be closed as [{$status->value}].");
         }
 
-        return DB::transaction(function () use ($payment, $status): Payment {
+        return DB::transaction(function () use ($payment, $status, $notify): Payment {
             $locked = Payment::query()->whereKey($payment->id)->lockForUpdate()->firstOrFail();
 
             if (! $locked->isPending()) {
@@ -46,7 +48,10 @@ class ClosePayment
                 }
             }
 
-            // sends PaymentProblemMail from phase 5 (when $notify is true)
+            // Only the call that closes the payment gets here, so a repeat queues nothing.
+            if ($notify) {
+                Mail::to($locked->user)->queue(new PaymentProblemMail($locked));
+            }
 
             return $locked;
         });

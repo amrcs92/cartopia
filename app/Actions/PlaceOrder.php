@@ -9,11 +9,13 @@ use App\Enums\PaymentMethod;
 use App\Enums\WalletTransactionType;
 use App\Exceptions\EmptyCart;
 use App\Exceptions\InsufficientBalance;
+use App\Mail\OrderReceiptMail;
 use App\Models\Order;
 use App\Models\ShippingMethod;
 use App\Models\User;
 use App\Wallet\Wallet;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Prices the basket from the database, debits the wallet and snapshots the
@@ -53,6 +55,9 @@ class PlaceOrder
             $this->wallet->debit($user, $total, WalletTransactionType::Purchase, "Order #{$order->id}", $order);
 
             $cart->clear();
+
+            // Held until the transaction commits (the mailable is afterCommit).
+            Mail::to($user)->queue(new OrderReceiptMail($order));
 
             return $order->load('items');
         });

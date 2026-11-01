@@ -140,6 +140,9 @@ interface PaymentGateway
     /** Asks the provider whether the payment went through (capturing it, for PayPal). Safe to call again. */
     public function confirm(Payment $payment): PaymentOutcome;
 
+    /** Asks the provider what became of the payment without changing anything: no capture, no expiry. */
+    public function lookup(Payment $payment): PaymentOutcome;
+
     /** Stops the hosted payment from being paid. Reports if it was already paid. */
     public function cancel(Payment $payment): PaymentOutcome;
 }
@@ -182,12 +185,13 @@ Uses the official `stripe/stripe-php` SDK through a `StripeClient` built from `s
   - `success_url` and `cancel_url` from the request
   - `expires_at` set to now plus 30 minutes, Stripe's minimum
 
-  The request sends the idempotency key `payment-{id}-start`. It returns the session id and its `url`.
+  The request sends the idempotency key `payment-{id}-{createdAt}-start`. It returns the session id and its `url`.
 - **confirm:** retrieves the session with `expand: ['payment_intent.latest_charge']`.
   - `status: complete` with `payment_status: paid` gives `Succeeded`. The PaymentIntent id and the charge's `payment_method_details.card.brand` and `last4` are read from it.
   - `open` gives `StillPending`.
   - `expired` gives `Cancelled`.
-- **cancel:** expires the session (idempotency key `payment-{id}-cancel`). If Stripe refuses because the session is already complete, it confirms instead and returns that outcome.
+- **lookup:** the same read as confirm.
+- **cancel:** expires the session (idempotency key `payment-{id}-{createdAt}-cancel`). If Stripe refuses because the session is already complete, it confirms instead and returns that outcome.
 - **Webhook verification:** `\Stripe\Webhook::constructEvent` with `services.stripe.webhook_secret`.
 - **Live-key guard:** the constructor throws a `LogicException` if the secret starts with `sk_live_` or `rk_live_`.
 
@@ -201,13 +205,15 @@ Uses Laravel's HTTP client against PayPal's Orders v2 REST API. The base URL is 
   - one purchase unit: `custom_id` set to the payment id, an amount whose breakdown holds `item_total` and `shipping`, and `items` from the request
   - `payment_source.paypal.experience_context` holding the return and cancel URLs, `brand_name: Cartopia`, `user_action: PAY_NOW` and `shipping_preference: NO_SHIPPING`
 
-  The header `PayPal-Request-Id: payment-{id}-start` is sent. It returns the order id and the `payer-action` link.
-- **confirm:** `POST /v2/checkout/orders/{id}/capture` with `PayPal-Request-Id: payment-{id}-capture`.
+  The header `PayPal-Request-Id: payment-{id}-{createdAt}-start` is sent. It returns the order id and the `payer-action` link.
+- **confirm:** `POST /v2/checkout/orders/{id}/capture` with `PayPal-Request-Id: payment-{id}-{createdAt}-capture`.
   - A capture with status `COMPLETED` gives `Succeeded`, with the capture id and amount.
   - A capture with status `PENDING` (held by PayPal) gives `StillPending` with the capture id. `PAYMENT.CAPTURE.COMPLETED` settles it later.
   - `INSTRUMENT_DECLINED` and other declines give `Declined`.
   - `ORDER_ALREADY_CAPTURED` fetches the order (`GET /v2/checkout/orders/{id}`) and reads its existing capture as above. That makes `confirm` safe to call again.
   - An order that hasn't been approved yet gives `StillPending`.
+  - A payment that already has a capture id (a held capture) isn't captured again: confirm reads the order with lookup instead.
+- **lookup:** `GET /v2/checkout/orders/{id}`, read as above. It never captures. A `COMPLETED` capture gives `Succeeded`, a `PENDING` one `StillPending` with the capture id, and an order with no capture `StillPending`.
 - **cancel:** PayPal orders can't be voided before approval, so this only reports `Cancelled`. Safety comes from section 6: Cartopia never captures a payment it has closed.
 
 ### 3.4 `PayPalWebhookVerifier`
@@ -304,6 +310,10 @@ It takes the payment, the end status (`cancelled`, `failed` or `expired`) and wh
 The new `CancelPayment` action handles it. If the payment is pending, it calls the gateway's `cancel`:
 - **`Cancelled`:** `ClosePayment` with `cancelled`, no email.
 - **`Succeeded`:** the shopper paid after all, for example in another tab. `CompletePayment` runs instead.
+- **`Declined`:** `ClosePayment` with `cancelled`, no email.
+- **`StillPending`:** nothing changes, and the shopper sees the still-waiting message.
+
+A payment that already has a `provider_payment_id` is never cancelled: PayPal holds that capture, and its webhook settles it. The provider isn't called, and the shopper sees the still-waiting message.
 
 Then it redirects as in section 4.4, step 4. A cancelled order payment leaves the basket untouched and returns any wallet share.
 
@@ -313,7 +323,7 @@ Then it redirects as in section 4.4, step 4. A cancelled order payment leaves th
 - It is excluded from CSRF in `bootstrap/app.php` and needs no login.
 - `StripeWebhookController` verifies the `Stripe-Signature` header. A bad signature, a missing secret or an unparseable payload answers 400.
 - The payment is found by `provider_reference`, the session id.
-- **`checkout.session.completed`:** if the payment is still pending, it confirms through the gateway and runs `CompletePayment`.
+- **`checkout.session.completed`:** if the payment is still pending, it confirms through the gateway and runs `CompletePayment`. If Cartopia had closed it meanwhile (expired or cancelled), it asks Stripe with `lookup`. If Stripe says it was paid, `CompletePayment` runs and money wins (section 6.3). A succeeded payment is left alone, so a repeat does nothing.
 - **`checkout.session.expired`:** `ClosePayment` with `expired`, **with** the email.
 - Unknown sessions and other event types answer 200 and are ignored, so Stripe doesn't retry them.
 
@@ -327,16 +337,22 @@ Then it redirects as in section 4.4, step 4. A cancelled order payment leaves th
 | Event | What happens |
 |---|---|
 | `CHECKOUT.ORDER.APPROVED` | The buyer approved but may never come back. If the payment is still pending, Cartopia confirms (captures) it now and runs `CompletePayment` on `Succeeded`. The capture carries the same `PayPal-Request-Id` as the return's, so the two can't both charge. |
-| `PAYMENT.CAPTURE.COMPLETED` | If the payment is still pending (its capture was held), it confirms through the gateway and runs `CompletePayment`. |
+| `PAYMENT.CAPTURE.COMPLETED` | If the payment is still pending (its capture was held), it confirms through the gateway and runs `CompletePayment`. If Cartopia had closed it meanwhile, it asks PayPal with `lookup`, which never captures. If PayPal says it was paid, `CompletePayment` runs and money wins (section 6.3). |
 | `PAYMENT.CAPTURE.DENIED` | `ClosePayment` with `failed`, **with** the email. |
 | Anything else, or an unknown payment | Answers 200 and is ignored. |
 
 ### 4.8 Stale payments
 
-The artisan command `payments:expire-stale`, scheduled every 15 minutes in `routes/console.php`:
-- It runs `ClosePayment` with `expired`, **with** the email, for payments that are still `pending` more than 3 hours after they were created.
+The artisan command `payments:expire-stale`, scheduled every 15 minutes in `routes/console.php`, looks at payments that are still `pending` more than 3 hours after they were created.
 - It skips payments that already have a `provider_payment_id`: those are PayPal captures held by PayPal, which its webhook settles.
-- It doesn't call the providers. Stripe sessions expire on their own after 30 minutes, and Cartopia never captures a PayPal payment that is no longer pending.
+- For each of the others, it locks the row and asks the provider first, with `lookup`. That only reads: nothing is captured or expired. A shopper can pay and never come back, and the webhook may be missing or late, so the provider may hold money for a payment that is still pending here.
+  - **Paid:** `CompletePayment` runs, as if the shopper had come back. The receipt goes out, and no problem email.
+  - **A capture PayPal is holding:** the capture id is stored and the payment stays pending, as above.
+  - **The provider can't be reached, or refuses the request:** the payment stays pending, and the next run asks again.
+  - **Anything else:** `ClosePayment` with `expired`, **with** the email.
+  - A provider that says the payment doesn't exist (PayPal's 404 on the order, Stripe's `resource_missing` on the session) means no money moved, so the payment expires too.
+- A payment that fails for any reason is logged and left for the next run, and the job goes on to the next payment. The command then exits with a failure code.
+- Runs never overlap (`withoutOverlapping`).
 
 ## 5. Splitting a payment
 
@@ -380,8 +396,8 @@ Database constraints back the lock up:
 
 ### 6.2 Calls to the providers
 
-- Every Stripe request that writes sends an `Idempotency-Key`, and every PayPal create or capture sends a `PayPal-Request-Id`. Both are built from the payment id and the step (`payment-42-start`, `payment-42-capture`). A retry after a timeout gets the first answer back instead of a second session or a second charge.
-- Cartopia never calls `confirm` for a payment that isn't pending.
+- Every Stripe request that writes sends an `Idempotency-Key`, and every PayPal create or capture sends a `PayPal-Request-Id`. Both are built from the payment id, its creation time as a Unix timestamp, and the step: `payment-{id}-{createdAt}-{step}`, such as `payment-42-1793000000-start` or `payment-42-1793000000-capture`. A retry after a timeout gets the first answer back instead of a second session or a second charge. The creation time keeps keys apart when a reset dev database hands out the same ids again, since Stripe and PayPal keep keys for a day or more.
+- Cartopia never calls `confirm` for a payment that isn't pending. For a closed payment it only calls `lookup`, which reads and changes nothing.
 - PayPal's `ORDER_ALREADY_CAPTURED` is read as the existing capture.
 
 ### 6.3 Races
@@ -394,7 +410,7 @@ Database constraints back the lock up:
 | A webhook delivered twice | The second finds the payment settled and does nothing. |
 | Cancel in one tab, paid in another (Stripe) | Expiring the session fails because it's complete, so `cancel` confirms and the order is placed. |
 | The stale job and a late PayPal return | Both lock the row. If the job wins, the payment is `expired` and the return never captures, so no money is taken. |
-| The provider confirms money for a payment Cartopia had closed | Prevented by design: Stripe sessions are expired at Stripe before the row closes, or have expired there long before the 3-hour job; PayPal is never captured once closed. If it happens anyway, money the provider confirms wins: the payment becomes `succeeded` and the order `Placed`, but the basket is left alone (the shopper may have filled it again). For a split order, the returned wallet share is debited again if the balance allows; otherwise it's logged at critical level for the admin panel. |
+| The provider confirms money for a payment Cartopia had closed | It can happen: the shopper pays but never comes back, or the return times out, and the webhook is late. The stale job asks the provider before it closes a payment (section 4.8). A late Stripe `checkout.session.completed` or PayPal `PAYMENT.CAPTURE.COMPLETED` for a closed payment asks again (sections 4.6 and 4.7). Money the provider confirms wins: the payment becomes `succeeded` and the order `Placed`, but the basket is left alone (the shopper may have filled it again). For a split order, the returned wallet share is debited again if the balance allows; otherwise it's logged at critical level for the admin panel. |
 | A double click on "Place order" | The button disables itself while the request runs, and `throttle:10,1` stays. A second request that got through only creates a second unpaid order (and a second wallet hold, for a split). That expires and returns on its own. |
 
 **Emails are sent exactly once** because each is queued inside the single locked state change that causes it, and the mailables are dispatched after commit. A rolled-back transaction sends nothing.
@@ -482,11 +498,26 @@ All three are queued mailables (`ShouldQueue`) that are dispatched after the dat
 
 | Email | Subject | Sent when | Holds |
 |---|---|---|---|
-| `OrderReceiptMail` | "Your Cartopia receipt for order #5" | An order becomes `Placed`: by wallet in `PlaceOrder`, by card, PayPal or split in `CompletePayment` | The receipt page's content: items, quantities and prices, subtotal, delivery, total, how it was paid (both parts for a split), the payment reference, the wallet balance after (when the wallet paid any of it), and a "View your order" link |
+| `OrderReceiptMail` | "Your Cartopia Order #5 Is Confirmed!" | An order becomes `Placed`: by wallet in `PlaceOrder`, by card, PayPal or split in `CompletePayment` | The receipt page's content: items, quantities and prices, subtotal, delivery, total, how it was paid (both parts for a split), the payment reference, the wallet balance after (when the wallet paid any of it), and a "View your order" link |
 | `TopUpReceiptMail` | "You added $25.00 to your Cartopia wallet" | A paid top-up is credited in `CompletePayment` | The amount, card or PayPal, the payment reference, the new balance, and a "Go to your wallet" link |
-| `PaymentProblemMail` | "Your Cartopia order #5 wasn't paid" (or "Your $25.00 top-up wasn't paid") | A payment ends badly **while the shopper isn't on the page**: expired by the stale job or Stripe's expiry webhook, or denied by PayPal's webhook | What wasn't paid, "Nothing was charged.", the returned wallet share for a split, "Your basket is still there." (for orders), and a link back to the basket or wallet |
+| `PaymentProblemMail` | "Payment Not Completed – Cartopia Order #5" (or "Payment Not Completed – Cartopia Top-up of $25.00") | A payment ends badly **while the shopper isn't on the page**: expired by the stale job or Stripe's expiry webhook, or denied by PayPal's webhook | What wasn't paid, "Nothing was charged.", the returned wallet share for a split, "Your basket is still there." (for orders), and a link back to the basket or wallet |
 
 A shopper who cancels on the provider's page, or sees a decline on return, gets the on-screen message and no email.
+
+The approved wording (canvas, Emails page), verbatim. Each email shows a title, then an intro line under it:
+
+| Email | Title | Intro |
+|---|---|---|
+| Order receipt (wallet, Stripe, PayPal or split) | "Your order is confirmed!" | "Thank you for shopping at Cartopia. We've successfully received your order, and we're happy to share your purchase details below." |
+| Top-up receipt | "$25.00 is in your wallet" | "Your top-up went through. It is ready to spend at checkout." |
+| Payment problem, order | "Payment not completed" | "We couldn't complete your payment for this order. Don't worry — your basket is saved, and you can try again whenever you're ready." |
+| Payment problem, top-up | "Payment not completed" | "We couldn't complete your payment for this top-up. Nothing was charged, and you can try again from your wallet whenever you're ready." |
+
+- **Receipt rows** under the slip: "Paid with", "Payment ref.", and for a split "Paid from wallet" and "Paid through Stripe" (or PayPal), then "Wallet balance after" when the wallet paid any of it. The slip's top line is "Order #5 · Pickup" (or the delivery method) and the date.
+- **Top-up rows:** "Amount", "Paid with", "Payment ref.", "New balance".
+- **Problem email (order):** an "Order" row ("#5 · $4.34"), then ticks: "Nothing was charged.", "$2.10 has been restored to your wallet." (split only), "Your basket is still there.". The top-up version shows an "Amount" row and the "Nothing was charged." tick.
+- **Buttons:** "View your order", "Go to your wallet", "Back to your basket" (or "Go to your wallet" for a top-up problem).
+- **Footer:** "Cartopia, a small online market for everyday staples." and "You're getting this email because you have a Cartopia account."
 
 ### 8.2 Look and delivery
 
@@ -591,12 +622,14 @@ Documented in the README.
   - a valid signature completes the payment, and a bad one or a missing secret answers 400
   - an expired event closes the payment and emails
   - unknown sessions and events answer 200
+  - a completed event for a payment closed meanwhile asks Stripe and, if paid, places the order once, even when delivered twice
 - **The PayPal webhook:**
   - a failed verification answers 400
   - an approval with no return captures and places the order
   - an approval racing the return captures once
   - a pending capture followed by its completed event places the order
   - a denied capture closes the payment and emails
+  - a completed capture for a payment closed meanwhile asks PayPal and, if paid, places the order once; a late approval never captures
   - the payment is found by `custom_id`, then by the order id
 - **Cancel:**
   - it keeps the basket, cancels the order and returns a wallet share
@@ -604,6 +637,7 @@ Documented in the README.
 - **`payments:expire-stale`:**
   - it expires only pending payments older than 3 hours, emails, and returns wallet shares
   - it skips held PayPal captures
+  - it asks the provider first: a payment the provider reports paid is completed, with the receipt and no problem email
 - **Emails** (`Mail::fake()`):
   - each email is queued exactly once, including under duplicate returns and webhooks
   - nothing is queued when the transaction rolls back

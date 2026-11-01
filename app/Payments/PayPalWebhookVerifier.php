@@ -47,6 +47,8 @@ class PayPalWebhookVerifier
 
         try {
             $response = Http::withToken($this->gateway->accessToken())
+                ->timeout(PayPalGateway::TIMEOUT)
+                ->connectTimeout(PayPalGateway::CONNECT_TIMEOUT)
                 ->withBody($json, 'application/json')
                 ->acceptJson()
                 ->post(PayPalGateway::BASE_URL.'/v1/notifications/verify-webhook-signature');
