@@ -5,10 +5,12 @@ use App\Actions\CompletePayment;
 use App\Cart\Cart;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
+use App\Enums\WalletTransactionType;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\Product;
+use App\Models\WalletTransaction;
 use App\Payments\Outcomes\Succeeded;
 use App\Payments\PaymentGateways;
 use App\Support\Money;
@@ -159,11 +161,38 @@ it('places an order whose payment was closed, but keeps the basket', function ()
         ->and(Cart::forUser($user)->count())->toBe(1);
 });
 
-it('refuses to complete a top-up for now', function () {
+it('credits the wallet when a top-up is paid', function () {
+    $payment = Payment::factory()->topUp(1000)->stripe()->create();
+
+    app(CompletePayment::class)->handle($payment, paidOutcome($payment));
+
+    $row = WalletTransaction::query()->where('payment_id', $payment->id)->sole();
+
+    expect($payment->user->fresh()->balance->cents())->toBe(1000)
+        ->and($row->type)->toBe(WalletTransactionType::TopUp)
+        ->and($row->description)->toBe('Top-up with Stripe')
+        ->and($payment->fresh()->status)->toBe(PaymentStatus::Succeeded);
+});
+
+it('credits a top-up only once however often it completes', function () {
     $payment = Payment::factory()->topUp(1000)->create();
 
     app(CompletePayment::class)->handle($payment, paidOutcome($payment));
-})->throws(LogicException::class, 'Top-up payments are completed in Task 24');
+    app(CompletePayment::class)->handle($payment, paidOutcome($payment));
+
+    expect($payment->user->fresh()->balance->cents())->toBe(1000)
+        ->and(WalletTransaction::where('payment_id', $payment->id)->count())->toBe(1);
+});
+
+it('credits a top-up the provider confirms after it was closed', function () {
+    $payment = Payment::factory()->topUp(1000)->create();
+    app(ClosePayment::class)->handle($payment, PaymentStatus::Cancelled, notify: false);
+
+    app(CompletePayment::class)->handle($payment, paidOutcome($payment));
+
+    expect($payment->user->fresh()->balance->cents())->toBe(1000)
+        ->and($payment->fresh()->status)->toBe(PaymentStatus::Succeeded);
+});
 
 it('closes a pending payment and cancels its order', function () {
     [$user, $payment] = startedOrderPayment();
