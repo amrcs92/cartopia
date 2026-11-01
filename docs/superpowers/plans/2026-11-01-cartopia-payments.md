@@ -441,7 +441,7 @@ Start with `git switch -c payments/phase-2-checkout` from phase 1's branch.
   - `CheckoutController::store`:
     - For a hosted method, `Inertia::location($started->redirectUrl)`.
     - On `PaymentProviderUnavailable` or `PaymentProviderRejected`, `refused("We couldn't reach {Stripe|PayPal}. Try again in a moment.")` (the provider name comes from the method, Stripe or PayPal).
-    - On `AmountTooSmall`, `refused('Card and PayPal payments start at $0.50.')`.
+    - On `AmountTooSmall`, `refused('Stripe and PayPal payments start at $0.50.')`.
   - The shared prop `paymentMethods`: a list of `PaymentMethod` values from `available()`.
 
 - [ ] **Step 1: Write the failing tests.** Set `PaymentGateways::fake()` in a `beforeEach`, and reuse `checkoutSetup()` from `CheckoutTest` by moving it to `tests/Pest.php`. In `StartOrderPaymentTest`:
@@ -456,7 +456,7 @@ Start with `git switch -c payments/phase-2-checkout` from phase 1's branch.
     - the response redirects to `cart.show` with the `checkoutError` flash "We couldn't reach Stripe. Try again in a moment."
   - **`it('refuses an empty basket')`:** the `checkoutError` is "Your basket is empty."
   - **`it('refuses a method that is not available')`:** after `config(['services.paypal.client_id' => null])` and with no fake bound, `payment_method=paypal` gives a validation error on `payment_method`.
-  - **`it('refuses card payments under 50 cents')`:** a single product priced 30, picked up, with `payment_method=stripe`, gives the `checkoutError` "Card and PayPal payments start at $0.50."
+  - **`it('refuses card payments under 50 cents')`:** a single product priced 30, picked up, with `payment_method=stripe`, gives the `checkoutError` "Stripe and PayPal payments start at $0.50."
   - **`it('passes the order lines to the gateway')`:** `$fake->started[0][1]` has two lines and a delivery fee of 500, its total equals 1274, and its description is "Cartopia order #{id}".
 
   In `CompletePaymentTest`:
@@ -637,7 +637,7 @@ Start with `git switch -c payments/phase-2-checkout` from phase 1's branch.
 - [ ] **Step 1: Build the wordmarks** as spec section 7.1 draws them: text, with the tokens, and `aria-hidden`. The option card carries a visible "Card" or "PayPal" name for assistive technology through `sr-only`.
 - [ ] **Step 2: Extend `PayWithOptions`:**
   - Add one `OptionCard` per available method, with the `data-test` values `pay-stripe` and `pay-paypal`.
-  - When `totalCents < 50`, the hosted cards are disabled and the note "Card and PayPal payments start at $0.50." is shown.
+  - When `totalCents < 50`, the hosted cards are disabled and the note "Stripe and PayPal payments start at $0.50." is shown.
   - The wallet card's disabled state is unchanged.
 - [ ] **Step 3: Update `CheckoutPanel`:**
   - The desktop button text comes from `buttonLabel`.
@@ -809,7 +809,7 @@ Start with `git switch -c payments/phase-4-top-ups` from phase 3's branch.
 - [ ] **Step 1: Update `TopUpForm`:**
   - Reuse the hosted option cards from Task 16, as the canvas's Wallet board draws them. Stripe is the default.
   - The button reads "Continue to pay $X", or "Continue to pay" while the amount is empty or invalid.
-  - With no methods available, show "Card and PayPal payments aren't set up on this copy of Cartopia." and disable the button.
+  - With no methods available, show "Stripe and PayPal payments aren't set up on this copy of Cartopia." and disable the button.
   - Remove the comment about free credit.
 - [ ] **Step 2: Rewrite the browser tests**, with the fake bound:
   - The quick amount $25 gives "Continue to pay $25.00".

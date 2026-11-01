@@ -411,7 +411,7 @@ The mockup each item matches is named in brackets.
 - **PayPal card:** the "PayPal" wordmark drawn as text: "Pay" in `#003087` in light mode and `#8FB4FF` in dark mode, "Pal" in `#009CDE`. Under it, "Pay with your PayPal account".
 - The wordmark colours become new tokens in `resources/css/app.css`, `brand-stripe`, `brand-paypal` and `brand-paypal-light`, with light and dark values, following the redesign's token rule.
 - Only the methods in the shared `paymentMethods` prop are shown.
-- **Below $0.50,** the Stripe and PayPal cards are disabled with "Card and PayPal payments start at $0.50."
+- **Below $0.50,** the Stripe and PayPal cards are disabled with "Stripe and PayPal payments start at $0.50."
 
 **The wallet card has three states:**
 
@@ -437,7 +437,7 @@ The phone bar's button keeps the text "Place order". While the request runs, bot
 
 - Under the amount, a "Pay with" fieldset holds the Stripe and PayPal option cards, drawn as on the canvas. Stripe is picked by default.
 - The button reads "Continue to pay $X", or "Continue to pay" while the amount is empty or invalid.
-- If no hosted method is available, the fieldset is replaced by "Card and PayPal payments aren't set up on this copy of Cartopia." and the button is disabled.
+- If no hosted method is available, the fieldset is replaced by "Stripe and PayPal payments aren't set up on this copy of Cartopia." and the button is disabled.
 - The comment in `TopUpForm.vue` about free credit goes.
 
 ### 7.3 Receipt [Receipt: wallet, Receipt: card, Receipt: PayPal, Receipt: split]
@@ -471,7 +471,7 @@ All of these are toasts, plus the inline `checkoutError` spot on the basket for 
 | PayPal declines on return | "PayPal couldn't take the payment. Try again or pick another way to pay." |
 | The provider can't be reached when starting | "We couldn't reach Stripe. Try again in a moment." (or "PayPal") |
 | The payment is still pending on return | "We're still waiting for the payment to be confirmed. Check your orders in a minute." |
-| The hosted part would be below $0.50 | "Card and PayPal payments start at $0.50." |
+| The hosted part would be below $0.50 | "Stripe and PayPal payments start at $0.50." |
 | A top-up succeeds | "Added $25.00 to your wallet." |
 
 ## 8. Emails
