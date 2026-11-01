@@ -4,8 +4,10 @@ namespace App\Http\Middleware;
 
 use App\Cart\Cart;
 use App\Catalog\Aisles;
+use App\Enums\PaymentMethod;
 use App\Http\Resources\AisleResource;
 use App\Models\User;
+use App\Payments\PaymentGateways;
 use Closure;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -58,6 +60,11 @@ class HandleInertiaRequests extends Middleware
                 'user' => fn (): ?array => $this->currentUser($request->user()),
             ],
             'cart' => fn (): array => ['count' => app(Cart::class)->count()],
+            // The hosted methods with credentials, e.g. ['stripe', 'paypal'].
+            'paymentMethods' => fn (): array => array_map(
+                fn (PaymentMethod $method): string => $method->value,
+                app(PaymentGateways::class)->available(),
+            ),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             // Only sent when the phone menu or the footer asks for it; once
             // loaded, the client keeps it across visits instead of refetching.

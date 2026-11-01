@@ -4,6 +4,7 @@ use App\Cart\Cart;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
+use App\Payments\PaymentGateways;
 use App\Support\Money;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -83,4 +84,18 @@ it('keeps bracketed query arrays as requested in the page url', function () {
 
             expect($url)->toContain('aisle%5B%5D=drinks')->not->toContain('aisle%5B0%5D');
         });
+});
+
+it('shares the available payment methods', function () {
+    PaymentGateways::fake();
+
+    $this->get(route('home'))
+        ->assertInertia(fn (Assert $page) => $page->where('paymentMethods', ['stripe', 'paypal']));
+});
+
+it('shares no payment methods without keys', function () {
+    config(['services.stripe.secret' => null, 'services.paypal.client_id' => null, 'services.paypal.secret' => null]);
+
+    $this->get(route('home'))
+        ->assertInertia(fn (Assert $page) => $page->where('paymentMethods', []));
 });

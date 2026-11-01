@@ -3,27 +3,15 @@
 use App\Cart\Cart;
 use App\Enums\PaymentMethod;
 use App\Models\Order;
-use App\Models\Product;
 use App\Models\ShippingMethod;
 use App\Models\User;
-use App\Support\Money;
 use Inertia\Testing\AssertableInertia as Assert;
-
-function checkoutSetup(int $balance = 10000): array
-{
-    $user = User::factory()->withBalance(Money::fromCents($balance))->create();
-    $cart = Cart::forUser($user);
-    $cart->add(Product::factory()->create(['price' => 200]), 2);
-    $cart->add(Product::factory()->create(['price' => 374]), 1);
-
-    return [$user, ShippingMethod::factory()->ups()->create()];
-}
 
 it('checks out and redirects to the order', function () {
     [$user, $ups] = checkoutSetup();
 
     $response = $this->actingAs($user)
-        ->post(route('checkout.store'), ['shipping_method_id' => $ups->id]);
+        ->post(route('checkout.store'), ['shipping_method_id' => $ups->id, 'payment_method' => 'wallet']);
 
     $order = Order::sole();
     $response->assertRedirect(route('orders.show', $order));
@@ -45,6 +33,7 @@ it('ignores client-sent prices', function () {
 
     $this->actingAs($user)->post(route('checkout.store'), [
         'shipping_method_id' => $ups->id,
+        'payment_method' => 'wallet',
         'price' => 1,
         'total' => 1,
         'total_price' => 0.01,
@@ -58,7 +47,7 @@ it('flashes an error on insufficient balance', function () {
     [$user, $ups] = checkoutSetup(1000);
 
     $this->actingAs($user)
-        ->post(route('checkout.store'), ['shipping_method_id' => $ups->id])
+        ->post(route('checkout.store'), ['shipping_method_id' => $ups->id, 'payment_method' => 'wallet'])
         ->assertRedirect(route('cart.show'));
 
     $this->get(route('cart.show'))->assertInertia(fn (Assert $page) => $page
@@ -74,16 +63,16 @@ it('flashes an error on insufficient balance', function () {
 it('redirects guests to login', function () {
     $ups = ShippingMethod::factory()->ups()->create();
 
-    $this->post(route('checkout.store'), ['shipping_method_id' => $ups->id])
+    $this->post(route('checkout.store'), ['shipping_method_id' => $ups->id, 'payment_method' => 'wallet'])
         ->assertRedirect(route('login'));
 });
 
 it('places only one order on double submit', function () {
     [$user, $ups] = checkoutSetup();
 
-    $this->actingAs($user)->post(route('checkout.store'), ['shipping_method_id' => $ups->id]);
+    $this->actingAs($user)->post(route('checkout.store'), ['shipping_method_id' => $ups->id, 'payment_method' => 'wallet']);
     $this->actingAs($user)
-        ->post(route('checkout.store'), ['shipping_method_id' => $ups->id])
+        ->post(route('checkout.store'), ['shipping_method_id' => $ups->id, 'payment_method' => 'wallet'])
         ->assertRedirect(route('cart.show'));
 
     $this->get(route('cart.show'))->assertInertia(fn (Assert $page) => $page
@@ -96,12 +85,12 @@ it('throttles checkout', function () {
     [$user, $ups] = checkoutSetup();
 
     foreach (range(1, 10) as $i) {
-        $this->actingAs($user)->post(route('checkout.store'), ['shipping_method_id' => $ups->id])
+        $this->actingAs($user)->post(route('checkout.store'), ['shipping_method_id' => $ups->id, 'payment_method' => 'wallet'])
             ->assertStatus(302);
     }
 
     $this->actingAs($user)
-        ->post(route('checkout.store'), ['shipping_method_id' => $ups->id])
+        ->post(route('checkout.store'), ['shipping_method_id' => $ups->id, 'payment_method' => 'wallet'])
         ->assertStatus(429);
 });
 
@@ -109,8 +98,18 @@ it('validates the shipping method', function () {
     [$user] = checkoutSetup();
 
     $this->actingAs($user)
-        ->post(route('checkout.store'), ['shipping_method_id' => 999])
+        ->post(route('checkout.store'), ['shipping_method_id' => 999, 'payment_method' => 'wallet'])
         ->assertSessionHasErrors('shipping_method_id');
+
+    expect(Order::count())->toBe(0);
+});
+
+it('requires a payment method', function () {
+    [$user, $ups] = checkoutSetup();
+
+    $this->actingAs($user)
+        ->post(route('checkout.store'), ['shipping_method_id' => $ups->id])
+        ->assertSessionHasErrors('payment_method');
 
     expect(Order::count())->toBe(0);
 });

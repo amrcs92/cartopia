@@ -24,6 +24,8 @@ export type SharedProps = {
     cart: {
         count: number;
     };
+    /** The hosted payment methods with credentials configured. */
+    paymentMethods: ('stripe' | 'paypal')[];
     sidebarOpen: boolean;
     /** Sent only on request (a partial reload), for the phone menu and footer. */
     menuAisles?: Aisle[];
