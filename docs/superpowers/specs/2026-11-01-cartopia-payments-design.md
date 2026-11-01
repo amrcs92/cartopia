@@ -482,11 +482,26 @@ All three are queued mailables (`ShouldQueue`) that are dispatched after the dat
 
 | Email | Subject | Sent when | Holds |
 |---|---|---|---|
-| `OrderReceiptMail` | "Your Cartopia receipt for order #5" | An order becomes `Placed`: by wallet in `PlaceOrder`, by card, PayPal or split in `CompletePayment` | The receipt page's content: items, quantities and prices, subtotal, delivery, total, how it was paid (both parts for a split), the payment reference, the wallet balance after (when the wallet paid any of it), and a "View your order" link |
+| `OrderReceiptMail` | "Your Cartopia Order #5 Is Confirmed!" | An order becomes `Placed`: by wallet in `PlaceOrder`, by card, PayPal or split in `CompletePayment` | The receipt page's content: items, quantities and prices, subtotal, delivery, total, how it was paid (both parts for a split), the payment reference, the wallet balance after (when the wallet paid any of it), and a "View your order" link |
 | `TopUpReceiptMail` | "You added $25.00 to your Cartopia wallet" | A paid top-up is credited in `CompletePayment` | The amount, card or PayPal, the payment reference, the new balance, and a "Go to your wallet" link |
-| `PaymentProblemMail` | "Your Cartopia order #5 wasn't paid" (or "Your $25.00 top-up wasn't paid") | A payment ends badly **while the shopper isn't on the page**: expired by the stale job or Stripe's expiry webhook, or denied by PayPal's webhook | What wasn't paid, "Nothing was charged.", the returned wallet share for a split, "Your basket is still there." (for orders), and a link back to the basket or wallet |
+| `PaymentProblemMail` | "Payment Not Completed – Cartopia Order #5" (or "Payment Not Completed – Cartopia Top-up of $25.00") | A payment ends badly **while the shopper isn't on the page**: expired by the stale job or Stripe's expiry webhook, or denied by PayPal's webhook | What wasn't paid, "Nothing was charged.", the returned wallet share for a split, "Your basket is still there." (for orders), and a link back to the basket or wallet |
 
 A shopper who cancels on the provider's page, or sees a decline on return, gets the on-screen message and no email.
+
+The approved wording (canvas, Emails page), verbatim. Each email shows a title, then an intro line under it:
+
+| Email | Title | Intro |
+|---|---|---|
+| Order receipt (wallet, Stripe, PayPal or split) | "Your order is confirmed!" | "Thank you for shopping at Cartopia. We've successfully received your order, and we're happy to share your purchase details below." |
+| Top-up receipt | "$25.00 is in your wallet" | "Your top-up went through. It is ready to spend at checkout." |
+| Payment problem, order | "Payment not completed" | "We couldn't complete your payment for this order. Don't worry — your basket is saved, and you can try again whenever you're ready." |
+| Payment problem, top-up | "Payment not completed" | "We couldn't complete your payment for this top-up. Nothing was charged, and you can try again from your wallet whenever you're ready." |
+
+- **Receipt rows** under the slip: "Paid with", "Payment ref.", and for a split "Paid from wallet" and "Paid through Stripe" (or PayPal), then "Wallet balance after" when the wallet paid any of it. The slip's top line is "Order #5 · Pickup" (or the delivery method) and the date.
+- **Top-up rows:** "Amount", "Paid with", "Payment ref.", "New balance".
+- **Problem email (order):** an "Order" row ("#5 · $4.34"), then ticks: "Nothing was charged.", "$2.10 has been restored to your wallet." (split only), "Your basket is still there.". The top-up version shows an "Amount" row and the "Nothing was charged." tick.
+- **Buttons:** "View your order", "Go to your wallet", "Back to your basket" (or "Go to your wallet" for a top-up problem).
+- **Footer:** "Cartopia, a small online market for everyday staples." and "You're getting this email because you have a Cartopia account."
 
 ### 8.2 Look and delivery
 
