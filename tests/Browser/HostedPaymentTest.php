@@ -90,3 +90,34 @@ it('defaults to card when the wallet is short', function () {
         ->assertSee('Pay $15.00 with Stripe')
         ->assertNoJavaScriptErrors();
 });
+
+it('splits a short wallet with Stripe', function () {
+    PaymentGateways::fake();
+    $user = hostedShopper(500);
+    $this->actingAs($user);
+
+    openBasketWithPeas()
+        ->click('Pickup')
+        ->assertSee('My $5.00 balance')
+        ->assertSee('Wallet $5.00 · Stripe $5.00')
+        ->press('Pay $5.00 with Stripe')
+        ->waitForText('Order placed. $5.00 came from your wallet and your Stripe payment of $5.00 was approved.')
+        ->waitForText('Wallet balance after')
+        ->assertSee('$0.00')
+        ->assertNoJavaScriptErrors();
+
+    expect($user->refresh()->balance->cents())->toBe(0);
+});
+
+it('lets Stripe pay everything', function () {
+    PaymentGateways::fake();
+    $this->actingAs(hostedShopper(500));
+
+    openBasketWithPeas()
+        ->click('Pickup')
+        ->assertSee('Wallet $5.00 · Stripe $5.00')
+        ->click('label:has([data-test="wallet-switch"])')
+        ->assertSee('Pay $10.00 with Stripe')
+        ->assertDontSee('Wallet $5.00 · Stripe $5.00')
+        ->assertNoJavaScriptErrors();
+});
