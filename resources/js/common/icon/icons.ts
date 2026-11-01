@@ -5,6 +5,7 @@ export type IconName =
     | 'basket'
     | 'search'
     | 'search-sad'
+    | 'zoom-in'
     | 'menu'
     | 'close'
     | 'moon'
@@ -33,6 +34,11 @@ export const icons: Record<IconName, IconShape> = {
     'basket-add': { paths: [basket, handle, 'M12 12.5v5.2', 'M9.4 15.1h5.2'] },
     basket: { paths: [basket, handle] },
     search: { paths: ['M20 20l-4-4'], circles: [[11, 11, 7]] },
+    // The search lens with a plus, for "enlarge this photo".
+    'zoom-in': {
+        paths: ['M20 20l-4-4', 'M11 8v6M8 11h6'],
+        circles: [[11, 11, 7]],
+    },
     // The search lens with a frown and two eyes, for "nothing found".
     'search-sad': {
         paths: ['M20 20l-4-4', 'M8.4 13.9a3.4 3.4 0 0 1 5.2 0'],
