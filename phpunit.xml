@@ -32,5 +32,10 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="STRIPE_SECRET" value=""/>
+        <env name="STRIPE_WEBHOOK_SECRET" value=""/>
+        <env name="PAYPAL_CLIENT_ID" value=""/>
+        <env name="PAYPAL_SECRET" value=""/>
+        <env name="PAYPAL_WEBHOOK_ID" value=""/>
     </php>
 </phpunit>
