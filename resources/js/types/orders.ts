@@ -6,6 +6,15 @@ export type OrderItem = {
     line_total: string;
 };
 
+export type OrderPayment = {
+    method: 'wallet' | 'stripe' | 'paypal';
+    paid_with: string;
+    /** Shortened for display; `full` is the whole sentence with the id. */
+    reference: { short: string; full: string } | null;
+    slip_lines: { label: string; value: string }[];
+    tag: string;
+};
+
 export type Order = {
     id: number;
     status: string;
@@ -16,6 +25,7 @@ export type Order = {
     placed_at: string;
     /** Up to two product photo URLs (first two lines of the order). */
     thumbnails: string[];
+    payment: OrderPayment;
     items: OrderItem[];
 };
 

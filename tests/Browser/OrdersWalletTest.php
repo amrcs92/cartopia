@@ -68,7 +68,7 @@ it('shows the order-placed banner after checkout but not when coming back to it'
         ->click('a:has-text("Back to orders")')
         ->waitForText('Your orders')
         ->back()
-        ->waitForText('Wallet balance afterwards')
+        ->waitForText('Wallet balance after')
         ->wait(0.8)
         ->assertDontSee('Order placed.')
         ->assertDontSee('Your receipt is below.');

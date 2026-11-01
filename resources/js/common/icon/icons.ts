@@ -16,7 +16,10 @@ export type IconName =
     | 'chevron-left'
     | 'chevron-right'
     | 'check'
-    | 'user';
+    | 'user'
+    | 'wallet'
+    | 'card'
+    | 'external-link';
 
 type IconShape = {
     paths: string[];
@@ -66,4 +69,15 @@ export const icons: Record<IconName, IconShape> = {
     'chevron-right': { paths: ['M9 5l7 7-7 7'] },
     check: { paths: ['M7 12.5l3.2 3L17 9'] },
     user: { paths: ['M4.5 20a7.5 7.5 0 0 1 15 0'], circles: [[12, 8, 4]] },
+    wallet: {
+        paths: [
+            'M3 7h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 7l12-4v4M16 13.5h2',
+        ],
+    },
+    card: { paths: ['M2 6h20v12H2zM2 10h20M6 15h4'] },
+    'external-link': {
+        paths: [
+            'M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5',
+        ],
+    },
 };

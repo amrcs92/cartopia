@@ -17,7 +17,7 @@ class OrderController extends Controller
     {
         $orders = $request->user()->orders()
             ->placed()
-            ->with(['shippingMethod', 'items.product.primaryImage'])
+            ->with(['shippingMethod', 'succeededPayment', 'items.product.primaryImage'])
             ->latest()
             ->latest('id')
             ->paginate(self::PER_PAGE);
@@ -29,14 +29,16 @@ class OrderController extends Controller
 
     public function show(Order $order): Response
     {
-        $order->load(['shippingMethod', 'items.product.primaryImage']);
+        $order->load(['shippingMethod', 'succeededPayment', 'items.product.primaryImage']);
+
+        $balanceAfter = $order->walletTransactions()
+            ->where('type', WalletTransactionType::Purchase)
+            ->latest('id')
+            ->first()?->balance_after;
 
         return Inertia::render('orders/OrderShowPage', [
-            'order' => (new OrderResource($order))->resolve(),
-            'balance_after' => $order->walletTransactions()
-                ->where('type', WalletTransactionType::Purchase)
-                ->latest('id')
-                ->first()?->balance_after->format(),
+            'order' => (new OrderResource($order))->withBalanceAfter($balanceAfter)->resolve(),
+            'balance_after' => $balanceAfter?->format(),
         ]);
     }
 }
