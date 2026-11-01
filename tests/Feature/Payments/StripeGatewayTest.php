@@ -266,3 +266,20 @@ it('verifies a webhook signature', function () {
     expect(fn () => StripeGateway::verifyWebhook($payload, $signature, null))->toThrow(UnexpectedValueException::class);
     expect(fn () => StripeGateway::verifyWebhook($payload, $signature, ''))->toThrow(UnexpectedValueException::class);
 });
+
+it('looks up a session Stripe no longer knows as not paid', function () {
+    $payment = stripePayment();
+    $this->stripe->queue(404, ['error' => ['type' => 'invalid_request_error', 'code' => 'resource_missing', 'message' => 'No such checkout.session']]);
+
+    expect($this->gateway->lookup($payment))->toBeInstanceOf(Cancelled::class);
+});
+
+it('still rejects a lookup Stripe refuses for another reason', function (int $status, array $error) {
+    $payment = stripePayment();
+    $this->stripe->queue($status, ['error' => $error]);
+
+    expect(fn () => $this->gateway->lookup($payment))->toThrow(PaymentProviderRejected::class);
+})->with([
+    'not found, other code' => [404, ['type' => 'invalid_request_error', 'message' => 'Not found']],
+    'bad key' => [401, ['type' => 'invalid_request_error', 'message' => 'Invalid API Key']],
+]);

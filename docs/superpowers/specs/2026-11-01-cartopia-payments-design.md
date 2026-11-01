@@ -350,6 +350,7 @@ The artisan command `payments:expire-stale`, scheduled every 15 minutes in `rout
   - **A capture PayPal is holding:** the capture id is stored and the payment stays pending, as above.
   - **The provider can't be reached, or refuses the request:** the payment stays pending, and the next run asks again.
   - **Anything else:** `ClosePayment` with `expired`, **with** the email.
+  - A provider that says the payment doesn't exist (PayPal's 404 on the order, Stripe's `resource_missing` on the session) means no money moved, so the payment expires too.
 - A payment that fails for any reason is logged and left for the next run, and the job goes on to the next payment. The command then exits with a failure code.
 - Runs never overlap (`withoutOverlapping`).
 

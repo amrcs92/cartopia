@@ -107,7 +107,7 @@ class PayPalGateway implements PaymentGateway
         // A capture exists already (held by PayPal): read it. Posting the capture again
         // with the same request id could only replay the old answer.
         if ($payment->provider_payment_id !== null) {
-            return $this->lookup($payment);
+            return $this->outcome($this->getOrder($payment));
         }
 
         $response = $this->call($payment, fn (PendingRequest $http): Response => $http
@@ -122,7 +122,7 @@ class PayPalGateway implements PaymentGateway
         $issue = (string) $response->json('details.0.issue');
 
         if ($issue === 'ORDER_ALREADY_CAPTURED') {
-            return $this->lookup($payment);
+            return $this->outcome($this->getOrder($payment));
         }
 
         if ($issue === 'ORDER_NOT_APPROVED') {
@@ -137,12 +137,24 @@ class PayPalGateway implements PaymentGateway
     }
 
     /**
-     * Reads the order and its capture, if any. Never captures.
+     * Reads the order and its capture, if any. Never captures. An order PayPal
+     * doesn't know (404) took no money, so it reads as cancelled and the stale
+     * job can close the payment.
      */
     public function lookup(Payment $payment): PaymentOutcome
     {
-        return $this->outcome($this->call($payment, fn (PendingRequest $http): Response => $http
-            ->get("/v2/checkout/orders/{$payment->provider_reference}")));
+        $response = $this->getOrder($payment, [404]);
+
+        return $response->status() === 404 ? new Cancelled : $this->outcome($response);
+    }
+
+    /**
+     * @param  list<int>  $allow
+     */
+    private function getOrder(Payment $payment, array $allow = []): Response
+    {
+        return $this->call($payment, fn (PendingRequest $http): Response => $http
+            ->get("/v2/checkout/orders/{$payment->provider_reference}"), $allow);
     }
 
     /**

@@ -290,3 +290,22 @@ it('cancels without calling PayPal', function () {
 
     Http::assertNothingSent();
 });
+
+it('looks up an order PayPal no longer knows as not paid', function () {
+    Http::fake(paypalToken() + [PAYPAL.'/v2/checkout/orders/ORDER1' => Http::response([
+        'name' => 'RESOURCE_NOT_FOUND',
+        'details' => [['issue' => 'INVALID_RESOURCE_ID']],
+    ], 404)]);
+
+    expect($this->gateway->lookup(paypalPayment()))->toBeInstanceOf(Cancelled::class);
+});
+
+it('still rejects or fails a lookup PayPal refuses for another reason', function (int $status, string $exception) {
+    Http::fake(paypalToken() + [PAYPAL.'/v2/checkout/orders/ORDER1' => Http::response(['name' => 'NOT_AUTHORIZED'], $status)]);
+
+    expect(fn () => $this->gateway->lookup(paypalPayment()))->toThrow($exception);
+})->with([
+    'forbidden' => [403, PaymentProviderRejected::class],
+    'unprocessable' => [422, PaymentProviderRejected::class],
+    'server error' => [500, PaymentProviderUnavailable::class],
+]);

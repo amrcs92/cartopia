@@ -78,17 +78,31 @@ class StripeGateway implements PaymentGateway
         return new StartedPayment((string) $session->id, (string) $session->url);
     }
 
-    public function confirm(Payment $payment): PaymentOutcome
-    {
-        return $this->lookup($payment);
-    }
-
     /**
      * Reading the session is all confirm does for Stripe: the money moved on Stripe's page.
      */
-    public function lookup(Payment $payment): PaymentOutcome
+    public function confirm(Payment $payment): PaymentOutcome
     {
         return $this->outcome($this->retrieve($payment));
+    }
+
+    /**
+     * The same read as confirm. A session Stripe doesn't know took no money, so it
+     * reads as cancelled and the stale job can close the payment.
+     */
+    public function lookup(Payment $payment): PaymentOutcome
+    {
+        try {
+            return $this->confirm($payment);
+        } catch (PaymentProviderRejected $e) {
+            $previous = $e->getPrevious();
+
+            if ($previous instanceof InvalidRequestException && $previous->getStripeCode() === 'resource_missing') {
+                return new Cancelled;
+            }
+
+            throw $e;
+        }
     }
 
     private function retrieve(Payment $payment): Session

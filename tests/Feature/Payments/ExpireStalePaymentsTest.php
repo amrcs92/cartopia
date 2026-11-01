@@ -1,8 +1,10 @@
 <?php
 
 use App\Actions\ClosePayment;
+use App\Actions\StartOrderPayment;
 use App\Cart\Cart;
 use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Enums\WalletTransactionType;
 use App\Mail\OrderReceiptMail;
@@ -17,9 +19,13 @@ use App\Payments\Outcomes\StillPending;
 use App\Payments\PaymentGateways;
 use App\Wallet\Wallet;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Exceptions;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Stripe\ApiRequestor;
+use Tests\Support\FakeStripeHttpClient;
 
 beforeEach(function () {
     Mail::fake();
@@ -193,3 +199,43 @@ it('is scheduled every fifteen minutes without overlapping', function () {
         ->and($event->expression)->toBe('*/15 * * * *')
         ->and($event->withoutOverlapping)->toBeTrue();
 });
+
+it('expires a stale split payment the provider no longer knows and returns the share', function (PaymentMethod $method) {
+    [$user, $ups] = checkoutSetup(500);
+    app(StartOrderPayment::class)->handle($user, $ups, $method, useWallet: true);
+    $payment = Payment::query()->latest('id')->firstOrFail();
+    $payment->forceFill(['created_at' => now()->subHours(4)])->save();
+    expect($user->fresh()->balance->cents())->toBe(0);
+
+    // The real gateways answer, with the provider faked at the HTTP level.
+    app()->forgetInstance(PaymentGateways::class);
+    config(['services.stripe.secret' => 'sk_test_secret', 'services.paypal.client_id' => 'client-id', 'services.paypal.secret' => 'client-secret']);
+    $stripe = new FakeStripeHttpClient;
+    ApiRequestor::setHttpClient($stripe);
+    Http::preventStrayRequests();
+
+    if ($method === PaymentMethod::Stripe) {
+        $stripe->queue(404, ['error' => ['type' => 'invalid_request_error', 'code' => 'resource_missing', 'message' => 'No such checkout.session']]);
+    } else {
+        Cache::flush();
+        Http::fake([
+            'https://api-m.sandbox.paypal.com/v1/oauth2/token' => Http::response(['access_token' => 'tok-123', 'expires_in' => 3600]),
+            'https://api-m.sandbox.paypal.com/v2/checkout/orders/*' => Http::response(['name' => 'RESOURCE_NOT_FOUND', 'details' => [['issue' => 'INVALID_RESOURCE_ID']]], 404),
+        ]);
+    }
+
+    try {
+        $this->artisan('payments:expire-stale')
+            ->expectsOutput('Expired 1 payments.')
+            ->assertSuccessful();
+    } finally {
+        ApiRequestor::setHttpClient(null);
+    }
+
+    expect($payment->fresh()->status)->toBe(PaymentStatus::Expired)
+        ->and($payment->order->fresh()->status)->toBe(OrderStatus::Cancelled)
+        ->and($user->fresh()->balance->cents())->toBe(500)
+        ->and(WalletTransaction::query()->where('type', WalletTransactionType::Release)->count())->toBe(1);
+
+    Mail::assertQueued(PaymentProblemMail::class, 1);
+})->with([PaymentMethod::Stripe, PaymentMethod::PayPal]);
