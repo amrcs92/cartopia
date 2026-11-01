@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Cart\Cart;
 use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
 use App\Enums\PaymentPurpose;
 use App\Enums\PaymentStatus;
 use App\Enums\WalletTransactionType;
@@ -14,7 +15,6 @@ use App\Payments\Outcomes\Succeeded;
 use App\Wallet\Wallet;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use LogicException;
 
 /**
  * Fulfils a payment the provider confirmed (spec 6.1), exactly once. The
@@ -61,11 +61,19 @@ class CompletePayment
 
             match ($locked->purpose) {
                 PaymentPurpose::Order => $this->placeOrder($locked, $closedMeanwhile),
-                PaymentPurpose::TopUp => throw new LogicException('Top-up payments are completed in Task 24'),
+                PaymentPurpose::TopUp => $this->creditTopUp($locked),
             };
 
             return $locked;
         });
+    }
+
+    private function creditTopUp(Payment $payment): void
+    {
+        $provider = $payment->method === PaymentMethod::PayPal ? 'PayPal' : 'Stripe';
+
+        // wallet_transactions.payment_id is unique: the database backstop against a double credit.
+        $this->wallet->credit($payment->user, $payment->amount, WalletTransactionType::TopUp, "Top-up with {$provider}", payment: $payment);
     }
 
     private function placeOrder(Payment $payment, bool $closedMeanwhile): void
