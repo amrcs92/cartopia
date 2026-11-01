@@ -28,6 +28,9 @@ class AppServiceProvider extends ServiceProvider
             ? new DatabaseCartStore(auth()->user())
             : new SessionCartStore(app('session.store')));
 
+        // Built on demand, like the registry's factory, so tests can swap it and no credentials are read until used.
+        $this->app->bind(PayPalGateway::class, fn (): PayPalGateway => new PayPalGateway((string) config('services.paypal.client_id'), (string) config('services.paypal.secret')));
+
         $this->app->singleton(PaymentGateways::class, fn (): PaymentGateways => new PaymentGateways([
             PaymentMethod::Stripe->value => fn (): PaymentGateway => new StripeGateway((string) config('services.stripe.secret')),
             PaymentMethod::PayPal->value => fn (): PaymentGateway => new PayPalGateway((string) config('services.paypal.client_id'), (string) config('services.paypal.secret')),
