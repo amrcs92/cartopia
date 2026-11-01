@@ -110,22 +110,22 @@ const lineTestId = (label: string) =>
                         </dd>
                     </div>
                     <div class="flex justify-between gap-4 pt-2 text-body">
-                        <dt>Paid with</dt>
-                        <dd class="flex items-center gap-2 text-right">
+                        <dt class="shrink-0 whitespace-nowrap">Paid with</dt>
+                        <dd class="min-w-0 text-right">
                             <Icon
                                 :name="methodIcon[props.order.payment.method]"
                                 :size="18"
-                            />
-                            {{ props.order.payment.paid_with }}
+                                class="mr-2 inline-block align-text-top"
+                            />{{ props.order.payment.paid_with }}
                         </dd>
                     </div>
                     <div
                         v-if="props.order.payment.reference"
                         class="flex justify-between gap-4 text-body"
                     >
-                        <dt>Payment ref.</dt>
+                        <dt class="shrink-0 whitespace-nowrap">Payment ref.</dt>
                         <dd
-                            class="text-right break-all"
+                            class="min-w-0 text-right"
                             :title="props.order.payment.reference.full"
                             :aria-label="props.order.payment.reference.full"
                             data-test="payment-ref"
