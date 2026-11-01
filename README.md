@@ -71,7 +71,7 @@ The admin account is used by the Filament admin panel, which is planned as the n
 
 ## Payments in sandbox mode
 
-Shoppers can pay by card (Stripe) or with PayPal, alone or together with their wallet balance, at checkout and when topping up. Both providers run in sandbox mode only, and `.env` is never committed. After editing `.env` run `php artisan config:clear`.
+Shoppers can pay with Stripe or PayPal, alone or together with their wallet balance, at checkout and when topping up. Both providers run in sandbox mode only, and `.env` is never committed. After editing `.env` run `php artisan config:clear`.
 
 ### Setup
 
@@ -106,8 +106,8 @@ At <https://cartopia.test>:
 - [ ] Stripe card `4000 0025 0000 3155` asks for 3-D Secure, then pays.
 - [ ] Stripe card `4000 0000 0000 0002` is declined and Stripe keeps you on its page.
 - [ ] PayPal pays with the sandbox Personal (buyer) account, and cancelling on PayPal's page returns you to the basket.
-- [ ] A split order: with a wallet balance below the total, put the balance towards the order and pay the rest by card or PayPal.
-- [ ] A top-up by card and by PayPal.
+- [ ] A split order: with a wallet balance below the total, put the balance towards the order and pay the rest with Stripe or PayPal.
+- [ ] A top-up with Stripe and one with PayPal.
 - [ ] Pay with each provider and close the tab before returning. The webhook alone settles it: the order shows as placed and the receipt email arrives.
 - [ ] Every email appears in Mailpit and reads well in light and dark.
 
