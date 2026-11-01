@@ -16,17 +16,27 @@ final class PaymentWording
     {
         // The hosted share; for a wallet-only order it is the whole total and unused.
         $hosted = $order->total->subtract($order->wallet_amount)->format();
+        $lead = $order->isSplit() ? "Order placed. {$order->wallet_amount->format()} came from your wallet and your" : 'Order placed. Your';
 
         return match ($order->payment_method) {
             PaymentMethod::Wallet => "Order placed. {$order->total->format()} was paid from your wallet.",
-            PaymentMethod::Stripe => "Order placed. Your card was charged {$hosted}.",
-            PaymentMethod::PayPal => "Order placed. Your PayPal payment of {$hosted} was approved.",
+            PaymentMethod::Stripe => "{$lead} Stripe payment of {$hosted} was approved.",
+            PaymentMethod::PayPal => "{$lead} PayPal payment of {$hosted} was approved.",
         };
     }
 
     public static function paidWith(Order $order): string
     {
-        // Split orders (wallet plus a hosted method) are worded in a later task.
+        if ($order->isSplit()) {
+            $hosted = $order->total->subtract($order->wallet_amount)->format();
+            $part = match ($order->payment_method) {
+                PaymentMethod::Stripe => self::stripeCardShort($order->succeededPayment),
+                default => 'PayPal',
+            };
+
+            return "Cartopia wallet {$order->wallet_amount->format()} + {$part} {$hosted}";
+        }
+
         return match ($order->payment_method) {
             PaymentMethod::Wallet => 'Cartopia wallet',
             PaymentMethod::Stripe => self::stripeCard($order->succeededPayment),
@@ -66,21 +76,36 @@ final class PaymentWording
     public static function slipLines(Order $order, ?Money $balanceAfter): array
     {
         $hosted = $order->total->subtract($order->wallet_amount)->format();
+        $balance = $balanceAfter === null ? [] : [['label' => 'Wallet balance after', 'value' => $balanceAfter->format()]];
+
+        if ($order->isSplit()) {
+            $hostedLabel = $order->payment_method === PaymentMethod::Stripe ? 'Paid through Stripe' : 'Paid through PayPal';
+
+            return [
+                ['label' => 'Paid from wallet', 'value' => Money::zero()->subtract($order->wallet_amount)->format()],
+                ['label' => $hostedLabel, 'value' => $hosted],
+                ...$balance,
+            ];
+        }
 
         return match ($order->payment_method) {
             PaymentMethod::Wallet => $balanceAfter === null
                 ? []
                 : [['label' => 'Wallet balance after', 'value' => $balanceAfter->format()]],
-            PaymentMethod::Stripe => [['label' => 'Charged to card', 'value' => $hosted]],
+            PaymentMethod::Stripe => [['label' => 'Paid through Stripe', 'value' => $hosted]],
             PaymentMethod::PayPal => [['label' => 'Paid through PayPal', 'value' => $hosted]],
         };
     }
 
     public static function tag(Order $order): string
     {
+        if ($order->isSplit()) {
+            return $order->payment_method === PaymentMethod::Stripe ? 'Wallet + Stripe' : 'Wallet + PayPal';
+        }
+
         return match ($order->payment_method) {
             PaymentMethod::Wallet => 'Paid with wallet',
-            PaymentMethod::Stripe => 'Paid by card',
+            PaymentMethod::Stripe => 'Paid with Stripe',
             PaymentMethod::PayPal => 'Paid with PayPal',
         };
     }
@@ -95,6 +120,15 @@ final class PaymentWording
             'discover' => 'Discover',
             default => ucfirst(strtolower($brand)),
         };
+    }
+
+    private static function stripeCardShort(?Payment $payment): string
+    {
+        if ($payment === null || $payment->card_last4 === null) {
+            return 'Stripe';
+        }
+
+        return self::cardBrand($payment->card_brand)." ending in {$payment->card_last4}";
     }
 
     private static function stripeCard(?Payment $payment): string

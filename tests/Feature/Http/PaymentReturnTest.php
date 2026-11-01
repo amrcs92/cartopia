@@ -27,7 +27,7 @@ it('places the order on return', function () {
 
     $this->get(route('orders.show', $payment->order))
         ->assertInertia(fn (Assert $page) => $page
-            ->hasFlash('orderPlaced', 'Order placed. Your card was charged $12.74.'));
+            ->hasFlash('orderPlaced', 'Order placed. Your Stripe payment of $12.74 was approved.'));
 
     expect($payment->fresh()->status)->toBe(PaymentStatus::Succeeded)
         ->and($payment->order->fresh()->status)->toBe(OrderStatus::Placed);

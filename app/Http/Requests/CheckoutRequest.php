@@ -23,6 +23,8 @@ class CheckoutRequest extends FormRequest
         return [
             'shipping_method_id' => ['required', 'integer', 'exists:shipping_methods,id'],
             'payment_method' => ['required', 'string', Rule::in([PaymentMethod::Wallet->value, ...$hosted])],
+            // Only read for a hosted method: split the order with the wallet.
+            'use_wallet' => ['sometimes', 'boolean'],
         ];
     }
 

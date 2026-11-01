@@ -6,7 +6,7 @@ import Icon from '@/common/icon/Icon.vue';
 import OptionCard from '@/common/stall/OptionCard.vue';
 import StallButton from '@/common/stall/StallButton.vue';
 import { useCurrentUser } from '@/modules/auth/useCurrentUser';
-import { formatCents } from '@/modules/cart/money';
+import { formatCents, splitPlan } from '@/modules/cart/money';
 import PayWithOptions from '@/modules/cart/PayWithOptions.vue';
 import { feeLabel, isPickup } from '@/modules/home/shipping';
 import { buttonLabel, MIN_HOSTED_CENTS } from '@/modules/payments/methods';
@@ -79,9 +79,11 @@ function choiceIsValid(
 const form = useForm<{
     shipping_method_id: number;
     payment_method: 'wallet' | HostedMethod | null;
+    use_wallet: boolean;
 }>({
     shipping_method_id: props.shippingMethods[0]?.id ?? 0,
     payment_method: null,
+    use_wallet: true,
 });
 
 const method = computed(() =>
@@ -103,20 +105,55 @@ watch(totalCents, (value) => {
     }
 });
 
+// The switch card shows when a hosted method is available and the wallet can
+// pay part of the order; only then is `use_wallet` sent.
+const balanceCents = computed(() => user.value?.balance_cents ?? 0);
+const switchShown = computed(
+    () =>
+        methods.value.length > 0 &&
+        splitPlan(totalCents.value, balanceCents.value, true).walletCents > 0,
+);
+const plan = computed(() =>
+    splitPlan(
+        totalCents.value,
+        balanceCents.value,
+        switchShown.value && form.use_wallet,
+    ),
+);
+const splitLine = computed(
+    () =>
+        `Wallet ${formatCents(plan.value.walletCents)} · ${
+            form.payment_method === 'paypal' ? 'PayPal' : 'Stripe'
+        } ${formatCents(plan.value.hostedCents)}`,
+);
+
 const canOrder = computed(
     () =>
         !form.processing &&
         method.value !== undefined &&
-        choiceIsValid(form.payment_method, totalCents.value),
+        choiceIsValid(form.payment_method, totalCents.value) &&
+        (form.payment_method === 'wallet' ||
+            plan.value.hostedCents >= MIN_HOSTED_CENTS),
 );
 
 const buttonText = computed(() =>
-    buttonLabel(form.payment_method ?? 'wallet', totalCents.value),
+    buttonLabel(
+        form.payment_method ?? 'wallet',
+        form.payment_method === 'wallet'
+            ? totalCents.value
+            : plan.value.hostedCents,
+    ),
 );
 
 function submit(): void {
     if (canOrder.value) {
-        form.submit(store());
+        form.transform((data) => {
+            const { use_wallet: useWallet, ...rest } = data;
+
+            return switchShown.value
+                ? { ...rest, use_wallet: useWallet }
+                : rest;
+        }).submit(store());
     }
 }
 </script>
@@ -172,6 +209,7 @@ function submit(): void {
 
             <PayWithOptions
                 v-model="form.payment_method"
+                v-model:use-wallet="form.use_wallet"
                 :balance="user.balance"
                 :balance-cents="user.balance_cents"
                 :total-cents="totalCents"
@@ -198,6 +236,14 @@ function submit(): void {
                     {{ total }}
                 </span>
             </div>
+
+            <p
+                v-if="switchShown && form.use_wallet"
+                class="-mt-3 text-right text-[15px] font-bold text-body tabular-nums"
+                data-test="split-line"
+            >
+                {{ splitLine }}
+            </p>
 
             <StallButton
                 variant="green"

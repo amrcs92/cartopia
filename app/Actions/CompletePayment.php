@@ -6,9 +6,12 @@ use App\Cart\Cart;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentPurpose;
 use App\Enums\PaymentStatus;
+use App\Enums\WalletTransactionType;
+use App\Exceptions\InsufficientBalance;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Payments\Outcomes\Succeeded;
+use App\Wallet\Wallet;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use LogicException;
@@ -20,7 +23,10 @@ use LogicException;
  */
 class CompletePayment
 {
-    public function __construct(private readonly ClosePayment $closePayment) {}
+    public function __construct(
+        private readonly ClosePayment $closePayment,
+        private readonly Wallet $wallet,
+    ) {}
 
     public function handle(Payment $payment, Succeeded $outcome): Payment
     {
@@ -76,10 +82,36 @@ class CompletePayment
         $order->update(['status' => OrderStatus::Placed]);
 
         if ($closedMeanwhile) {
-            // The shopper may have filled the basket again, so it stays. Task 20 re-debits a returned wallet share.
+            // The shopper may have filled the basket again, so it stays.
+            $this->takeReturnedShareAgain($payment, $order);
+
             return;
         }
 
         Cart::forUser($order->user)->clear();
+    }
+
+    /**
+     * Closing gave a split order's wallet share back (a Release row); now the
+     * order is paid after all, so the share is debited again if the balance
+     * still allows. If not, the order stays placed and the admin is told.
+     */
+    private function takeReturnedShareAgain(Payment $payment, Order $order): void
+    {
+        $released = $order->walletTransactions()->where('type', WalletTransactionType::Release)->exists();
+
+        if (! $order->isSplit() || ! $released) {
+            return;
+        }
+
+        try {
+            $this->wallet->debit($order->user, $order->wallet_amount, WalletTransactionType::Purchase, "Order #{$order->id}", $order);
+        } catch (InsufficientBalance) {
+            Log::critical('A split order was paid after its wallet share was returned, and the balance no longer covers the share.', [
+                'payment_id' => $payment->id,
+                'order_id' => $order->id,
+                'unrecovered_cents' => $order->wallet_amount->cents(),
+            ]);
+        }
     }
 }

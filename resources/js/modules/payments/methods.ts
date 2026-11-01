@@ -14,7 +14,7 @@ export function buttonLabel(
     const amount = formatCents(amountCents);
 
     if (method === 'stripe') {
-        return `Pay ${amount} by card`;
+        return `Pay ${amount} with Stripe`;
     }
 
     if (method === 'paypal') {
