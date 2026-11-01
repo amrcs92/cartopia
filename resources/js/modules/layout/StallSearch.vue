@@ -41,12 +41,12 @@ function submit(): void {
             class="flex h-12 items-center gap-2.5 rounded-[14px] border-[2.5px] border-outline bg-surface px-3.5 text-subtle has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-marigold has-[:focus-visible]:outline-solid"
         >
             <Icon name="search" :size="20" />
-            <span class="sr-only">Search the stall</span>
+            <span class="sr-only">Search products</span>
             <input
                 v-model="search"
                 type="search"
                 name="q"
-                placeholder="Search the stall"
+                placeholder="Search products"
                 autocomplete="off"
                 class="h-full min-w-0 flex-1 bg-transparent text-base text-ink placeholder:text-subtle focus-visible:outline-none"
             />

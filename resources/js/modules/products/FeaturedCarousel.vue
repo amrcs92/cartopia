@@ -5,7 +5,7 @@ import IconButton from '@/common/stall/IconButton.vue';
 import FeaturedCard from '@/modules/products/FeaturedCard.vue';
 import type { Product } from '@/types';
 
-// "Featured at the stall": a cream panel under a hanging wooden sign. It shows
+// "Featured products": a cream panel under a hanging wooden sign. It shows
 // 3 cards on desktop and 2 on tablets; the arrows and dots glide the row one
 // card at a time (500ms, ease-stall) and wrap at the ends. Cards out of view
 // are hidden from the keyboard and screen readers, and a live region announces
@@ -129,7 +129,7 @@ function tintFor(index: number): 1 | 2 | 3 {
                     :id="titleId"
                     class="rounded-xl border-[2.5px] border-outline bg-wood px-6 py-1 font-chalk text-[30px] leading-tight font-bold whitespace-nowrap text-chalk shadow-press sm:px-8 sm:text-[38px]"
                 >
-                    Featured at the stall
+                    Featured products
                 </h2>
             </div>
         </div>

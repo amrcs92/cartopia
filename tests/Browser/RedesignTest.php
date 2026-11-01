@@ -200,14 +200,14 @@ it('clears a filter from its chip when nothing matches', function () {
 
     visit('/products?q=mango&max_price=1')
         ->assertSee('Results for "mango"')
-        ->assertSee('Nothing on the stall matches that')
+        ->assertSee('No products match that')
         ->assertSee('Remove the price filter to see more.')
         ->click('internal:role=button[name="Remove Search: mango"s]')
         ->assertSee('All products')
         ->assertQueryStringMissing('q')
         ->click('internal:role=button[name="Remove Under $1"s]')
         ->waitForText('Apple')
-        ->assertDontSee('Nothing on the stall matches that');
+        ->assertDontSee('No products match that');
 });
 
 it('shows the aisle in the breadcrumb and rates a product with the stars', function () {
@@ -264,9 +264,9 @@ it('disables placing the order when the wallet cannot cover it', function () {
         ->assertScript('document.querySelector("[data-test=checkout-button]").disabled', true);
 });
 
-it('shows the empty basket with a way back to the stall', function () {
+it('shows the empty basket with a way back to the shop', function () {
     visit('/cart')->assertSee('Your basket is empty')
-        ->assertSee('Browse the stall');
+        ->assertSee('Browse the shop');
 });
 
 it('draws a visible focus ring around the quantity steppers', function () {

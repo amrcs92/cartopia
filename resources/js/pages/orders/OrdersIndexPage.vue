@@ -43,7 +43,7 @@ const props = defineProps<{
                 size="lg"
                 :href="productsIndex().url"
             >
-                Browse the stall
+                Browse the shop
             </StallButton>
         </div>
 
