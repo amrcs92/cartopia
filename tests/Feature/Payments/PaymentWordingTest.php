@@ -70,3 +70,45 @@ it('names card brands', function () {
         ->and(PaymentWording::cardBrand('jcb'))->toBe('Jcb')
         ->and(PaymentWording::cardBrand(null))->toBe('Card');
 });
+
+function splitOrder(PaymentMethod $method, bool $withCard = true): Order
+{
+    $order = Order::factory()->make([
+        'payment_method' => $method,
+        'total' => 434,
+        'wallet_amount' => 210,
+    ]);
+    $order->setRelation('succeededPayment', $withCard && $method === PaymentMethod::Stripe
+        ? Payment::factory()->stripe()->make(['card_brand' => 'visa', 'card_last4' => '4242'])
+        : null);
+
+    return $order;
+}
+
+it('words the order placed message for a split', function () {
+    expect(PaymentWording::placedMessage(splitOrder(PaymentMethod::Stripe)))->toBe('Order placed. $2.10 came from your wallet and your Stripe payment of $2.24 was approved.')
+        ->and(PaymentWording::placedMessage(splitOrder(PaymentMethod::PayPal)))->toBe('Order placed. $2.10 came from your wallet and your PayPal payment of $2.24 was approved.');
+});
+
+it('says how a split was paid', function () {
+    expect(PaymentWording::paidWith(splitOrder(PaymentMethod::Stripe)))->toBe('Cartopia wallet $2.10 + Visa ending in 4242 $2.24')
+        ->and(PaymentWording::paidWith(splitOrder(PaymentMethod::Stripe, withCard: false)))->toBe('Cartopia wallet $2.10 + Stripe $2.24')
+        ->and(PaymentWording::paidWith(splitOrder(PaymentMethod::PayPal)))->toBe('Cartopia wallet $2.10 + PayPal $2.24');
+});
+
+it('writes the end of the slip for a split', function () {
+    expect(PaymentWording::slipLines(splitOrder(PaymentMethod::Stripe), Money::fromCents(0)))->toBe([
+        ['label' => 'Paid from wallet', 'value' => '-$2.10'],
+        ['label' => 'Paid through Stripe', 'value' => '$2.24'],
+        ['label' => 'Wallet balance after', 'value' => '$0.00'],
+    ])
+        ->and(PaymentWording::slipLines(splitOrder(PaymentMethod::PayPal), null))->toBe([
+            ['label' => 'Paid from wallet', 'value' => '-$2.10'],
+            ['label' => 'Paid through PayPal', 'value' => '$2.24'],
+        ]);
+});
+
+it('tags a split', function () {
+    expect(PaymentWording::tag(splitOrder(PaymentMethod::Stripe)))->toBe('Wallet + Stripe')
+        ->and(PaymentWording::tag(splitOrder(PaymentMethod::PayPal)))->toBe('Wallet + PayPal');
+});

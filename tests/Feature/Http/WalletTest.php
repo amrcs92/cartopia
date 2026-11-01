@@ -104,6 +104,23 @@ it('paginates the ledger at 15 per page and shows only own rows', function () {
             ->where('transactions.meta.total', 17));
 });
 
+it('lists a release row as a credit', function () {
+    $user = User::factory()->create();
+    WalletTransaction::create([
+        'user_id' => $user->id, 'type' => WalletTransactionType::Release,
+        'amount' => 210, 'balance_after' => 210,
+        'description' => 'Order #5 not paid, balance returned',
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('wallet.show'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('transactions.data.0.type', 'release')
+            ->where('transactions.data.0.type_label', 'Returned')
+            ->where('transactions.data.0.amount', '+$2.10')
+            ->where('transactions.data.0.description', 'Order #5 not paid, balance returned'));
+});
+
 it('redirects guests to login', function () {
     $this->get(route('wallet.show'))->assertRedirect(route('login'));
     $this->post(route('wallet.top-ups.store'), ['amount' => '5'])->assertRedirect(route('login'));
