@@ -49,8 +49,10 @@ onMounted(() => {
 
 onBeforeUnmount(() => stopListening?.());
 
+// Only the wallet can be chosen for now; the card and PayPal choice comes later.
 const form = useForm({
     shipping_method_id: props.shippingMethods[0]?.id ?? 0,
+    payment_method: 'wallet',
 });
 
 const method = computed(() =>
