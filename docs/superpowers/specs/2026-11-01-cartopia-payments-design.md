@@ -49,7 +49,7 @@ Success means:
 | How is a payment confirmed? | On return, the server asks the provider directly. Stripe and PayPal webhooks also settle payments for shoppers who never come back, and PayPal captures that finish later. |
 | When does a card or PayPal order exist? | Straight away, as "Awaiting payment", before the redirect. It becomes "Placed" when the payment succeeds. |
 | How is the code structured? | One small `PaymentGateway` contract with a Stripe and a PayPal implementation, shared by checkout and top-ups. |
-| What is the method called? | `stripe` and `paypal`, after the provider. The interface still says "card" where the canvas does. |
+| What is the method called? | `stripe` and `paypal`, after the provider. The interface names the method "Stripe" too (changed during the phase 3 design review); only the card itself is called a card ("Credit or debit card", "Visa ending in 4242"). |
 | When can the wallet and a card share a total? | Only when the balance is above zero but below the total. |
 | Which emails? | An order receipt for every method, a top-up receipt, and a notice when a payment ends badly while the shopper is away. |
 | Where do emails go locally? | Laragon's Mailpit. `.env.example` and CI keep the `log` mailer. |
@@ -61,7 +61,7 @@ Success means:
 
 - **`App\Enums\PaymentMethod`:**
   - cases: `Wallet` (`wallet`), `Stripe` (`stripe`) and `PayPal` (`paypal`)
-  - `label()` returns "Wallet", "Card" and "PayPal". "Card" is the shopper's word for Stripe.
+  - `label()` returns "Wallet", "Stripe" and "PayPal".
   - `isHosted()` is true for `Stripe` and `PayPal`.
 - **`App\Enums\PaymentPurpose`:** `Order` (`order`) and `TopUp` (`top_up`).
 - **`App\Enums\PaymentStatus`:** `Pending`, `Succeeded`, `Cancelled`, `Failed` and `Expired`.
@@ -114,7 +114,7 @@ Indexes:
 ### 2.4 `wallet_transactions` changes
 
 - A new nullable, unique `payment_id` foreign key (`nullOnDelete`). A paid top-up can be credited only once, even if a code path slipped past the row lock.
-- A paid top-up's description is "Top-up by card" or "Top-up by PayPal".
+- A paid top-up's description is "Top-up with Stripe" or "Top-up with PayPal".
 - A release reads "Order #5 not paid, balance returned" and carries the order id.
 - `Wallet::credit` takes an optional `?Payment $payment` and an optional `?Order $order`.
 - The signup bonus and admin adjustments don't change.
@@ -418,17 +418,17 @@ The mockup each item matches is named in brackets.
 | Balance | Wallet card | Default choice |
 |---|---|---|
 | Covers the total | A normal option card: "Balance $115.26" | Wallet |
-| Above zero but short, with a hosted method available | It becomes a switch, "Use my $2.10 balance" (or "Use $3.84 of your balance" under the 50-cent rule), on by default, with the note "Pay the remaining $2.24 by card or PayPal below." It isn't a radio in this state: the radios are only Stripe and PayPal. | Stripe, with the switch on |
+| Above zero but short, with a hosted method available | It becomes a switch card [Basket: wallet + card split]: a wallet icon in a marigold tile, the title "My $2.10 balance" (the whole balance, also under the 50-cent rule), the note "Switch on, then pay the rest with Stripe or PayPal below.", and a sticker-style switch on the right (outlined pill, hard shadow, marigold knob with a check), on by default. The card has the selected fill while the switch is on. The switch's accessible name is "Use my $2.10 balance". It isn't a radio in this state: the radios are only Stripe and PayPal. | Stripe, with the switch on |
 | Zero, or short with no hosted method available | Disabled, as today: "Balance $2.10. You need $2.24 more.", with the "Top up your wallet" link | Stripe, if available. Otherwise nothing is chosen and "Place order" stays disabled, as today. |
 
-**Under the total,** when a split is on, a small line reads "Wallet $2.10 · Card $2.24" (or "PayPal").
+**Under the total,** when a split is on, a small line gives the exact split: "Wallet $2.10 · Stripe $2.24" (or "PayPal"). Under the 50-cent rule it shows the real shares, for example "Wallet $3.84 · Stripe $0.50".
 
 **The main button follows the choice:**
 
 | Choice | Button |
 |---|---|
 | Wallet | "Place order and pay $X" |
-| Stripe | "Pay $X by card", where $X is the hosted part when split |
+| Stripe | "Pay $X with Stripe", where $X is the hosted part when split |
 | PayPal | "Pay $X with PayPal", the same |
 
 The phone bar's button keeps the text "Place order". While the request runs, both buttons are disabled.
@@ -444,12 +444,12 @@ The phone bar's button keeps the text "Place order". While the request runs, bot
 
 `OrderResource` gains a `payment` object: `method`, `paid_with`, `reference` (shortened for display) and `slip_lines` (label and value pairs for the bottom of the slip). The page renders:
 
-| | Wallet | Card | PayPal | Split (wallet + card) |
+| | Wallet | Stripe | PayPal | Split (wallet + Stripe) |
 |---|---|---|---|---|
-| Banner after checkout | "Order placed. $4.34 was paid from your wallet." | "Order placed. Your card was charged $2.90." | "Order placed. Your PayPal payment of $11.00 was approved." | "Order placed. $2.10 came from your wallet and your card was charged $2.24." (or "…and your PayPal payment of $2.24 was approved.") |
+| Banner after checkout | "Order placed. $4.34 was paid from your wallet." | "Order placed. Your Stripe payment of $2.90 was approved." | "Order placed. Your PayPal payment of $11.00 was approved." | "Order placed. $2.10 came from your wallet and your Stripe payment of $2.24 was approved." (or "…your PayPal payment of $2.24 was approved.") |
 | Paid with | Cartopia wallet | Visa ending in 4242, through Stripe | PayPal | Cartopia wallet $2.10 + Visa ending in 4242 $2.24 |
 | Payment ref. | (no row) | Stripe payment pi_3Q8x…7Kd2 | PayPal capture 7XK21…48N | as for the card or PayPal part |
-| End of the slip | Wallet balance after $110.92 | Charged to card $2.90 | Paid through PayPal $11.00 | Paid from wallet −$2.10, Charged to card $2.24 (or Paid through PayPal), Wallet balance after $0.00 |
+| End of the slip | Wallet balance after $110.92 | Paid through Stripe $2.90 | Paid through PayPal $11.00 | Paid from wallet −$2.10, Paid through Stripe $2.24 (or Paid through PayPal), Wallet balance after $0.00 |
 
 - **Card brand:** capitalised as the card network writes it: Visa, Mastercard, American Express, Discover. Any other brand is capitalised as given.
 - **Payment reference:** shortened to its first 8 and last 4 characters, joined by an ellipsis. The full id is in the element's `title` and in an accessible label.
@@ -458,8 +458,8 @@ The phone bar's button keeps the text "Place order". While the request runs, bot
 
 ### 7.4 Orders list and ledger [Orders, Wallet]
 
-- The order card's tag reads "Paid with wallet", "Paid by card", "Paid with PayPal", "Wallet + card" or "Wallet + PayPal".
-- Ledger rows read "Top-up by card" or "Top-up by PayPal" for paid top-ups, and "Order #5 not paid, balance returned" for a release, which is shown as a credit.
+- The order card's tag reads "Paid with wallet", "Paid with Stripe", "Paid with PayPal", "Wallet + Stripe" or "Wallet + PayPal".
+- Ledger rows read "Top-up with Stripe" or "Top-up with PayPal" for paid top-ups, and "Order #5 not paid, balance returned" for a release, which is shown as a credit.
 
 ### 7.5 Messages
 
@@ -622,7 +622,7 @@ A `FakePaymentGateway` is bound for the browser suite. Its "hosted page" URL is 
 - paying for a basket by card and landing on the card receipt
 - the same with PayPal
 - cancelling and finding the basket unchanged
-- a short wallet turns into the "Use my balance" switch; paying the rest by card lands on the split receipt and the balance reads $0.00
+- a short wallet turns into the "My $X balance" switch card; paying the rest with Stripe lands on the split receipt and the balance reads $0.00
 - turning the switch off makes the card pay everything
 - topping up by card and seeing the new balance and ledger row
 
@@ -659,7 +659,7 @@ Each phase is one branch and one pull request, stacked like the redesign. `main`
    - their feature and browser tests
 3. **Split wallet + card** (`payments/phase-3-split`):
    - first, draw Basket: split and Receipt: split on the canvas in light and dark, and get them approved
-   - then the wallet hold and release, the "Use my balance" switch, the 50-cent rule in the UI, the split receipt, the split tag and the release ledger row
+   - then the wallet hold and release, the "My $X balance" switch card, the 50-cent rule in the UI, the split receipt, the split tag and the release ledger row
 4. **Paid top-ups** (`payments/phase-4-top-ups`):
    - `StartTopUpPayment`, the wallet's "Pay with" choice and the ledger copy
    - removing `TopUpWallet` and rewriting its tests
