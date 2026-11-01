@@ -310,6 +310,10 @@ It takes the payment, the end status (`cancelled`, `failed` or `expired`) and wh
 The new `CancelPayment` action handles it. If the payment is pending, it calls the gateway's `cancel`:
 - **`Cancelled`:** `ClosePayment` with `cancelled`, no email.
 - **`Succeeded`:** the shopper paid after all, for example in another tab. `CompletePayment` runs instead.
+- **`Declined`:** `ClosePayment` with `cancelled`, no email.
+- **`StillPending`:** nothing changes, and the shopper sees the still-waiting message.
+
+A payment that already has a `provider_payment_id` is never cancelled: PayPal holds that capture, and its webhook settles it. The provider isn't called, and the shopper sees the still-waiting message.
 
 Then it redirects as in section 4.4, step 4. A cancelled order payment leaves the basket untouched and returns any wallet share.
 
