@@ -8,6 +8,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentCancelController;
 use App\Http\Controllers\PaymentReturnController;
+use App\Http\Controllers\PayPalWebhookController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\StripeWebhookController;
@@ -25,6 +26,7 @@ Route::put('products/{product}/rating', [RatingController::class, 'update'])
     ->name('products.rating.update');
 
 Route::post('webhooks/stripe', StripeWebhookController::class)->name('webhooks.stripe');
+Route::post('webhooks/paypal', PayPalWebhookController::class)->name('webhooks.paypal');
 
 Route::get('cart', [CartController::class, 'show'])->name('cart.show');
 Route::post('cart/items', [CartItemController::class, 'store'])->name('cart.items.store');
