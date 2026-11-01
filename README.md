@@ -29,7 +29,7 @@ It started in 2018 as a plain-PHP project and was rebuilt in 2026 as a Laravel s
 
 - Product catalog with search, price and rating filters, sorting and pagination
 - Aisles (categories) with a filter for each, and a featured carousel on the home, shop and product pages
-- Product detail with image gallery and 1-5 star ratings (one rating per user and product)
+- Product detail with a photo gallery (thumbnails and arrows, a zoom panel on hover, and a full-screen view with swipe on phones) and 1-5 star ratings (one rating per user and product)
 - Basket for guests (session) and users (database); a guest basket is merged into the account on login or registration
 - An added-to-basket panel that confirms each addition and links to the basket
 - Checkout paid from the wallet balance, priced entirely on the server
