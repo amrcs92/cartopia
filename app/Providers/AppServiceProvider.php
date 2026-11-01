@@ -9,6 +9,7 @@ use App\Enums\PaymentMethod;
 use App\Models\User;
 use App\Payments\PaymentGateway;
 use App\Payments\PaymentGateways;
+use App\Payments\PayPalGateway;
 use App\Payments\StripeGateway;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
@@ -27,9 +28,9 @@ class AppServiceProvider extends ServiceProvider
             ? new DatabaseCartStore(auth()->user())
             : new SessionCartStore(app('session.store')));
 
-        // Task 6 adds the 'paypal' factory.
         $this->app->singleton(PaymentGateways::class, fn (): PaymentGateways => new PaymentGateways([
             PaymentMethod::Stripe->value => fn (): PaymentGateway => new StripeGateway((string) config('services.stripe.secret')),
+            PaymentMethod::PayPal->value => fn (): PaymentGateway => new PayPalGateway((string) config('services.paypal.client_id'), (string) config('services.paypal.secret')),
         ]));
     }
 
