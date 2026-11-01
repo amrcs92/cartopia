@@ -23,6 +23,11 @@ class PayPalGateway implements PaymentGateway
     /** Fixed in code so a live host can never be reached. */
     public const string BASE_URL = 'https://api-m.sandbox.paypal.com';
 
+    /** Seconds. Calls run under row locks, so they must end well inside InnoDB's 50-second lock wait. */
+    public const int TIMEOUT = 10;
+
+    public const int CONNECT_TIMEOUT = 5;
+
     private const string TOKEN_KEY = 'paypal.token';
 
     /** PayPal's own issue codes for a refused payment. */
@@ -147,7 +152,7 @@ class PayPalGateway implements PaymentGateway
             return $cached;
         }
 
-        $response = $this->send($payment, fn (): Response => Http::baseUrl(self::BASE_URL)
+        $response = $this->send($payment, fn (): Response => $this->http()
             ->withBasicAuth($this->clientId, $this->secret)
             ->asForm()
             ->post('/v1/oauth2/token', ['grant_type' => 'client_credentials']));
@@ -206,8 +211,13 @@ class PayPalGateway implements PaymentGateway
     private function call(Payment $payment, Closure $callback, array $allow = []): Response
     {
         return $this->send($payment, fn (): Response => $callback(
-            Http::baseUrl(self::BASE_URL)->withToken($this->token($payment))->acceptJson()->asJson(),
+            $this->http()->withToken($this->token($payment))->acceptJson()->asJson(),
         ), $allow);
+    }
+
+    private function http(): PendingRequest
+    {
+        return Http::baseUrl(self::BASE_URL)->timeout(self::TIMEOUT)->connectTimeout(self::CONNECT_TIMEOUT);
     }
 
     /**

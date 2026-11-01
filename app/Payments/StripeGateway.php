@@ -18,6 +18,7 @@ use Stripe\Exception\ApiConnectionException;
 use Stripe\Exception\ApiErrorException;
 use Stripe\Exception\InvalidRequestException;
 use Stripe\Exception\SignatureVerificationException;
+use Stripe\HttpClient\CurlClient;
 use Stripe\StripeClient;
 use Stripe\Webhook;
 use UnexpectedValueException;
@@ -26,6 +27,11 @@ class StripeGateway implements PaymentGateway
 {
     private const array EXPAND = ['payment_intent.latest_charge'];
 
+    /** Seconds. Calls run under row locks, so they must end well inside InnoDB's 50-second lock wait. */
+    private const int TIMEOUT = 10;
+
+    private const int CONNECT_TIMEOUT = 5;
+
     private readonly StripeClient $client;
 
     public function __construct(string $secret)
@@ -33,6 +39,9 @@ class StripeGateway implements PaymentGateway
         if (str_starts_with($secret, 'sk_live_') || str_starts_with($secret, 'rk_live_')) {
             throw new LogicException('Cartopia only uses Stripe in test mode; live keys are refused.');
         }
+
+        // The SDK's shared client, so a test's ApiRequestor::setHttpClient() still takes over.
+        CurlClient::instance()->setTimeout(self::TIMEOUT)->setConnectTimeout(self::CONNECT_TIMEOUT);
 
         $this->client = new StripeClient($secret);
     }

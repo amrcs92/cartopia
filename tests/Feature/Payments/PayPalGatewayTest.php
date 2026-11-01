@@ -228,6 +228,24 @@ it('keeps the secret and token out of error messages', function () {
     }
 });
 
+it('gives PayPal ten seconds and five to connect', function () {
+    $timeouts = [];
+    Http::fake(function (Request $r, array $options) use (&$timeouts) {
+        $timeouts[$r->url()] = [$options['timeout'] ?? null, $options['connect_timeout'] ?? null];
+
+        return str_ends_with($r->url(), '/token')
+            ? Http::response(['access_token' => 'tok-123', 'expires_in' => 3600])
+            : Http::response(captureBody(), 201);
+    });
+
+    $this->gateway->confirm(paypalPayment());
+
+    expect($timeouts)->toBe([
+        PAYPAL.'/v1/oauth2/token' => [10, 5],
+        PAYPAL.'/v2/checkout/orders/ORDER1/capture' => [10, 5],
+    ]);
+});
+
 it('cancels without calling PayPal', function () {
     Http::fake();
 

@@ -113,3 +113,18 @@ it('throws unavailable when PayPal cannot be reached', function () {
 
     app(PayPalWebhookVerifier::class)->verify(paypalWebhookRequest());
 })->throws(PaymentProviderUnavailable::class);
+
+it('gives PayPal ten seconds and five to connect', function () {
+    $timeouts = [];
+    Http::fake(function (ClientRequest $r, array $options) use (&$timeouts) {
+        $timeouts[$r->url()] = [$options['timeout'] ?? null, $options['connect_timeout'] ?? null];
+
+        return str_ends_with($r->url(), '/token')
+            ? Http::response(['access_token' => 'tok-123', 'expires_in' => 3600])
+            : Http::response(['verification_status' => 'SUCCESS']);
+    });
+
+    app(PayPalWebhookVerifier::class)->verify(paypalWebhookRequest());
+
+    expect($timeouts[PAYPAL_VERIFY])->toBe([10, 5]);
+});

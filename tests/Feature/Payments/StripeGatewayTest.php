@@ -14,6 +14,7 @@ use App\Support\Money;
 use Stripe\ApiRequestor;
 use Stripe\Event;
 use Stripe\Exception\SignatureVerificationException;
+use Stripe\HttpClient\CurlClient;
 use Tests\Support\FakeStripeHttpClient;
 
 beforeEach(function () {
@@ -221,6 +222,15 @@ it('maps bad credentials to a rejection without leaking the secret', function ()
         expect($e->getMessage())->not->toContain('sk_test_secret')
             ->and($e->getPrevious())->not->toBeNull();
     }
+});
+
+it('gives Stripe ten seconds and five to connect', function () {
+    $http = CurlClient::instance()->setTimeout(80)->setConnectTimeout(30);
+
+    new StripeGateway('sk_test_secret');
+
+    expect($http->getTimeout())->toBe(10)
+        ->and($http->getConnectTimeout())->toBe(5);
 });
 
 it('refuses live keys', function (string $key) {
