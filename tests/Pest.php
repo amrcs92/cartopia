@@ -45,3 +45,13 @@ function startedOrderPayment(PaymentMethod $method = PaymentMethod::Stripe): arr
 
     return [$user, Payment::sole()];
 }
+
+/**
+ * A valid Stripe-Signature header for the payload, as Stripe would send it.
+ */
+function stripeSignature(string $payload, string $secret): string
+{
+    $t = time();
+
+    return "t={$t},v1=".hash_hmac('sha256', "{$t}.{$payload}", $secret);
+}

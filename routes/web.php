@@ -10,6 +10,7 @@ use App\Http\Controllers\PaymentCancelController;
 use App\Http\Controllers\PaymentReturnController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RatingController;
+use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\TopUpController;
 use App\Http\Controllers\WalletController;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,8 @@ Route::get('products/{product}', [ProductController::class, 'show'])->name('prod
 Route::put('products/{product}/rating', [RatingController::class, 'update'])
     ->middleware('auth')
     ->name('products.rating.update');
+
+Route::post('webhooks/stripe', StripeWebhookController::class)->name('webhooks.stripe');
 
 Route::get('cart', [CartController::class, 'show'])->name('cart.show');
 Route::post('cart/items', [CartItemController::class, 'store'])->name('cart.items.store');
