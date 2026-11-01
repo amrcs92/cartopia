@@ -138,6 +138,21 @@ it('reads open and expired sessions', function () {
     expect($this->gateway->confirm($payment))->toBeInstanceOf(Cancelled::class);
 });
 
+it('looks up a session without changing it', function () {
+    $payment = stripePayment();
+    $this->stripe
+        ->queue(200, paidSessionBody())
+        ->queue(200, sessionBody())
+        ->queue(200, sessionBody(['status' => 'expired']));
+
+    expect($this->gateway->lookup($payment))->toEqual(new Succeeded('pi_123', Money::fromCents(1274), 'usd', 'visa', '4242'))
+        ->and($this->gateway->lookup($payment))->toBeInstanceOf(StillPending::class)
+        ->and($this->gateway->lookup($payment))->toBeInstanceOf(Cancelled::class)
+        ->and(array_column($this->stripe->requests, 'method'))->toBe(['get', 'get', 'get'])
+        ->and($this->stripe->last()['url'])->toEndWith('/v1/checkout/sessions/cs_test_1')
+        ->and($this->stripe->last()['params']['expand'])->toBe(['payment_intent.latest_charge']);
+});
+
 it('expires a session on cancel', function () {
     $payment = stripePayment();
     $this->stripe->queue(200, sessionBody(['status' => 'expired']));

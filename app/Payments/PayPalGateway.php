@@ -116,8 +116,7 @@ class PayPalGateway implements PaymentGateway
         $issue = (string) $response->json('details.0.issue');
 
         if ($issue === 'ORDER_ALREADY_CAPTURED') {
-            return $this->outcome($this->call($payment, fn (PendingRequest $http): Response => $http
-                ->get("/v2/checkout/orders/{$payment->provider_reference}")));
+            return $this->lookup($payment);
         }
 
         if ($issue === 'ORDER_NOT_APPROVED') {
@@ -129,6 +128,15 @@ class PayPalGateway implements PaymentGateway
         }
 
         throw new PaymentProviderRejected("PayPal rejected the capture for payment {$payment->id}, code ".($issue !== '' ? $issue : 'none').'.');
+    }
+
+    /**
+     * Reads the order and its capture, if any. Never captures.
+     */
+    public function lookup(Payment $payment): PaymentOutcome
+    {
+        return $this->outcome($this->call($payment, fn (PendingRequest $http): Response => $http
+            ->get("/v2/checkout/orders/{$payment->provider_reference}")));
     }
 
     /**

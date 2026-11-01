@@ -80,6 +80,14 @@ class StripeGateway implements PaymentGateway
 
     public function confirm(Payment $payment): PaymentOutcome
     {
+        return $this->lookup($payment);
+    }
+
+    /**
+     * Reading the session is all confirm does for Stripe: the money moved on Stripe's page.
+     */
+    public function lookup(Payment $payment): PaymentOutcome
+    {
         return $this->outcome($this->retrieve($payment));
     }
 

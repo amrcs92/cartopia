@@ -201,6 +201,27 @@ it('reads an unapproved order as pending', function () {
         ->and($outcome->providerPaymentId)->toBeNull();
 });
 
+it('looks up an order without capturing it', function (?string $status, string $outcome, ?string $captureId) {
+    $body = $status === null ? ['id' => 'ORDER1', 'status' => 'APPROVED', 'purchase_units' => [[]]] : captureBody($status);
+    Http::fake(paypalToken() + [PAYPAL.'/v2/checkout/orders/ORDER1' => Http::response($body)]);
+
+    $result = $this->gateway->lookup(paypalPayment());
+
+    expect($result)->toBeInstanceOf($outcome);
+
+    if ($result instanceof Succeeded || $result instanceof StillPending) {
+        expect($result->providerPaymentId)->toBe($captureId);
+    }
+
+    Http::assertSent(fn (Request $r) => $r->method() === 'GET' && $r->url() === PAYPAL.'/v2/checkout/orders/ORDER1');
+    Http::assertNotSent(fn (Request $r) => $r->method() === 'POST' && ! str_ends_with($r->url(), '/token'));
+})->with([
+    'captured' => ['COMPLETED', Succeeded::class, 'CAP1'],
+    'held' => ['PENDING', StillPending::class, 'CAP1'],
+    'declined' => ['DECLINED', Declined::class, null],
+    'never captured' => [null, StillPending::class, null],
+]);
+
 it('maps outages', function () {
     Http::fake(paypalToken() + [PAYPAL.'/v2/checkout/orders/ORDER1/capture' => fn () => throw new ConnectionException('timeout')]);
     expect(fn () => $this->gateway->confirm(paypalPayment()))->toThrow(PaymentProviderUnavailable::class);

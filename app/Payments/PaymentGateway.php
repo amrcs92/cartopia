@@ -26,6 +26,15 @@ interface PaymentGateway
     public function confirm(Payment $payment): PaymentOutcome;
 
     /**
+     * Asks the provider what became of the payment without changing anything:
+     * no capture, no expiry. For a payment Cartopia may already have closed.
+     *
+     * @throws PaymentProviderUnavailable
+     * @throws PaymentProviderRejected
+     */
+    public function lookup(Payment $payment): PaymentOutcome;
+
+    /**
      * Cancels the payment at the provider, or reports that it was paid after all.
      *
      * @throws PaymentProviderUnavailable

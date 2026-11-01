@@ -140,6 +140,9 @@ interface PaymentGateway
     /** Asks the provider whether the payment went through (capturing it, for PayPal). Safe to call again. */
     public function confirm(Payment $payment): PaymentOutcome;
 
+    /** Asks the provider what became of the payment without changing anything: no capture, no expiry. */
+    public function lookup(Payment $payment): PaymentOutcome;
+
     /** Stops the hosted payment from being paid. Reports if it was already paid. */
     public function cancel(Payment $payment): PaymentOutcome;
 }
@@ -187,6 +190,7 @@ Uses the official `stripe/stripe-php` SDK through a `StripeClient` built from `s
   - `status: complete` with `payment_status: paid` gives `Succeeded`. The PaymentIntent id and the charge's `payment_method_details.card.brand` and `last4` are read from it.
   - `open` gives `StillPending`.
   - `expired` gives `Cancelled`.
+- **lookup:** the same read as confirm.
 - **cancel:** expires the session (idempotency key `payment-{id}-cancel`). If Stripe refuses because the session is already complete, it confirms instead and returns that outcome.
 - **Webhook verification:** `\Stripe\Webhook::constructEvent` with `services.stripe.webhook_secret`.
 - **Live-key guard:** the constructor throws a `LogicException` if the secret starts with `sk_live_` or `rk_live_`.
@@ -208,6 +212,7 @@ Uses Laravel's HTTP client against PayPal's Orders v2 REST API. The base URL is 
   - `INSTRUMENT_DECLINED` and other declines give `Declined`.
   - `ORDER_ALREADY_CAPTURED` fetches the order (`GET /v2/checkout/orders/{id}`) and reads its existing capture as above. That makes `confirm` safe to call again.
   - An order that hasn't been approved yet gives `StillPending`.
+- **lookup:** `GET /v2/checkout/orders/{id}`, read as above. It never captures. A `COMPLETED` capture gives `Succeeded`, a `PENDING` one `StillPending` with the capture id, and an order with no capture `StillPending`.
 - **cancel:** PayPal orders can't be voided before approval, so this only reports `Cancelled`. Safety comes from section 6: Cartopia never captures a payment it has closed.
 
 ### 3.4 `PayPalWebhookVerifier`

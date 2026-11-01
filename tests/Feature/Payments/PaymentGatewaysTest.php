@@ -170,3 +170,22 @@ it('uses the queued cancel outcome once', function () {
     expect($fake->cancel($payment))->toBeInstanceOf(Succeeded::class)
         ->and($fake->cancel($payment))->toBeInstanceOf(Cancelled::class);
 });
+
+it('looks up nothing paid by default and records it', function () {
+    $payment = Payment::factory()->topUp(2500)->create();
+    $fake = new FakePaymentGateway;
+
+    expect($fake->lookup($payment))->toBeInstanceOf(Cancelled::class)
+        ->and($fake->lookedUp)->toBe([$payment->id])
+        ->and($fake->confirmed)->toBeEmpty();
+});
+
+it('returns queued lookup outcomes and failures in order', function () {
+    $payment = Payment::factory()->stripe()->topUp(2500)->create();
+    $fake = new FakePaymentGateway;
+    $fake->willLookUp($fake->paid($payment), new PaymentProviderUnavailable('down'));
+
+    expect($fake->lookup($payment))->toEqual(new Succeeded("fake_pay_{$payment->id}", $payment->amount, 'usd', 'visa', '4242'))
+        ->and(fn () => $fake->lookup($payment))->toThrow(PaymentProviderUnavailable::class)
+        ->and($fake->lookup($payment))->toBeInstanceOf(Cancelled::class);
+});
