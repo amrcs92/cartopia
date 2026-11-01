@@ -19,11 +19,13 @@ it('tops up the wallet', function () {
         ->fill('#top-up-amount', '20')
         ->assertSee('Continue to pay $20.00')
         ->press('[data-test="top-up"]')
-        ->waitForText('Added $20.00 to your wallet.')
-        ->assertSee('Added $20.00 to your wallet.')
+        // Wait on the ledger row, which stays; the toast fades after 4 seconds.
+        // Its wording is covered in the feature tests.
+        ->waitForText('Top-up with Stripe')
         ->assertSee('$120.00')
-        ->assertSee('Top-up with Stripe')
         ->assertNoJavaScriptErrors();
+
+    expect($user->refresh()->balance->format())->toBe('$120.00');
 });
 
 it('does not show the top-up toast again when going Back', function () {
@@ -35,7 +37,7 @@ it('does not show the top-up toast again when going Back', function () {
     $page = visit('/wallet')
         ->fill('#top-up-amount', '20')
         ->press('[data-test="top-up"]')
-        ->waitForText('Added $20.00 to your wallet.');
+        ->waitForText('Top-up with Stripe');
     $page->script('document.querySelector(\'a[href$="/products"]\').click()');
     $page->wait(5)
         ->assertDontSee('Added $20.00 to your wallet.')

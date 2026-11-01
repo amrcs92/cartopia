@@ -1,5 +1,8 @@
 <?php
 
+use App\Cart\Cart;
+use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\ShippingMethod;
@@ -44,11 +47,13 @@ it('pays with Stripe and shows the Stripe receipt', function () {
         ->click('UPS')
         ->click(payCard('stripe'))
         ->press('Pay $15.00 with Stripe')
-        ->waitForText('Your Stripe payment of $15.00 was approved.')
-        ->assertSee('Visa ending in 4242, through Stripe')
+        // Wait on the receipt, which stays once rendered; the banner then comes with it.
+        ->waitForText('Visa ending in 4242, through Stripe')
+        ->assertSee('Your Stripe payment of $15.00 was approved.')
         ->assertNoJavaScriptErrors();
 
-    expect(Payment::sole()->status->value)->toBe('succeeded')
+    expect(Payment::sole()->status)->toBe(PaymentStatus::Succeeded)
+        ->and(Payment::sole()->order->status)->toBe(OrderStatus::Placed)
         ->and($user->refresh()->balance->format())->toBe('$100.00');
 });
 
@@ -61,23 +66,33 @@ it('pays with PayPal', function () {
         ->click('UPS')
         ->click(payCard('paypal'))
         ->press('Pay $15.00 with PayPal')
-        ->waitForText('Your PayPal payment of $15.00 was approved.')
+        ->waitForText('Paid through PayPal')
+        ->assertSee('Your PayPal payment of $15.00 was approved.')
         ->assertNoJavaScriptErrors();
 
-    expect($user->refresh()->balance->format())->toBe('$100.00');
+    expect(Payment::sole()->status)->toBe(PaymentStatus::Succeeded)
+        ->and(Payment::sole()->order->status)->toBe(OrderStatus::Placed)
+        ->and($user->refresh()->balance->format())->toBe('$100.00');
 });
 
 it('cancels and keeps the basket', function () {
     PaymentGateways::fake()->redirectToCancel();
-    $this->actingAs(hostedShopper());
+    $user = hostedShopper();
+    $this->actingAs($user);
 
     openBasketWithPeas()
         ->click('UPS')
         ->click(payCard('stripe'))
         ->press('Pay $15.00 with Stripe')
+        // The message also shows in a toast that fades; the one under the total stays.
         ->waitForText('Payment cancelled. Nothing was charged.')
+        ->assertSeeIn('[data-test="checkout-error"]', 'Payment cancelled. Nothing was charged.')
         ->assertSee('Garden Peas')
         ->assertNoJavaScriptErrors();
+
+    expect(Payment::sole()->status)->toBe(PaymentStatus::Cancelled)
+        ->and(Payment::sole()->order->status)->toBe(OrderStatus::Cancelled)
+        ->and(Cart::forUser($user)->count())->toBe(1);
 });
 
 it('defaults to card when the wallet is short', function () {
