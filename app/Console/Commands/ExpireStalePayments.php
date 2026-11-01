@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Actions\ClosePayment;
+use App\Actions\ExpireStalePayment;
 use App\Enums\PaymentStatus;
 use App\Models\Payment;
 use Illuminate\Console\Attributes\Description;
@@ -10,12 +10,12 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
 #[Signature('payments:expire-stale')]
-#[Description('Expire pending payments that were never started with a provider and are over three hours old')]
+#[Description('Settle or expire pending payments over three hours old, asking the provider first')]
 class ExpireStalePayments extends Command
 {
     public const STALE_AFTER_HOURS = 3;
 
-    public function handle(ClosePayment $closePayment): int
+    public function handle(ExpireStalePayment $expireStalePayment): int
     {
         $expired = 0;
 
@@ -24,8 +24,8 @@ class ExpireStalePayments extends Command
             ->whereNull('provider_payment_id')
             ->where('created_at', '<=', now()->subHours(self::STALE_AFTER_HOURS))
             ->lazyById()
-            ->each(function (Payment $payment) use ($closePayment, &$expired): void {
-                $closed = $closePayment->handle($payment, PaymentStatus::Expired, notify: true);
+            ->each(function (Payment $payment) use ($expireStalePayment, &$expired): void {
+                $closed = $expireStalePayment->handle($payment);
 
                 if ($closed->status === PaymentStatus::Expired) {
                     $expired++;

@@ -1,18 +1,47 @@
 <?php
 
 use App\Actions\ClosePayment;
+use App\Cart\Cart;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
+use App\Enums\WalletTransactionType;
+use App\Mail\OrderReceiptMail;
+use App\Mail\PaymentProblemMail;
+use App\Mail\TopUpReceiptMail;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\User;
+use App\Models\WalletTransaction;
+use App\Payments\Outcomes\StillPending;
+use App\Payments\PaymentGateways;
 use App\Wallet\Wallet;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+
+beforeEach(function () {
+    Mail::fake();
+    $this->fake = PaymentGateways::fake();
+});
 
 function pendingPaymentCreated(DateTimeInterface $at, array $state = []): Payment
 {
     $order = Order::factory()->awaitingPayment()->create();
 
-    return Payment::factory()->forOrder($order)->create(['created_at' => $at] + $state);
+    return Payment::factory()->forOrder($order)->withReference('cs_'.Str::random(8))->create(['created_at' => $at] + $state);
+}
+
+/**
+ * A pending Stripe order payment for the checkoutSetup() basket, started four hours ago.
+ *
+ * @return array{0: User, 1: Payment}
+ */
+function staleOrderPayment(): array
+{
+    [$user, $payment] = startedOrderPayment();
+    $payment->forceFill(['created_at' => now()->subHours(4)])->save();
+
+    return [$user, $payment];
 }
 
 it('expires only old pending payments', function () {
@@ -57,6 +86,67 @@ it('does not count a payment that settles before it is closed', function () {
 
     expect($racing->fresh()->status)->toBe(PaymentStatus::Succeeded)
         ->and($stale->fresh()->status)->toBe(PaymentStatus::Expired);
+});
+
+it('places the order when the provider says a stale payment was paid', function () {
+    [$user, $payment] = staleOrderPayment();
+    $this->fake->willLookUp($this->fake->paid($payment));
+
+    $this->artisan('payments:expire-stale')
+        ->expectsOutput('Expired 0 payments.')
+        ->assertSuccessful();
+
+    $payment->refresh();
+
+    expect($payment->status)->toBe(PaymentStatus::Succeeded)
+        ->and($payment->card_last4)->toBe('4242')
+        ->and($payment->order->status)->toBe(OrderStatus::Placed)
+        ->and(Cart::forUser($user)->count())->toBe(0)
+        ->and($this->fake->lookedUp)->toBe([$payment->id])
+        ->and($this->fake->confirmed)->toBeEmpty();
+
+    Mail::assertQueued(OrderReceiptMail::class, 1);
+    Mail::assertNotQueued(PaymentProblemMail::class);
+});
+
+it('credits a stale top-up the provider says was paid', function () {
+    $payment = Payment::factory()->topUp(2500)->withReference('cs_top')->create(['created_at' => now()->subHours(4)]);
+    $this->fake->willLookUp($this->fake->paid($payment));
+
+    $this->artisan('payments:expire-stale')->assertSuccessful();
+
+    expect($payment->fresh()->status)->toBe(PaymentStatus::Succeeded)
+        ->and(WalletTransaction::query()->where('payment_id', $payment->id)->sole()->type)->toBe(WalletTransactionType::TopUp);
+
+    Mail::assertQueued(TopUpReceiptMail::class, 1);
+    Mail::assertNotQueued(PaymentProblemMail::class);
+});
+
+it('expires a stale payment the provider says was not paid, with the email', function () {
+    [, $payment] = staleOrderPayment();
+
+    $this->artisan('payments:expire-stale')
+        ->expectsOutput('Expired 1 payments.')
+        ->assertSuccessful();
+
+    expect($payment->fresh()->status)->toBe(PaymentStatus::Expired)
+        ->and($payment->order->fresh()->status)->toBe(OrderStatus::Cancelled)
+        ->and($this->fake->lookedUp)->toBe([$payment->id]);
+
+    Mail::assertQueued(PaymentProblemMail::class, 1);
+    Mail::assertNotQueued(OrderReceiptMail::class);
+});
+
+it('keeps a stale payment whose capture PayPal is holding', function () {
+    $payment = pendingPaymentCreated(now()->subHours(4), ['method' => 'paypal']);
+    $this->fake->willLookUp(new StillPending('CAP9'));
+
+    $this->artisan('payments:expire-stale')->expectsOutput('Expired 0 payments.');
+
+    expect($payment->fresh()->status)->toBe(PaymentStatus::Pending)
+        ->and($payment->fresh()->provider_payment_id)->toBe('CAP9');
+
+    Mail::assertNothingQueued();
 });
 
 it('is scheduled every fifteen minutes', function () {

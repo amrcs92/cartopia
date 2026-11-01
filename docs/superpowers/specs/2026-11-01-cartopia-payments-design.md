@@ -339,10 +339,13 @@ Then it redirects as in section 4.4, step 4. A cancelled order payment leaves th
 
 ### 4.8 Stale payments
 
-The artisan command `payments:expire-stale`, scheduled every 15 minutes in `routes/console.php`:
-- It runs `ClosePayment` with `expired`, **with** the email, for payments that are still `pending` more than 3 hours after they were created.
+The artisan command `payments:expire-stale`, scheduled every 15 minutes in `routes/console.php`, looks at payments that are still `pending` more than 3 hours after they were created.
 - It skips payments that already have a `provider_payment_id`: those are PayPal captures held by PayPal, which its webhook settles.
-- It doesn't call the providers. Stripe sessions expire on their own after 30 minutes, and Cartopia never captures a PayPal payment that is no longer pending.
+- For each of the others, it locks the row and asks the provider first, with `lookup`. That only reads: nothing is captured or expired. A shopper can pay and never come back, and the webhook may be missing or late, so the provider may hold money for a payment that is still pending here.
+  - **Paid:** `CompletePayment` runs, as if the shopper had come back. The receipt goes out, and no problem email.
+  - **A capture PayPal is holding:** the capture id is stored and the payment stays pending, as above.
+  - **The provider can't be reached, or refuses the request:** the payment stays pending, and the next run asks again.
+  - **Anything else:** `ClosePayment` with `expired`, **with** the email.
 
 ## 5. Splitting a payment
 
@@ -625,6 +628,7 @@ Documented in the README.
 - **`payments:expire-stale`:**
   - it expires only pending payments older than 3 hours, emails, and returns wallet shares
   - it skips held PayPal captures
+  - it asks the provider first: a payment the provider reports paid is completed, with the receipt and no problem email
 - **Emails** (`Mail::fake()`):
   - each email is queued exactly once, including under duplicate returns and webhooks
   - nothing is queued when the transaction rolls back
