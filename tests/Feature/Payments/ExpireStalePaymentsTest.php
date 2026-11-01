@@ -12,10 +12,12 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Models\User;
 use App\Models\WalletTransaction;
+use App\Payments\Exceptions\PaymentProviderUnavailable;
 use App\Payments\Outcomes\StillPending;
 use App\Payments\PaymentGateways;
 use App\Wallet\Wallet;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
@@ -149,10 +151,45 @@ it('keeps a stale payment whose capture PayPal is holding', function () {
     Mail::assertNothingQueued();
 });
 
-it('is scheduled every fifteen minutes', function () {
+it('leaves a payment for the next run when the provider cannot be reached, and goes on', function () {
+    $unreachable = pendingPaymentCreated(now()->subHours(4));
+    $stale = pendingPaymentCreated(now()->subHours(4));
+    $this->fake->willLookUp(new PaymentProviderUnavailable('Stripe could not be reached for payment 1.'));
+
+    $this->artisan('payments:expire-stale')
+        ->expectsOutput('Expired 1 payments.')
+        ->expectsOutput('1 payments could not be processed.')
+        ->assertFailed();
+
+    expect($unreachable->fresh()->status)->toBe(PaymentStatus::Pending)
+        ->and($unreachable->order->fresh()->status)->toBe(OrderStatus::AwaitingPayment)
+        ->and($stale->fresh()->status)->toBe(PaymentStatus::Expired);
+
+    Mail::assertQueued(PaymentProblemMail::class, 1);
+    Mail::assertQueued(PaymentProblemMail::class, fn (PaymentProblemMail $mail) => $mail->payment->is($stale));
+});
+
+it('reports any other failure and goes on', function () {
+    Exceptions::fake();
+    $failing = pendingPaymentCreated(now()->subHours(4));
+    $stale = pendingPaymentCreated(now()->subHours(4));
+    $this->fake->willLookUp(new RuntimeException('Lock wait timeout exceeded'));
+
+    $this->artisan('payments:expire-stale')
+        ->expectsOutput('Expired 1 payments.')
+        ->assertFailed();
+
+    expect($failing->fresh()->status)->toBe(PaymentStatus::Pending)
+        ->and($stale->fresh()->status)->toBe(PaymentStatus::Expired);
+
+    Exceptions::assertReported(fn (RuntimeException $e) => $e->getMessage() === 'Lock wait timeout exceeded');
+});
+
+it('is scheduled every fifteen minutes without overlapping', function () {
     $event = collect(app(Schedule::class)->events())
         ->first(fn ($event) => str_contains($event->command, 'payments:expire-stale'));
 
     expect($event)->not->toBeNull()
-        ->and($event->expression)->toBe('*/15 * * * *');
+        ->and($event->expression)->toBe('*/15 * * * *')
+        ->and($event->withoutOverlapping)->toBeTrue();
 });
