@@ -7,6 +7,7 @@ use App\Exceptions\EmptyCart;
 use App\Exceptions\InsufficientBalance;
 use App\Http\Requests\CheckoutRequest;
 use App\Models\ShippingMethod;
+use App\Payments\PaymentWording;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 
@@ -26,7 +27,7 @@ class CheckoutController extends Controller
 
         // Inertia's native flash: delivered once, never kept in history state, so
         // the receipt banner does not come back when going Back.
-        Inertia::flash('orderPlaced', 'Order placed.');
+        Inertia::flash('orderPlaced', PaymentWording::placedMessage($order));
 
         return to_route('orders.show', $order);
     }

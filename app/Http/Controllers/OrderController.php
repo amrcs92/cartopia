@@ -16,6 +16,7 @@ class OrderController extends Controller
     public function index(Request $request): Response
     {
         $orders = $request->user()->orders()
+            ->placed()
             ->with(['shippingMethod', 'items.product.primaryImage'])
             ->latest()
             ->latest('id')

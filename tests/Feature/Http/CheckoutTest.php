@@ -1,6 +1,7 @@
 <?php
 
 use App\Cart\Cart;
+use App\Enums\PaymentMethod;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ShippingMethod;
@@ -29,12 +30,14 @@ it('checks out and redirects to the order', function () {
 
     // Inertia's native flash: the receipt shows the banner once.
     $this->get(route('orders.show', $order))
-        ->assertInertia(fn (Assert $page) => $page->hasFlash('orderPlaced', 'Order placed.'));
+        ->assertInertia(fn (Assert $page) => $page->hasFlash('orderPlaced', 'Order placed. $12.74 was paid from your wallet.'));
     $this->get(route('orders.show', $order))
         ->assertInertia(fn (Assert $page) => $page->missingFlash('orderPlaced'));
 
     expect($order->user_id)->toBe($user->id)
-        ->and($order->total->cents())->toBe(1274);
+        ->and($order->total->cents())->toBe(1274)
+        ->and($order->payment_method)->toBe(PaymentMethod::Wallet)
+        ->and($order->wallet_amount->cents())->toBe(1274);
 });
 
 it('ignores client-sent prices', function () {

@@ -25,6 +25,21 @@ it('lists only the users own orders, newest first', function () {
             ->where('orders.data.1.id', $old->id));
 });
 
+it('hides orders that are not placed', function () {
+    $user = User::factory()->create();
+    $placed = Order::factory()->for($user)->create();
+    $awaiting = Order::factory()->for($user)->awaitingPayment()->create();
+    Order::factory()->for($user)->cancelled()->create();
+
+    $this->actingAs($user)
+        ->get(route('orders.index'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('orders.data', 1)
+            ->where('orders.data.0.id', $placed->id));
+
+    $this->get(route('orders.show', $awaiting))->assertNotFound();
+});
+
 it('shows the users own order with items', function () {
     $user = User::factory()->create();
     $order = Order::factory()->for($user)->create();

@@ -5,6 +5,7 @@ namespace App\Actions;
 use App\Cart\Cart;
 use App\Cart\CartLine;
 use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
 use App\Enums\WalletTransactionType;
 use App\Exceptions\EmptyCart;
 use App\Exceptions\InsufficientBalance;
@@ -49,6 +50,8 @@ class PlaceOrder
                 'shipping_fee' => $fee,
                 'total' => $total,
                 'status' => OrderStatus::Placed,
+                'payment_method' => PaymentMethod::Wallet,
+                'wallet_amount' => $total,
             ]);
 
             $order->items()->createMany(array_map(fn (CartLine $line): array => [
