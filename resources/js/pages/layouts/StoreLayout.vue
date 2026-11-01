@@ -1,6 +1,13 @@
 <script setup lang="ts">
-import { useMediaQuery } from '@vueuse/core';
-import { ref, watch } from 'vue';
+import { useElementSize, useMediaQuery, useWindowScroll } from '@vueuse/core';
+import {
+    computed,
+    onUnmounted,
+    ref,
+    useTemplateRef,
+    watch,
+    watchEffect,
+} from 'vue';
 import Breadcrumbs from '@/common/app/Breadcrumbs.vue';
 import FlashToast from '@/common/flash-toast/FlashToast.vue';
 import AddedToBasketPanel from '@/modules/cart/AddedToBasketPanel.vue';
@@ -24,6 +31,41 @@ const menuOpen = ref(false);
 watch(isPhone, () => {
     menuOpen.value = false;
 });
+
+// The header stays pinned to the top of the window. Once the page has
+// scrolled past the announcement bar the header floats over the page, so it
+// gets a bottom rule and a soft shadow. Its height goes in
+// --store-header-h on the root, for the scroll padding (in-page jumps land
+// below it) and for anything else that sticks under it.
+const headerBar = useTemplateRef('headerBar');
+const { height: headerHeight } = useElementSize(headerBar, undefined, {
+    box: 'border-box',
+});
+const { y: scrollY } = useWindowScroll();
+
+// A sticky element's offsetTop follows it as it sticks, so the point it
+// starts floating is taken from the bottom of the announcement bar above it.
+const announcement = useTemplateRef('announcement');
+const headerFloating = computed(
+    () =>
+        announcement.value !== null &&
+        scrollY.value >
+            announcement.value.offsetTop + announcement.value.offsetHeight,
+);
+
+watchEffect(() => {
+    if (typeof document !== 'undefined' && headerHeight.value > 0) {
+        document.documentElement.style.setProperty(
+            '--store-header-h',
+            `${headerHeight.value}px`,
+        );
+    }
+});
+
+onUnmounted(() => {
+    document.documentElement.style.removeProperty('--store-header-h');
+});
+
 // On a phone the checkout bar is pinned over the bottom of the screen; the
 // root's bottom padding (only while the bar is on the page) keeps the
 // footer's last row clear of it.
@@ -41,6 +83,7 @@ watch(isPhone, () => {
         </a>
 
         <p
+            ref="announcement"
             class="bg-announce px-4 py-2 text-center text-[13px] font-bold text-announce-ink sm:text-sm"
         >
             <span class="sm:hidden">
@@ -52,11 +95,20 @@ watch(isPhone, () => {
             </span>
         </p>
 
-        <template v-if="isPhone">
-            <PhoneHeader @open-menu="menuOpen = true" />
-            <PhoneMenu :open="menuOpen" @close="menuOpen = false" />
-        </template>
-        <StoreHeader v-else />
+        <div
+            ref="headerBar"
+            data-test="header-bar"
+            :data-floating="headerFloating"
+            class="sticky top-0 z-30 transition-shadow duration-200 ease-stall"
+            :class="
+                headerFloating &&
+                'shadow-[0_2.5px_0_var(--outline),0_10px_22px_-12px_rgb(0_0_0/0.45)]'
+            "
+        >
+            <PhoneHeader v-if="isPhone" @open-menu="menuOpen = true" />
+            <StoreHeader v-else />
+        </div>
+        <PhoneMenu v-if="isPhone" :open="menuOpen" @close="menuOpen = false" />
 
         <Awning />
 

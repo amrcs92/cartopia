@@ -264,6 +264,28 @@
     }
 }
 
+/* A theme switch the user makes (useAppearance adds `theme-fading` for 250ms):
+   every colour eases to its new value. The theme button's own icons keep
+   their motion. Reduced motion skips the fade. */
+@media (prefers-reduced-motion: no-preference) {
+    .theme-fading *:not([data-theme-icon]),
+    .theme-fading *:not([data-theme-icon])::before,
+    .theme-fading *:not([data-theme-icon])::after {
+        transition-property:
+            color, background-color, border-color, outline-color, fill, stroke,
+            box-shadow !important;
+        transition-duration: 250ms !important;
+        transition-timing-function: var(--ease-stall) !important;
+        transition-delay: 0s !important;
+    }
+}
+
+/* The store header stays pinned to the top (StoreLayout sets its height in
+   --store-header-h), so in-page jumps land below it. */
+html {
+    scroll-padding-top: var(--store-header-h, 0px);
+}
+
 @media (prefers-reduced-motion: reduce) {
     *,
     ::before,
