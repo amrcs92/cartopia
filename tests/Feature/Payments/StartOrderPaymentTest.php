@@ -135,7 +135,7 @@ it('refuses card payments under 50 cents', function () {
         ->assertRedirect(route('cart.show'));
 
     $this->get(route('cart.show'))->assertInertia(fn (Assert $page) => $page
-        ->hasFlash('checkoutError', 'Card and PayPal payments start at $0.50.'));
+        ->hasFlash('checkoutError', 'Stripe and PayPal payments start at $0.50.'));
 
     expect(Order::count())->toBe(0)
         ->and(Payment::count())->toBe(0)

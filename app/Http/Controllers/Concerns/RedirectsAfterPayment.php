@@ -74,10 +74,25 @@ trait RedirectsAfterPayment
     {
         return match ($payment->status) {
             PaymentStatus::Failed => "{$this->providerName($payment)} couldn't take the payment. Try again or pick another way to pay.",
-            PaymentStatus::Cancelled, PaymentStatus::Expired => 'Payment cancelled. Nothing was charged.',
+            PaymentStatus::Cancelled, PaymentStatus::Expired => $this->cancelledMessage($payment),
             PaymentStatus::Pending => "We're still waiting for the payment to be confirmed. Check your orders in a minute.",
             PaymentStatus::Succeeded => '',
         };
+    }
+
+    /**
+     * A split order's wallet share was returned when the payment closed (ClosePayment).
+     */
+    private function cancelledMessage(Payment $payment): string
+    {
+        $message = 'Payment cancelled. Nothing was charged.';
+        $order = $payment->order;
+
+        if ($payment->purpose === PaymentPurpose::Order && $order instanceof Order && $order->isSplit()) {
+            return "{$message} Your {$order->wallet_amount->format()} wallet balance is back.";
+        }
+
+        return $message;
     }
 
     private function toastTypeFor(Payment $payment): string

@@ -5,8 +5,10 @@ namespace App\Actions;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentPurpose;
 use App\Enums\PaymentStatus;
+use App\Enums\WalletTransactionType;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Wallet\Wallet;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -16,6 +18,8 @@ use InvalidArgumentException;
  */
 class ClosePayment
 {
+    public function __construct(private readonly Wallet $wallet) {}
+
     public function handle(Payment $payment, PaymentStatus $status, bool $notify): Payment
     {
         if (! in_array($status, [PaymentStatus::Cancelled, PaymentStatus::Failed, PaymentStatus::Expired], true)) {
@@ -31,9 +35,15 @@ class ClosePayment
 
             $locked->update(['status' => $status, 'completed_at' => now()]);
 
-            if ($locked->purpose === PaymentPurpose::Order && $locked->order instanceof Order) {
-                $locked->order->update(['status' => OrderStatus::Cancelled]);
-                // Task 20 returns the order's wallet share here (a Release row).
+            $order = $locked->order;
+
+            if ($locked->purpose === PaymentPurpose::Order && $order instanceof Order) {
+                $order->update(['status' => OrderStatus::Cancelled]);
+
+                // The held wallet share goes back exactly once: pending only ends once, under the payment lock.
+                if ($order->wallet_amount->cents() > 0) {
+                    $this->wallet->credit($order->user, $order->wallet_amount, WalletTransactionType::Release, "Order #{$order->id} not paid, balance returned", $order);
+                }
             }
 
             // sends PaymentProblemMail from phase 5 (when $notify is true)

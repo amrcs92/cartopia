@@ -5,6 +5,7 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Wallet\Wallet;
 use Illuminate\Console\Scheduling\Schedule;
 
 function pendingPaymentCreated(DateTimeInterface $at, array $state = []): Payment
@@ -40,7 +41,7 @@ it('does not count a payment that settles before it is closed', function () {
     $stale = pendingPaymentCreated(now()->subHours(5));
 
     // Settles the first payment just before the real close runs.
-    $this->app->bind(ClosePayment::class, fn () => new class extends ClosePayment
+    $this->app->bind(ClosePayment::class, fn () => new class(app(Wallet::class)) extends ClosePayment
     {
         public function handle(Payment $payment, PaymentStatus $status, bool $notify): Payment
         {

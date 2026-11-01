@@ -51,11 +51,11 @@ class CheckoutController extends Controller
     private function startHostedPayment(CheckoutRequest $request, StartOrderPayment $startOrderPayment, ShippingMethod $method, PaymentMethod $paymentMethod): Response
     {
         try {
-            $started = $startOrderPayment->handle($request->user(), $method, $paymentMethod);
+            $started = $startOrderPayment->handle($request->user(), $method, $paymentMethod, $request->boolean('use_wallet'));
         } catch (EmptyCart) {
             return $this->refused('Your basket is empty.');
         } catch (AmountTooSmall) {
-            return $this->refused('Card and PayPal payments start at $0.50.');
+            return $this->refused('Stripe and PayPal payments start at $0.50.');
         } catch (PaymentProviderUnavailable|PaymentProviderRejected $e) {
             // The message only: the previous exception can carry request headers.
             Log::warning("Couldn't start a {$paymentMethod->value} checkout payment: {$e->getMessage()}");
