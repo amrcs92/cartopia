@@ -104,6 +104,12 @@ class PayPalGateway implements PaymentGateway
 
     public function confirm(Payment $payment): PaymentOutcome
     {
+        // A capture exists already (held by PayPal): read it. Posting the capture again
+        // with the same request id could only replay the old answer.
+        if ($payment->provider_payment_id !== null) {
+            return $this->lookup($payment);
+        }
+
         $response = $this->call($payment, fn (PendingRequest $http): Response => $http
             ->withHeaders(['PayPal-Request-Id' => "payment-{$payment->id}-capture"])
             ->withBody('{}', 'application/json')

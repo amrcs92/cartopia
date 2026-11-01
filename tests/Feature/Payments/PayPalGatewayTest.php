@@ -192,6 +192,22 @@ it('reads an order that was already captured', function () {
     Http::assertSent(fn (Request $r) => $r->method() === 'GET' && $r->url() === PAYPAL.'/v2/checkout/orders/ORDER1');
 });
 
+it('reads a held capture instead of capturing again', function () {
+    $payment = paypalPayment();
+    $payment->update(['provider_payment_id' => 'CAP1']);
+    Http::fake(paypalToken() + [
+        PAYPAL.'/v2/checkout/orders/ORDER1/capture' => Http::response(captureBody('PENDING'), 201),
+        PAYPAL.'/v2/checkout/orders/ORDER1' => Http::response(captureBody()),
+    ]);
+
+    $outcome = $this->gateway->confirm($payment);
+
+    expect($outcome)->toBeInstanceOf(Succeeded::class)
+        ->and($outcome->providerPaymentId)->toBe('CAP1');
+
+    Http::assertNotSent(fn (Request $r) => str_ends_with($r->url(), '/capture'));
+});
+
 it('reads an unapproved order as pending', function () {
     Http::fake(paypalToken() + [PAYPAL.'/v2/checkout/orders/ORDER1/capture' => Http::response(['details' => [['issue' => 'ORDER_NOT_APPROVED']]], 422)]);
 

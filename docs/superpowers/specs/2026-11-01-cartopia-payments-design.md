@@ -212,6 +212,7 @@ Uses Laravel's HTTP client against PayPal's Orders v2 REST API. The base URL is 
   - `INSTRUMENT_DECLINED` and other declines give `Declined`.
   - `ORDER_ALREADY_CAPTURED` fetches the order (`GET /v2/checkout/orders/{id}`) and reads its existing capture as above. That makes `confirm` safe to call again.
   - An order that hasn't been approved yet gives `StillPending`.
+  - A payment that already has a capture id (a held capture) isn't captured again: confirm reads the order with lookup instead.
 - **lookup:** `GET /v2/checkout/orders/{id}`, read as above. It never captures. A `COMPLETED` capture gives `Succeeded`, a `PENDING` one `StillPending` with the capture id, and an order with no capture `StillPending`.
 - **cancel:** PayPal orders can't be voided before approval, so this only reports `Cancelled`. Safety comes from section 6: Cartopia never captures a payment it has closed.
 
