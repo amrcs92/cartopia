@@ -17,7 +17,8 @@ use LogicException;
 /**
  * Asks the provider what became of a pending payment and records the answer
  * (spec 4.4, step 3). The provider is asked under the row lock, so a payment
- * closed meanwhile (by the stale job, say) is never captured.
+ * closed meanwhile (by the stale job, say) is never captured. A provider event
+ * saying the money moved still reaches a closed payment, read-only.
  */
 class SettlePayment
 {
@@ -28,16 +29,23 @@ class SettlePayment
     ) {}
 
     /**
+     * @param  bool  $moneyMoved  the caller is a provider event saying the money moved
+     *                            (Stripe's completed session, PayPal's completed capture)
+     *
      * @throws PaymentProviderUnavailable
      * @throws PaymentProviderRejected
      */
-    public function handle(Payment $payment, bool $notifyOnFailure): Payment
+    public function handle(Payment $payment, bool $notifyOnFailure, bool $moneyMoved = false): Payment
     {
-        return DB::transaction(function () use ($payment, $notifyOnFailure): Payment {
+        return DB::transaction(function () use ($payment, $notifyOnFailure, $moneyMoved): Payment {
             $locked = Payment::query()->whereKey($payment->id)->lockForUpdate()->firstOrFail();
 
-            if (! $locked->isPending()) {
+            if ($locked->status === PaymentStatus::Succeeded) {
                 return $locked;
+            }
+
+            if (! $locked->isPending()) {
+                return $moneyMoved ? $this->settleClosed($locked) : $locked;
             }
 
             $outcome = $this->gateways->for($locked->method)->confirm($locked);
@@ -50,6 +58,17 @@ class SettlePayment
                 default => throw new LogicException('Unknown payment outcome '.$outcome::class.'.'),
             };
         });
+    }
+
+    /**
+     * The payment was closed here, but the provider says money moved. It is only
+     * looked up, never captured: money the provider confirms wins (spec 6.3).
+     */
+    private function settleClosed(Payment $payment): Payment
+    {
+        $outcome = $this->gateways->for($payment->method)->lookup($payment);
+
+        return $outcome instanceof Succeeded ? $this->completePayment->handle($payment, $outcome) : $payment;
     }
 
     private function keepPending(Payment $payment, StillPending $outcome): Payment

@@ -59,7 +59,9 @@ class PayPalWebhookController extends Controller
             if ($type === 'PAYMENT.CAPTURE.DENIED') {
                 $closePayment->handle($payment, PaymentStatus::Failed, notify: true);
             } else {
-                $settlePayment->handle($payment, notifyOnFailure: true);
+                // A completed capture also reaches a payment closed meanwhile, read-only;
+                // an approval never captures a closed payment.
+                $settlePayment->handle($payment, notifyOnFailure: true, moneyMoved: $type === 'PAYMENT.CAPTURE.COMPLETED');
             }
         } catch (PaymentProviderUnavailable $e) {
             Log::warning('PayPal webhook could not reach PayPal: '.$e->getMessage());

@@ -1,12 +1,20 @@
 <?php
 
+use App\Actions\ClosePayment;
+use App\Actions\StartOrderPayment;
+use App\Cart\Cart;
 use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
+use App\Enums\WalletTransactionType;
+use App\Mail\OrderReceiptMail;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\WalletTransaction;
 use App\Payments\Exceptions\PaymentProviderUnavailable;
 use App\Payments\PaymentGateway;
 use App\Payments\PaymentGateways;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Testing\TestResponse;
 
 beforeEach(function () {
@@ -112,4 +120,49 @@ it('needs no CSRF token or login', function () {
     postStripeWebhook(stripeEvent('checkout.session.completed'))->assertOk();
 
     expect($this->payment->fresh()->status)->toBe(PaymentStatus::Succeeded);
+});
+
+it('places an expired order once when a late completed event says it was paid', function () {
+    Mail::fake();
+    [$user, $ups] = checkoutSetup(500);
+    app(StartOrderPayment::class)->handle($user, $ups, PaymentMethod::Stripe, useWallet: true);
+    $payment = Payment::query()->latest('id')->firstOrFail();
+    app(ClosePayment::class)->handle($payment, PaymentStatus::Expired, notify: false);
+    expect($user->fresh()->balance->cents())->toBe(500);
+
+    $this->fake->willLookUp($this->fake->paid($payment), $this->fake->paid($payment));
+    $json = stripeEvent('checkout.session.completed', (string) $payment->provider_reference);
+
+    postStripeWebhook($json)->assertOk();
+    postStripeWebhook($json)->assertOk();
+
+    expect($payment->fresh()->status)->toBe(PaymentStatus::Succeeded)
+        ->and($payment->order->fresh()->status)->toBe(OrderStatus::Placed)
+        // The returned share is taken again, once.
+        ->and($user->fresh()->balance->cents())->toBe(0)
+        ->and(WalletTransaction::query()->where('type', WalletTransactionType::Purchase)->count())->toBe(2)
+        ->and(Cart::forUser($user)->count())->toBe(3)
+        ->and($this->fake->lookedUp)->toBe([$payment->id])
+        ->and($this->fake->confirmed)->toBeEmpty();
+
+    Mail::assertQueued(OrderReceiptMail::class, 1);
+});
+
+it('leaves a closed payment alone when Stripe does not confirm a late completed event', function () {
+    app(ClosePayment::class)->handle($this->payment, PaymentStatus::Expired, notify: false);
+
+    postStripeWebhook(stripeEvent('checkout.session.completed'))->assertOk();
+
+    expect($this->payment->fresh()->status)->toBe(PaymentStatus::Expired)
+        ->and($this->order->fresh()->status)->toBe(OrderStatus::Cancelled)
+        ->and($this->fake->lookedUp)->toBe([$this->payment->id]);
+});
+
+it('answers 503 when Stripe cannot be reached for a late completed event', function () {
+    app(ClosePayment::class)->handle($this->payment, PaymentStatus::Expired, notify: false);
+    $this->fake->willLookUp(new PaymentProviderUnavailable('down'));
+
+    postStripeWebhook(stripeEvent('checkout.session.completed'))->assertStatus(503);
+
+    expect($this->payment->fresh()->status)->toBe(PaymentStatus::Expired);
 });

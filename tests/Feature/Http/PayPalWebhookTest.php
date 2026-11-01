@@ -1,8 +1,10 @@
 <?php
 
+use App\Actions\ClosePayment;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
+use App\Mail\OrderReceiptMail;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Payments\Exceptions\PaymentProviderUnavailable;
@@ -11,6 +13,7 @@ use App\Payments\Outcomes\Succeeded;
 use App\Payments\PaymentGateways;
 use App\Payments\PayPalWebhookVerifier;
 use App\Support\Money;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Testing\TestResponse;
 
 beforeEach(function () {
@@ -134,4 +137,33 @@ it('ignores a custom_id that points at a Stripe payment', function () {
     postPayPalWebhook(paypalEvent('PAYMENT.CAPTURE.DENIED', ['id' => 'CAP1', 'custom_id' => (string) $stripe->id]))->assertOk();
 
     expect($stripe->fresh()->status)->toBe(PaymentStatus::Pending);
+});
+
+it('places an expired order once when a late completed capture says it was paid', function () {
+    Mail::fake();
+    app(ClosePayment::class)->handle($this->payment, PaymentStatus::Expired, notify: false);
+    $this->fake->willLookUp($this->fake->paid($this->payment), $this->fake->paid($this->payment));
+    $json = paypalEvent('PAYMENT.CAPTURE.COMPLETED', ['id' => 'CAP1', 'custom_id' => (string) $this->payment->id]);
+    verifierSays(true);
+
+    postPayPalWebhook($json)->assertOk();
+    postPayPalWebhook($json)->assertOk();
+
+    expect($this->payment->fresh()->status)->toBe(PaymentStatus::Succeeded)
+        ->and($this->order->fresh()->status)->toBe(OrderStatus::Placed)
+        ->and($this->fake->lookedUp)->toBe([$this->payment->id])
+        ->and($this->fake->confirmed)->toBeEmpty();
+
+    Mail::assertQueued(OrderReceiptMail::class, 1);
+});
+
+it('never captures a closed payment on a late approval', function () {
+    app(ClosePayment::class)->handle($this->payment, PaymentStatus::Expired, notify: false);
+    verifierSays(true);
+
+    postPayPalWebhook(paypalEvent('CHECKOUT.ORDER.APPROVED', ['id' => 'PP-ORDER-1']))->assertOk();
+
+    expect($this->payment->fresh()->status)->toBe(PaymentStatus::Expired)
+        ->and($this->fake->confirmed)->toBeEmpty()
+        ->and($this->fake->lookedUp)->toBeEmpty();
 });
