@@ -11,7 +11,7 @@ const props = defineProps<{
 <template>
     <section
         aria-labelledby="order-summary"
-        class="flex flex-col gap-5 rounded-[26px] border-[2.5px] border-outline bg-surface p-5 shadow-card lg:sticky lg:top-6 lg:p-6"
+        class="flex flex-col gap-5 rounded-[26px] border-[2.5px] border-outline bg-surface p-5 shadow-card lg:sticky lg:top-[calc(var(--store-header-h,0px)+1.5rem)] lg:p-6"
     >
         <h2 id="order-summary" class="font-serif text-[26px] text-ink">
             Order summary

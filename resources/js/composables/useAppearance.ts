@@ -83,6 +83,23 @@ export function initializeTheme(): void {
     mediaQuery()?.addEventListener('change', handleSystemThemeChange);
 }
 
+// While `theme-fading` is on the root, app.css eases every colour to its new
+// value, so a switch the user makes fades instead of flashing. It comes off
+// again once the fade is over, so hovers keep their own timing.
+const themeFadeMs = 250;
+let themeFadeTimer: ReturnType<typeof setTimeout> | undefined;
+
+function fadeTheme(): void {
+    const root = document.documentElement;
+
+    clearTimeout(themeFadeTimer);
+    root.classList.add('theme-fading');
+    themeFadeTimer = setTimeout(
+        () => root.classList.remove('theme-fading'),
+        themeFadeMs,
+    );
+}
+
 const appearance = ref<Appearance>('system');
 
 export function useAppearance(): UseAppearanceReturn {
@@ -113,6 +130,7 @@ export function useAppearance(): UseAppearanceReturn {
         // Store in cookie for SSR...
         setCookie('appearance', value);
 
+        fadeTheme();
         updateTheme(value);
     }
 

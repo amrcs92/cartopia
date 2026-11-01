@@ -18,6 +18,56 @@ it('switches to dark mode and keeps it after a reload', function () {
         ->assertScript('document.documentElement.classList.contains("dark")', true);
 });
 
+it('swaps the moon for the sun when switching to dark mode', function () {
+    visit('/')->assertPresent('[data-theme-icon="moon"][data-shown="true"]')
+        ->assertPresent('[data-theme-icon="sun"][data-shown="false"]')
+        ->click('[aria-label="Switch to dark mode"]')
+        ->assertPresent('[data-theme-icon="sun"][data-shown="true"]')
+        ->assertPresent('[data-theme-icon="moon"][data-shown="false"]')
+        ->assertPresent('[aria-label="Switch to light mode"]')
+        ->assertNoJavaScriptErrors();
+});
+
+// The scroll position updates the header on the next frames, so each check
+// waits two frames before it reads the header.
+function headerAfterScroll(int $y): string
+{
+    return <<<JS
+        new Promise((resolve) => {
+            window.scrollTo(0, {$y});
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                const bar = document.querySelector("[data-test=header-bar]");
+                resolve(bar.getBoundingClientRect().top + ':' + bar.dataset.floating);
+            }));
+        })
+        JS;
+}
+
+it('keeps the header pinned to the top once the page scrolls', function (int $width) {
+    Product::factory()->count(6)->featured()->create();
+
+    visit('/')->resize($width, 640)
+        ->assertScript(headerAfterScroll(0).'.then((s) => s.endsWith(":false"))', true)
+        ->assertScript(headerAfterScroll(900), '0:true')
+        ->assertScript(
+            'parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) === document.querySelector("[data-test=header-bar]").offsetHeight',
+            true,
+        )
+        ->assertScript(headerAfterScroll(0).'.then((s) => s.endsWith(":false"))', true)
+        ->assertNoJavaScriptErrors();
+})->with([1280, 360]);
+
+it('opens the phone menu over the pinned header', function () {
+    visit('/')->resize(360, 640)
+        ->assertScript(headerAfterScroll(900), '0:true')
+        ->click('[aria-label="Open menu"]')
+        ->assertSee('Log in')
+        ->assertScript(
+            'parseInt(getComputedStyle(document.querySelector("[role=dialog]")).zIndex) > parseInt(getComputedStyle(document.querySelector("[data-test=header-bar]")).zIndex)',
+            true,
+        );
+});
+
 it('opens the phone menu and never scrolls sideways at 360px', function () {
     // Featured products fill the carousel's swipeable row, which must scroll
     // on its own without widening the page.
