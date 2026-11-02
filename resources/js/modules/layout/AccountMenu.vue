@@ -44,6 +44,13 @@ const itemClass =
                 Account settings
             </Link>
         </DropdownMenuItem>
+        <DropdownMenuItem
+            v-if="props.user.is_admin"
+            as-child
+            :class="itemClass"
+        >
+            <a href="/admin" class="flex w-full items-center">Admin</a>
+        </DropdownMenuItem>
         <DropdownMenuItem as-child :class="[itemClass, 'text-danger']">
             <Link
                 :href="logout()"
