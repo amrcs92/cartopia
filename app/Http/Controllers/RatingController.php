@@ -12,6 +12,8 @@ class RatingController extends Controller
 {
     public function update(RateProductRequest $request, Product $product, RateProduct $rateProduct): RedirectResponse
     {
+        abort_unless($product->is_visible, 404);
+
         $rateProduct->handle($request->user(), $product, $request->integer('stars'));
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Thanks for rating!']);

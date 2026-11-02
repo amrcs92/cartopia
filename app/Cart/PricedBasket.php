@@ -3,6 +3,7 @@
 namespace App\Cart;
 
 use App\Exceptions\EmptyCart;
+use App\Exceptions\UnavailableProduct;
 use App\Models\ShippingMethod;
 use App\Support\Money;
 
@@ -22,10 +23,18 @@ final readonly class PricedBasket
 
     /**
      * @throws EmptyCart
+     * @throws UnavailableProduct
      */
     public static function of(Cart $cart, ShippingMethod $method): self
     {
         $summary = $cart->summary();
+
+        // Before anything is created or charged: a hidden product must never be paid for.
+        $unavailable = $summary->firstUnavailable();
+
+        if ($unavailable !== null) {
+            throw new UnavailableProduct("Remove {$unavailable->product->name} from your basket to continue.");
+        }
 
         if ($summary->isEmpty()) {
             throw new EmptyCart('Your basket is empty.');

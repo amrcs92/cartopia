@@ -19,8 +19,25 @@ final readonly class CartSummary
         return $this->lines === [];
     }
 
+    /**
+     * Items that can be bought: lines of hidden products don't count.
+     */
     public function totalQuantity(): int
     {
-        return array_sum(array_map(fn (CartLine $line): int => $line->quantity, $this->lines));
+        return array_sum(array_map(fn (CartLine $line): int => $line->available ? $line->quantity : 0, $this->lines));
+    }
+
+    /**
+     * The first line, in basket order, whose product is no longer sold.
+     */
+    public function firstUnavailable(): ?CartLine
+    {
+        foreach ($this->lines as $line) {
+            if (! $line->available) {
+                return $line;
+            }
+        }
+
+        return null;
     }
 }
