@@ -85,6 +85,17 @@ it('fetches a token once', function () {
         && $r->hasHeader('Authorization', 'Basic '.base64_encode('client-id:client-secret')));
 });
 
+it('fetches a new token after switching to another app', function () {
+    Http::fake(paypalToken() + [PAYPAL.'/v2/checkout/orders' => paypalOrderResponse()]);
+
+    $this->gateway->start(paypalPayment(), paypalRequest());
+    (new PayPalGateway('other-client-id', 'other-secret'))->start(paypalPayment(), paypalRequest());
+
+    Http::assertSent(fn (Request $r) => $r->url() === PAYPAL.'/v1/oauth2/token'
+        && $r->hasHeader('Authorization', 'Basic '.base64_encode('other-client-id:other-secret')));
+    Http::assertSentCount(4);
+});
+
 it('creates an order', function () {
     Http::fake(paypalToken() + [PAYPAL.'/v2/checkout/orders' => paypalOrderResponse()]);
 

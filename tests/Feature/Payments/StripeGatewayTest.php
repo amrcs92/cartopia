@@ -87,7 +87,7 @@ it('creates a checkout session', function () {
     expect($sent['method'])->toBe('post')
         ->and($sent['url'])->toEndWith('/v1/checkout/sessions')
         ->and($sent['params']['mode'])->toBe('payment')
-        ->and($sent['params']['payment_method_types'])->toBe(['card'])
+        ->and($sent['params'])->not->toHaveKey('payment_method_types')
         ->and($sent['params']['line_items'])->toHaveCount(3)
         ->and($sent['params']['line_items'][0]['price_data']['unit_amount'])->toBe(30)
         ->and($sent['params']['line_items'][0]['quantity'])->toBe(2)

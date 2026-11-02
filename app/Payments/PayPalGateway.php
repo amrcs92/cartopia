@@ -28,8 +28,6 @@ class PayPalGateway implements PaymentGateway
 
     public const int CONNECT_TIMEOUT = 5;
 
-    private const string TOKEN_KEY = 'paypal.token';
-
     /** PayPal's own issue codes for a refused payment. */
     private const array DECLINES = ['INSTRUMENT_DECLINED', 'TRANSACTION_REFUSED'];
 
@@ -170,9 +168,18 @@ class PayPalGateway implements PaymentGateway
         return $this->token(null);
     }
 
+    /**
+     * A token belongs to one PayPal app, so the key carries a hash of its client
+     * id: switching apps in .env never reuses the old app's token.
+     */
+    private function tokenKey(): string
+    {
+        return 'paypal.token.'.hash('sha256', $this->clientId);
+    }
+
     private function token(?Payment $payment): string
     {
-        $cached = Cache::get(self::TOKEN_KEY);
+        $cached = Cache::get($this->tokenKey());
 
         if (is_string($cached) && $cached !== '') {
             return $cached;
@@ -192,7 +199,7 @@ class PayPalGateway implements PaymentGateway
         $ttl = (int) $response->json('expires_in', 0) - 60;
 
         if ($ttl > 0) {
-            Cache::put(self::TOKEN_KEY, $token, $ttl);
+            Cache::put($this->tokenKey(), $token, $ttl);
         }
 
         return $token;
@@ -263,7 +270,7 @@ class PayPalGateway implements PaymentGateway
         }
 
         if ($response->status() === 401) {
-            Cache::forget(self::TOKEN_KEY);
+            Cache::forget($this->tokenKey());
         }
 
         $code = (string) ($response->json('details.0.issue') ?? $response->json('name') ?? $response->json('error') ?? 'none');

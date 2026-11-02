@@ -65,7 +65,6 @@ class StripeGateway implements PaymentGateway
 
         $session = $this->call($payment, fn (): Session => $this->client->checkout->sessions->create([
             'mode' => 'payment',
-            'payment_method_types' => ['card'],
             'line_items' => $lineItems,
             'client_reference_id' => (string) $payment->id,
             'metadata' => $metadata,
