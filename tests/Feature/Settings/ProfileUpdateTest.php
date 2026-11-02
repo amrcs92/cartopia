@@ -157,3 +157,25 @@ test('an admin who issued a refund can be deleted, and the refund stays without 
         ->and($refund->admin)->toBeNull()
         ->and(WalletTransaction::query()->where('refund_id', $refund->id)->sole()->admin_id)->toBeNull();
 });
+
+test('an admin cannot delete their account until their admin access is removed', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->from(route('profile.edit'))
+        ->delete(route('profile.destroy'), ['password' => 'password'])
+        ->assertSessionHasErrors(['password' => 'Remove your admin access before deleting your account.'])
+        ->assertRedirect(route('profile.edit'));
+
+    $this->assertAuthenticatedAs($admin);
+    expect($admin->fresh())->not->toBeNull();
+
+    // Another admin removes their access; now the account can go.
+    $admin->forceFill(['is_admin' => false])->save();
+
+    $this->delete(route('profile.destroy'), ['password' => 'password'])
+        ->assertSessionHasNoErrors()
+        ->assertRedirect(route('home'));
+
+    expect($admin->fresh())->toBeNull();
+});
