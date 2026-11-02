@@ -14,6 +14,7 @@ use App\Payments\Outcomes\StillPending;
 use App\Payments\Outcomes\Succeeded;
 use App\Payments\PaymentGateways;
 use Illuminate\Support\Facades\DB;
+use LogicException;
 
 /**
  * An admin asks the provider about a payment (spec 5.4). It is the same
@@ -44,7 +45,11 @@ class CheckPaymentWithProvider
                 return "This payment is already {$locked->status->value}.";
             }
 
-            $provider = $locked->method === PaymentMethod::PayPal ? 'PayPal' : 'Stripe';
+            $provider = match ($locked->method) {
+                PaymentMethod::Stripe => 'Stripe',
+                PaymentMethod::PayPal => 'PayPal',
+                PaymentMethod::Wallet => throw new LogicException('A wallet payment has no provider to check.'),
+            };
 
             // A payment that never reached a provider has nothing to ask about.
             if ($locked->provider_reference === null) {
@@ -54,7 +59,12 @@ class CheckPaymentWithProvider
             $outcome = $this->gateways->for($locked->method)->lookup($locked);
 
             if ($outcome instanceof Succeeded) {
-                $this->completePayment->handle($locked, $outcome);
+                $completed = $this->completePayment->handle($locked, $outcome);
+
+                // A mismatched amount or currency closes the payment as failed instead.
+                if ($completed->status !== PaymentStatus::Succeeded) {
+                    return "{$provider} reported a different amount. The payment is marked failed.";
+                }
 
                 return $locked->purpose === PaymentPurpose::TopUp
                     ? "Paid at {$provider}. The top-up is credited."

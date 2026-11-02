@@ -15,7 +15,9 @@ use App\Payments\Exceptions\PaymentProviderUnavailable;
 use App\Payments\Outcomes\Cancelled;
 use App\Payments\Outcomes\Declined;
 use App\Payments\Outcomes\StillPending;
+use App\Payments\Outcomes\Succeeded;
 use App\Payments\PaymentGateways;
+use App\Support\Money;
 use Illuminate\Support\Facades\Mail;
 
 beforeEach(function () {
@@ -166,4 +168,34 @@ it('lets a rejection propagate and leaves the payment untouched', function () {
 
     expect($payment->fresh()->status)->toBe(PaymentStatus::Pending);
     Mail::assertNothingQueued();
+});
+
+it('says so when the provider reports a different amount on an order payment', function (PaymentMethod $method, string $name) {
+    $payment = checkablePayment($method, topUp: false);
+    $this->fake->willLookUp(new Succeeded('pay_1', Money::fromCents($payment->amount->cents() + 100), 'usd'));
+
+    $answer = app(CheckPaymentWithProvider::class)->handle($payment);
+
+    expect($answer)->toBe("{$name} reported a different amount. The payment is marked failed.")
+        ->and($payment->fresh()->status)->toBe(PaymentStatus::Failed)
+        ->and($payment->order->fresh()->status)->toBe(OrderStatus::Cancelled);
+    Mail::assertNothingQueued();
+})->with('providers');
+
+it('says so when the provider reports a different amount on a top-up', function (PaymentMethod $method, string $name) {
+    $payment = checkablePayment($method, topUp: true);
+    $this->fake->willLookUp(new Succeeded('pay_1', Money::fromCents(1), 'usd'));
+
+    $answer = app(CheckPaymentWithProvider::class)->handle($payment);
+
+    expect($answer)->toBe("{$name} reported a different amount. The payment is marked failed.")
+        ->and($payment->fresh()->status)->toBe(PaymentStatus::Failed)
+        ->and($payment->user->fresh()->balance->cents())->toBe(0);
+    Mail::assertNothingQueued();
+})->with('providers');
+
+it('refuses to check a wallet payment', function () {
+    $payment = checkablePayment(PaymentMethod::Wallet, topUp: true);
+
+    expect(fn () => app(CheckPaymentWithProvider::class)->handle($payment))->toThrow(LogicException::class);
 });
