@@ -83,9 +83,9 @@ Shoppers can pay with Stripe or PayPal, alone or together with their wallet bala
 2. **PayPal:** in the PayPal Developer dashboard open a sandbox app (Apps & Credentials) and copy its Client ID and Secret into `PAYPAL_CLIENT_ID` and `PAYPAL_SECRET`.
 3. **PayPal webhook:** PayPal must reach your machine, so expose it with ngrok (ideally on your free static domain):
     ```bash
-    ngrok http https://cartopia.test --host-header=cartopia.test
+    ngrok http http://localhost:80 --host-header=cartopia.test
     ```
-    In the sandbox app add a webhook with the URL `https://<ngrok-host>/webhooks/paypal` and these events: `CHECKOUT.ORDER.APPROVED`, `PAYMENT.CAPTURE.COMPLETED` and `PAYMENT.CAPTURE.DENIED`. Copy the webhook's ID into `PAYPAL_WEBHOOK_ID`.
+    In the sandbox app add a webhook with the URL `https://<ngrok-host>/webhooks/paypal` and these events: `CHECKOUT.ORDER.APPROVED`, `PAYMENT.CAPTURE.COMPLETED` and `PAYMENT.CAPTURE.DENIED`. Copy the webhook's ID into `PAYPAL_WEBHOOK_ID`. Point ngrok at plain HTTP as above: forwarding to `https://cartopia.test` makes Apache pick its virtual host from the TLS connection rather than the rewritten Host header, so PayPal's webhooks get Apache's 404 instead of reaching Cartopia. Use a sandbox Business account in a country that can receive payments (the United States, say): one in Egypt makes every capture fail with `COMPLIANCE_VIOLATION`.
 4. **Mail:** start Mailpit from Laragon and set these lines in `.env`. The inbox is at <http://localhost:8025>.
     ```
     MAIL_MAILER=smtp
