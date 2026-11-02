@@ -22,6 +22,7 @@ class ProductController extends Controller
         $filters = $request->filters();
 
         $products = Product::query()
+            ->visible()
             ->with(['primaryImage', 'category'])
             ->withRatingStats()
             ->inAisles($filters['aisle'])
@@ -45,6 +46,8 @@ class ProductController extends Controller
 
     public function show(Product $product): Response
     {
+        abort_unless($product->is_visible, 404);
+
         $product->load(['images', 'primaryImage', 'category'])
             ->loadAvg('ratings', 'stars')
             ->loadCount('ratings');
