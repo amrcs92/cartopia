@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
 it('seeds the legacy catalog, shipping, demo and admin users', function () {
-    Storage::fake('public');
+    fakePublicDisk();
 
     $this->seed();
 
