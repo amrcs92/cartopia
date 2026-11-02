@@ -12,7 +12,6 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -50,7 +49,23 @@ class AdminPanelProvider extends PanelProvider
                     900 => '#163526',
                     950 => '#0e2219',
                 ],
-                'warning' => Color::hex('#F5B42E'),
+                // Marigold (#F5B42E) at 400, which dark mode uses for warning
+                // text, and the store's star (#E09A12) at 500. 600 and up are
+                // a dark amber so light-mode warning text and badges on white
+                // or on 50 (the store's selected cream) reach AA.
+                'warning' => [
+                    50 => '#fff6de',
+                    100 => '#fce7b0',
+                    200 => '#fad685',
+                    300 => '#f8c65a',
+                    400 => '#f5b42e',
+                    500 => '#e09a12',
+                    600 => '#8a5a00',
+                    700 => '#6f4800',
+                    800 => '#573900',
+                    900 => '#452d00',
+                    950 => '#2a1b00',
+                ],
                 // The store's green-tinted neutrals (resources/css/app.css):
                 // 50 is the light page, 200/300 the light lines, 700 the dark
                 // line, 800 the dark field, 900 the dark card and 950 the dark

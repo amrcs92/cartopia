@@ -37,4 +37,9 @@ it('gives the admin panel the store look in light and dark mode', function () {
         ->assertScript(panelColour('.fi-sidebar'), 'rgb(34, 56, 43)')
         ->assertScript(panelColour('.fi-body'), 'rgb(17, 25, 21)')
         ->assertScript(panelColour('.fi-wi-stats-overview-stat'), 'rgb(26, 37, 31)');
+
+    // The store green behind primary buttons, and a card's offset shadow.
+    visit('/admin/products')->inLightMode()
+        ->assertScript(panelColour('.fi-header .fi-btn.fi-color-primary'), 'rgb(31, 90, 61)')
+        ->assertScript("getComputedStyle(document.querySelector('.fi-ta-ctn')).boxShadow", 'rgb(31, 90, 61) 5px 5px 0px 0px');
 });
