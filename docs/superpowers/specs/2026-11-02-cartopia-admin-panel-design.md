@@ -1,7 +1,7 @@
 # Cartopia: Admin Panel Design
 
 - **Date:** 2026-11-02
-- **Status:** Approved in brainstorming, awaiting written-spec review
+- **Status:** Implemented
 - **Sub-project:** 4 of 4. The order is: 1 core store (done, amrcs92/cartopia#1), 2 store redesign (done, amrcs92/cartopia#2, #3 and #4), 3 payments with Stripe and PayPal (done, amrcs92/cartopia#5 to #9, with fixes in #16 and #17), **4 Filament admin panel (this spec)**.
 - **Design reference:** the canvas [Cartopia Store Redesign](https://claude.ai/artifact/GMbSbdvDMisyhnSpqQUmkq). The panel itself uses Filament's own layout and needs no boards. The refund receipt email is drawn on the canvas's **Emails** page and approved before it is built (section 9).
 

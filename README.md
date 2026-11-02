@@ -38,6 +38,7 @@ It started in 2018 as a plain-PHP project and was rebuilt in 2026 as a Laravel s
 - $100 signup bonus for new accounts
 - Light and dark themes, with a toggle in the header
 - A friendly not-found page that points back to the home page and the shop
+- A Filament admin panel at `/admin` for products, aisles, orders, payments, customers and refunds
 
 ## Setup (Laragon, Windows)
 
@@ -67,7 +68,7 @@ For front-end development use `npm run dev` instead of building.
 | Demo  | `amrcs1992@gmail.com` | `12345`    |
 | Admin | `admin@cartopia.test` | `password` |
 
-The admin account is used by the Filament admin panel, which is planned as the next sub-project.
+The admin account signs in to the [admin panel](#admin-panel).
 
 ## Payments in sandbox mode
 
@@ -110,6 +111,31 @@ At <https://cartopia.test>:
 - [ ] A top-up with Stripe and one with PayPal.
 - [ ] Pay with each provider and close the tab before returning. The webhook alone settles it: the order shows as placed and the receipt email arrives.
 - [ ] Every email appears in Mailpit and reads well in light and dark.
+
+## Admin panel
+
+A Filament back office at <https://cartopia.test/admin>.
+
+### Access
+
+Sign in with the seeded admin from [Demo logins](#demo-logins). Anyone who is not an admin gets the store's not-found page. Admins see an "Admin" link in the account menu.
+
+### Screens
+
+- **Dashboard:** sales overview, a sales chart and the latest orders.
+- **Products:** add, edit, feature and move products between aisles. Photos are JPG or WebP, under 1 MB, square and at least 1200 × 1200px, up to five per product. Hide a product rather than deleting it.
+- **Aisles:** add and rename the store's categories, with a product count for each.
+- **Orders:** browse and open orders, and refund them.
+- **Payments:** every Stripe and PayPal payment. The "Needs attention" tab lists payments that need a look, and "Check with provider" asks Stripe or PayPal for the payment's current state.
+- **Customers:** accounts with their orders and wallet ledger. "Adjust wallet" credits or debits a balance, and "Make admin" or "Remove admin" changes who can sign in to the panel.
+
+### Refunds in sandbox
+
+Only a whole order can be refunded. The part paid from the wallet goes back to the wallet, and the Stripe or PayPal part goes back through the provider's sandbox. If the provider refuses the refund or can't be reached, "Retry refund" appears on the order. The shopper gets a refund receipt email, which shows up in Mailpit while the queue worker runs. Stripe and PayPal refunds also appear in each provider's sandbox dashboard.
+
+### Look
+
+The panel uses a custom theme that matches the store, in `resources/css/filament/admin/theme.css`. `npm run build` builds it.
 
 ## Quality checks and tests
 
