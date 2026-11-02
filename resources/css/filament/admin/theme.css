@@ -42,8 +42,16 @@
     background-color: var(--gray-800);
 }
 
-/* Dark placeholders: gray-400 (#8d9c90) is 4.8:1 on the #223029 field, where
-   Filament's gray-500 is about 3:1. Light mode keeps gray-400 on white. */
+/* Placeholders that pass AA (checked with the WCAG formula). Light: gray-500
+   (#5f6f63) is 5.3:1 on the white field, where Filament's gray-400 is 2.9:1.
+   Dark: gray-400 (#8d9c90) is 4.8:1 on the #223029 field, where Filament's
+   gray-500 is 2.6:1. */
+.fi-input::placeholder,
+.fi-fo-textarea textarea::placeholder,
+.fi-select-input-placeholder {
+    color: var(--gray-500);
+}
+
 .dark .fi-input::placeholder,
 .dark .fi-fo-textarea textarea::placeholder,
 .dark .fi-select-input-placeholder {

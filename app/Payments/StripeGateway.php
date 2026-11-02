@@ -3,10 +3,14 @@
 namespace App\Payments;
 
 use App\Models\Payment;
+use App\Models\Refund;
 use App\Payments\Exceptions\PaymentProviderRejected;
 use App\Payments\Exceptions\PaymentProviderUnavailable;
 use App\Payments\Outcomes\Cancelled;
 use App\Payments\Outcomes\PaymentOutcome;
+use App\Payments\Outcomes\RefundAccepted;
+use App\Payments\Outcomes\RefundOutcome;
+use App\Payments\Outcomes\RefundRefused;
 use App\Payments\Outcomes\StillPending;
 use App\Payments\Outcomes\Succeeded;
 use App\Support\Money;
@@ -19,6 +23,7 @@ use Stripe\Exception\ApiErrorException;
 use Stripe\Exception\InvalidRequestException;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\HttpClient\CurlClient;
+use Stripe\Refund as StripeRefund;
 use Stripe\StripeClient;
 use Stripe\Webhook;
 use UnexpectedValueException;
@@ -136,6 +141,43 @@ class StripeGateway implements PaymentGateway
         }
 
         return new Cancelled;
+    }
+
+    /**
+     * Refunds the payment intent in full. A 4xx answer is a refusal carrying
+     * Stripe's own message; outages throw as everywhere else.
+     */
+    public function refund(Payment $payment, Refund $refund): RefundOutcome
+    {
+        try {
+            $created = $this->call($payment, fn (): StripeRefund => $this->client->refunds->create([
+                'payment_intent' => (string) $payment->provider_payment_id,
+                'amount' => $payment->amount->cents(),
+            ], ['idempotency_key' => $refund->idempotencyKey()]));
+        } catch (PaymentProviderRejected $e) {
+            $previous = $e->getPrevious();
+
+            if (! $previous instanceof ApiErrorException || $previous->getHttpStatus() === 401) {
+                throw $e;
+            }
+
+            // The key is still in progress (409) or Stripe is rate limiting (429): try the same key again.
+            if (in_array($previous->getHttpStatus(), [409, 429], true)) {
+                throw new PaymentProviderUnavailable("Stripe asked to retry the refund for payment {$payment->id}.", 0, $previous);
+            }
+
+            return new RefundRefused($previous->getMessage());
+        }
+
+        if (in_array($created->status, ['failed', 'canceled'], true)) {
+            return new RefundRefused((string) ($created->failure_reason ?? "Stripe couldn't complete the refund"));
+        }
+
+        if ((string) $created->id === '') {
+            throw new PaymentProviderUnavailable("Stripe gave no refund id for payment {$payment->id}.");
+        }
+
+        return new RefundAccepted((string) $created->id);
     }
 
     /**

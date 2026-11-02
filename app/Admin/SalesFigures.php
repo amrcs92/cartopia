@@ -23,12 +23,12 @@ class SalesFigures
     /** From Monday 00:00 to now. */
     public function thisWeek(): Money
     {
-        return $this->sum(now()->startOfWeek());
+        return $this->sum(now()->startOfWeek(CarbonInterface::MONDAY));
     }
 
     public function ordersThisWeek(): int
     {
-        return $this->placedSince(now()->startOfWeek())->count();
+        return $this->placedSince(now()->startOfWeek(CarbonInterface::MONDAY))->count();
     }
 
     public function needsAttention(): int

@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
-    Storage::fake('public');
+    fakePublicDisk();
 });
 
 it('shows the four newest products on the welcome page', function () {

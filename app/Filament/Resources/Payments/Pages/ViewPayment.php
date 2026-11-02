@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Payments\Pages;
 
 use App\Actions\Admin\CheckPaymentWithProvider;
+use App\Enums\ProviderCheckOutcome;
 use App\Filament\Resources\Payments\PaymentResource;
 use App\Models\Payment;
 use App\Payments\Exceptions\PaymentProviderRejected;
@@ -33,7 +34,7 @@ class ViewPayment extends ViewRecord
                     $provider = $payment->method->label();
 
                     try {
-                        $message = $check->handle($payment);
+                        $answer = $check->handle($payment);
                     } catch (PaymentProviderUnavailable) {
                         Notification::make()->danger()->title("{$provider} couldn't be reached. Try again in a moment.")->send();
 
@@ -45,7 +46,14 @@ class ViewPayment extends ViewRecord
                     }
 
                     $this->getRecord()->refresh();
-                    Notification::make()->success()->title($message)->send();
+                    Notification::make()
+                        ->status(match ($answer->outcome) {
+                            ProviderCheckOutcome::Paid, ProviderCheckOutcome::AlreadySettled => 'success',
+                            ProviderCheckOutcome::StillPending => 'warning',
+                            ProviderCheckOutcome::AmountMismatch, ProviderCheckOutcome::Closed => 'danger',
+                        })
+                        ->title($answer->message)
+                        ->send();
                 }),
         ];
     }

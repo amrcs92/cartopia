@@ -3,9 +3,11 @@
 namespace App\Payments;
 
 use App\Models\Payment;
+use App\Models\Refund;
 use App\Payments\Exceptions\PaymentProviderRejected;
 use App\Payments\Exceptions\PaymentProviderUnavailable;
 use App\Payments\Outcomes\PaymentOutcome;
+use App\Payments\Outcomes\RefundOutcome;
 
 interface PaymentGateway
 {
@@ -41,4 +43,13 @@ interface PaymentGateway
      * @throws PaymentProviderRejected
      */
     public function cancel(Payment $payment): PaymentOutcome;
+
+    /**
+     * Refunds the payment in full. A refusal (a 4xx answer) comes back as an
+     * outcome; an unreachable provider or a 5xx answer is thrown.
+     *
+     * @throws PaymentProviderUnavailable
+     * @throws PaymentProviderRejected
+     */
+    public function refund(Payment $payment, Refund $refund): RefundOutcome;
 }

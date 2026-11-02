@@ -1,8 +1,11 @@
 <?php
 
+use App\Actions\Admin\CheckPaymentWithProvider;
+use App\Actions\Admin\ProviderCheck;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentPurpose;
 use App\Enums\PaymentStatus;
+use App\Enums\ProviderCheckOutcome;
 use App\Filament\Resources\Customers\CustomerResource;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Resources\Payments\Pages\ListPayments;
@@ -13,8 +16,12 @@ use App\Models\Payment;
 use App\Models\User;
 use App\Payments\Exceptions\PaymentProviderRejected;
 use App\Payments\Exceptions\PaymentProviderUnavailable;
+use App\Payments\Outcomes\Cancelled;
 use App\Payments\Outcomes\StillPending;
+use App\Payments\Outcomes\Succeeded;
 use App\Payments\PaymentGateways;
+use App\Support\Money;
+use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
@@ -126,6 +133,20 @@ it('shows the payment details, customer, order and provider link', function () {
         ->assertSee('https://dashboard.stripe.com/test/payments/pi_abc123');
 });
 
+it('names a pending payment by its checkout session or PayPal order, on the list and its page', function (PaymentMethod $method, string $reference, string $shown) {
+    $payment = Payment::factory()->state(['method' => $method])->withReference($reference)->create();
+
+    Livewire::test(ListPayments::class)
+        ->assertTableColumnStateSet('reference', $shown, $payment);
+
+    Livewire::test(ViewPayment::class, ['record' => $payment->getKey()])
+        ->assertSee('Provider reference')
+        ->assertSee($shown);
+})->with([
+    'Stripe' => [PaymentMethod::Stripe, 'cs_test_a1b2c3', 'Stripe checkout session cs_test_a1b2c3'],
+    'PayPal' => [PaymentMethod::PayPal, '5O190127TN364715T', 'PayPal order 5O190127TN364715T'],
+]);
+
 it('shows a top-up without an order or provider link', function () {
     $payment = Payment::factory()->topUp(1500)->paypal()->create();
 
@@ -153,10 +174,37 @@ it('shows the provider answer as a notification and refreshes the page', functio
 
     Livewire::test(ViewPayment::class, ['record' => $payment->getKey()])
         ->callAction('checkWithProvider')
-        ->assertNotified('Paid at PayPal. The top-up is credited.')
+        ->assertNotified(Notification::make()->success()->title('Paid at PayPal. The top-up is credited.'))
         ->assertSee('Succeeded');
 
     expect($payment->fresh()->status)->toBe(PaymentStatus::Succeeded);
+});
+
+it('shows each provider answer in its tone', function (Closure $answer, string $status, string $message) {
+    Mail::fake();
+    $fake = PaymentGateways::fake();
+    $payment = Payment::factory()->topUp(2500)->stripe()->withReference('ref_1')->create();
+    $fake->willLookUp($answer($payment));
+
+    Livewire::test(ViewPayment::class, ['record' => $payment->getKey()])
+        ->callAction('checkWithProvider')
+        ->assertNotified(Notification::make()->status($status)->title($message));
+})->with([
+    'paid' => [fn (Payment $payment) => new Succeeded('pi_1', $payment->amount, 'usd'), 'success', 'Paid at Stripe. The top-up is credited.'],
+    'still pending' => [fn () => new StillPending, 'warning', 'Still pending at Stripe.'],
+    'a different amount' => [fn () => new Succeeded('pi_1', Money::fromCents(1), 'usd'), 'danger', 'Stripe reported a different amount. The payment is marked failed.'],
+    'gone' => [fn () => new Cancelled, 'danger', "Stripe no longer has this payment. It's closed."],
+]);
+
+it('shows a payment that settled meanwhile as a success', function () {
+    $payment = Payment::factory()->stripe()->withReference('ref_1')->create();
+    // Settling between the page's load and the check's lock is a race, so the answer is stood in.
+    $this->mock(CheckPaymentWithProvider::class)->shouldReceive('handle')
+        ->andReturn(new ProviderCheck(ProviderCheckOutcome::AlreadySettled, 'This payment is already succeeded.'));
+
+    Livewire::test(ViewPayment::class, ['record' => $payment->getKey()])
+        ->callAction('checkWithProvider')
+        ->assertNotified(Notification::make()->success()->title('This payment is already succeeded.'));
 });
 
 it('says when the provider still has the payment pending', function () {
@@ -166,7 +214,7 @@ it('says when the provider still has the payment pending', function () {
 
     Livewire::test(ViewPayment::class, ['record' => $payment->getKey()])
         ->callAction('checkWithProvider')
-        ->assertNotified('Still pending at Stripe.');
+        ->assertNotified(Notification::make()->warning()->title('Still pending at Stripe.'));
 });
 
 it('warns when the provider cannot be reached', function (PaymentMethod $method, string $name) {

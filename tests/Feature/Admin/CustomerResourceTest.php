@@ -8,6 +8,7 @@ use App\Filament\Resources\Customers\Pages\ListCustomers;
 use App\Filament\Resources\Customers\Pages\ViewCustomer;
 use App\Filament\Resources\Customers\RelationManagers\OrdersRelationManager;
 use App\Filament\Resources\Customers\RelationManagers\WalletTransactionsRelationManager;
+use App\Filament\Resources\Orders\OrderResource;
 use App\Models\Order;
 use App\Models\User;
 use App\Models\WalletTransaction;
@@ -72,6 +73,14 @@ it('lists only the customer\'s orders on the Orders tab', function () {
     Livewire::test(OrdersRelationManager::class, ['ownerRecord' => $shopper, 'pageClass' => ViewCustomer::class])
         ->assertCanSeeTableRecords([$mine])
         ->assertCanNotSeeTableRecords([$other]);
+});
+
+it('links each order on the Orders tab to its order page', function () {
+    $shopper = User::factory()->create();
+    $order = Order::factory()->for($shopper)->create();
+
+    Livewire::test(OrdersRelationManager::class, ['ownerRecord' => $shopper, 'pageClass' => ViewCustomer::class])
+        ->assertSee(OrderResource::getUrl('view', ['record' => $order]));
 });
 
 it('lists the ledger newest first on the Wallet tab', function () {

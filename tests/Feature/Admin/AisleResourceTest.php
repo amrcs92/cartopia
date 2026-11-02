@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
 beforeEach(function () {
-    Storage::fake('public');
+    fakePublicDisk();
     $this->actingAs(User::factory()->admin()->create());
 });
 

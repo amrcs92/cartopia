@@ -107,8 +107,10 @@ class AdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
+            // Persistent, so Livewire's update requests (every click in the
+            // panel) re-check admin access, not only page loads.
             ->authMiddleware([
                 AuthenticateAdmin::class,
-            ]);
+            ], isPersistent: true);
     }
 }

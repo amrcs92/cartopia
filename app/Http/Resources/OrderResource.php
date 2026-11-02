@@ -10,7 +10,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Expects the order loaded with `shippingMethod`, `succeededPayment` and `items.product.primaryImage`.
+ * Expects the order loaded with `shippingMethod`, `succeededPayment`, `refund.payment` and `items.product.primaryImage`.
  *
  * @mixin Order
  */
@@ -49,6 +49,7 @@ class OrderResource extends JsonResource
                 'slip_lines' => PaymentWording::slipLines($this->resource, $this->balanceAfter),
                 'tag' => PaymentWording::tag($this->resource),
             ],
+            'refund_lines' => PaymentWording::refundLines($this->resource),
             'items' => OrderItemResource::collection($this->items)->resolve($request),
         ];
     }

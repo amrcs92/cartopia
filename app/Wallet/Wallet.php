@@ -6,6 +6,7 @@ use App\Enums\WalletTransactionType;
 use App\Exceptions\InsufficientBalance;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\Refund;
 use App\Models\User;
 use App\Models\WalletTransaction;
 use App\Support\Money;
@@ -18,11 +19,11 @@ use InvalidArgumentException;
  */
 class Wallet
 {
-    public function credit(User $user, Money $amount, WalletTransactionType $type, ?string $description = null, ?Order $order = null, ?Payment $payment = null, ?User $admin = null): WalletTransaction
+    public function credit(User $user, Money $amount, WalletTransactionType $type, ?string $description = null, ?Order $order = null, ?Payment $payment = null, ?User $admin = null, ?Refund $refund = null): WalletTransaction
     {
         $this->assertPositive($amount);
 
-        return $this->apply($user, $amount, $type, $description, $order, $payment, $admin);
+        return $this->apply($user, $amount, $type, $description, $order, $payment, $admin, $refund);
     }
 
     /**
@@ -32,15 +33,15 @@ class Wallet
     {
         $this->assertPositive($amount);
 
-        return $this->apply($user, Money::zero()->subtract($amount), $type, $description, $order, null, $admin);
+        return $this->apply($user, Money::zero()->subtract($amount), $type, $description, $order, null, $admin, null);
     }
 
     /**
      * @param  Money  $signed  Positive to credit, negative to debit.
      */
-    private function apply(User $user, Money $signed, WalletTransactionType $type, ?string $description, ?Order $order, ?Payment $payment, ?User $admin): WalletTransaction
+    private function apply(User $user, Money $signed, WalletTransactionType $type, ?string $description, ?Order $order, ?Payment $payment, ?User $admin, ?Refund $refund): WalletTransaction
     {
-        return DB::transaction(function () use ($user, $signed, $type, $description, $order, $payment, $admin): WalletTransaction {
+        return DB::transaction(function () use ($user, $signed, $type, $description, $order, $payment, $admin, $refund): WalletTransaction {
             $locked = User::query()->whereKey($user->getKey())->lockForUpdate()->firstOrFail();
 
             $newBalance = $locked->balance->add($signed);
@@ -58,6 +59,7 @@ class Wallet
                 'payment_id' => $payment?->id,
                 'description' => $description,
                 'admin_id' => $admin?->id,
+                'refund_id' => $refund?->id,
             ]);
 
             $locked->balance = $newBalance;

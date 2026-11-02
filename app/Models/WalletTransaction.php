@@ -19,10 +19,11 @@ use Illuminate\Support\Carbon;
  * @property int|null $order_id
  * @property int|null $payment_id
  * @property int|null $admin_id
+ * @property int|null $refund_id
  * @property string|null $description
  * @property Carbon|null $created_at
  */
-#[Fillable(['user_id', 'type', 'amount', 'balance_after', 'order_id', 'payment_id', 'admin_id', 'description'])]
+#[Fillable(['user_id', 'type', 'amount', 'balance_after', 'order_id', 'payment_id', 'admin_id', 'refund_id', 'description'])]
 class WalletTransaction extends Model
 {
     public const UPDATED_AT = null;
@@ -61,6 +62,14 @@ class WalletTransaction extends Model
     public function payment(): BelongsTo
     {
         return $this->belongsTo(Payment::class);
+    }
+
+    /**
+     * @return BelongsTo<Refund, $this>
+     */
+    public function refund(): BelongsTo
+    {
+        return $this->belongsTo(Refund::class);
     }
 
     /**

@@ -147,6 +147,19 @@ const lineTestId = (label: string) =>
                         </dd>
                     </div>
                 </dl>
+
+                <ul
+                    v-if="props.order.refund_lines.length > 0"
+                    class="mt-4 space-y-2 border-t-2 border-dashed border-line-strong pt-4 text-body"
+                >
+                    <li
+                        v-for="line in props.order.refund_lines"
+                        :key="line"
+                        data-test="refund-line"
+                    >
+                        {{ line }}
+                    </li>
+                </ul>
             </article>
         </div>
 

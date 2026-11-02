@@ -1,10 +1,13 @@
 <?php
 
 use App\Models\Payment;
+use App\Models\Refund;
 use App\Payments\Exceptions\PaymentProviderRejected;
 use App\Payments\Exceptions\PaymentProviderUnavailable;
 use App\Payments\Outcomes\Cancelled;
 use App\Payments\Outcomes\Declined;
+use App\Payments\Outcomes\RefundAccepted;
+use App\Payments\Outcomes\RefundRefused;
 use App\Payments\Outcomes\StillPending;
 use App\Payments\Outcomes\Succeeded;
 use App\Payments\PaymentLine;
@@ -320,3 +323,65 @@ it('still rejects or fails a lookup PayPal refuses for another reason', function
     'unprocessable' => [422, PaymentProviderRejected::class],
     'server error' => [500, PaymentProviderUnavailable::class],
 ]);
+
+function paypalCapturePayment(): Payment
+{
+    return Payment::find(42) ?? Payment::factory()->paypal()->topUp(2274)->withReference('ORDER1')->create(['id' => 42, 'provider_payment_id' => 'CAP1']);
+}
+
+it('refunds a capture for the payment amount', function (string $status) {
+    Http::fake(paypalToken() + [PAYPAL.'/v2/payments/captures/CAP1/refund' => Http::response(['id' => 'REF1', 'status' => $status], 201)]);
+    $refund = Refund::factory()->create(['id' => 7, 'attempt' => 2]);
+
+    $outcome = $this->gateway->refund(paypalCapturePayment(), $refund);
+
+    expect($outcome)->toEqual(new RefundAccepted('REF1'));
+    Http::assertSent(fn (Request $r) => $r->method() === 'POST'
+        && $r->url() === PAYPAL.'/v2/payments/captures/CAP1/refund'
+        && $r['amount'] === ['currency_code' => 'USD', 'value' => '22.74']
+        && $r->hasHeader('PayPal-Request-Id', "refund-7-{$refund->created_at->getTimestamp()}-2"));
+})->with(['completed' => 'COMPLETED', 'pending' => 'PENDING']);
+
+it('refuses a refund PayPal reports as failed', function () {
+    Http::fake(paypalToken() + [PAYPAL.'/v2/payments/captures/CAP1/refund' => Http::response(['id' => 'REF1', 'status' => 'CANCELLED'], 201)]);
+
+    expect($this->gateway->refund(paypalCapturePayment(), Refund::factory()->create()))->toBeInstanceOf(RefundRefused::class);
+});
+
+it('reads a client error as a refusal with the issue code', function () {
+    Http::fake(paypalToken() + [PAYPAL.'/v2/payments/captures/CAP1/refund' => Http::response(['name' => 'UNPROCESSABLE_ENTITY', 'message' => 'Nope', 'details' => [['issue' => 'CAPTURE_FULLY_REFUNDED']]], 422)]);
+
+    expect($this->gateway->refund(paypalCapturePayment(), Refund::factory()->create()))->toEqual(new RefundRefused('CAPTURE_FULLY_REFUNDED'));
+});
+
+it('falls back to the message when PayPal gives no issue', function () {
+    Http::fake(paypalToken() + [PAYPAL.'/v2/payments/captures/CAP1/refund' => Http::response(['name' => 'NOT_AUTHORIZED', 'message' => 'Authorization failed.'], 403)]);
+
+    expect($this->gateway->refund(paypalCapturePayment(), Refund::factory()->create()))->toEqual(new RefundRefused('Authorization failed.'));
+});
+
+it('maps refund outages to unavailable', function () {
+    Http::fake(paypalToken() + [PAYPAL.'/v2/payments/captures/CAP1/refund' => Http::response([], 500)]);
+    expect(fn () => $this->gateway->refund(paypalCapturePayment(), Refund::factory()->create()))->toThrow(PaymentProviderUnavailable::class);
+
+    Http::fake(paypalToken() + [PAYPAL.'/v2/payments/captures/CAP1/refund' => fn () => throw new ConnectionException('timeout')]);
+    expect(fn () => $this->gateway->refund(paypalCapturePayment(), Refund::factory()->create()))->toThrow(PaymentProviderUnavailable::class);
+});
+
+it('retries a refund PayPal answers with 409 or 429', function (int $status) {
+    Http::fake(paypalToken() + [PAYPAL.'/v2/payments/captures/CAP1/refund' => Http::response(['name' => 'X', 'message' => 'Try again.'], $status)]);
+
+    expect(fn () => $this->gateway->refund(paypalCapturePayment(), Refund::factory()->create()))->toThrow(PaymentProviderUnavailable::class);
+})->with([409, 429]);
+
+it('treats a PayPal credentials error on a refund as a rejection', function () {
+    Http::fake(paypalToken() + [PAYPAL.'/v2/payments/captures/CAP1/refund' => Http::response(['name' => 'AUTHENTICATION_FAILURE'], 401)]);
+
+    expect(fn () => $this->gateway->refund(paypalCapturePayment(), Refund::factory()->create()))->toThrow(PaymentProviderRejected::class);
+});
+
+it('treats a PayPal refund reply without an id as unavailable', function () {
+    Http::fake(paypalToken() + [PAYPAL.'/v2/payments/captures/CAP1/refund' => Http::response(['status' => 'COMPLETED'], 201)]);
+
+    expect(fn () => $this->gateway->refund(paypalCapturePayment(), Refund::factory()->create()))->toThrow(PaymentProviderUnavailable::class);
+});

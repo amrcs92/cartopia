@@ -3,6 +3,7 @@
 namespace App\Payments;
 
 use App\Enums\PaymentMethod;
+use App\Enums\RefundStatus;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Support\Money;
@@ -103,6 +104,62 @@ final class PaymentWording
             PaymentMethod::Stripe => [['label' => 'Paid through Stripe', 'value' => $hosted]],
             PaymentMethod::PayPal => [['label' => 'Paid through PayPal', 'value' => $hosted]],
         };
+    }
+
+    /**
+     * Where a succeeded refund went, one sentence per destination: the
+     * provider part first, then the wallet part. Empty until it succeeded.
+     *
+     * @return list<string>
+     */
+    public static function refundLines(Order $order): array
+    {
+        return array_map(
+            fn (array $row): string => "{$row['label']} · {$row['value']}",
+            self::refundRows($order, null),
+        );
+    }
+
+    /**
+     * The same destinations as label and amount rows, for the refund receipt.
+     * With a wallet part and a balance, a last row shows the balance after
+     * that credit. Empty until the refund succeeded.
+     *
+     * @return list<array{label: string, value: string, bold: bool}>
+     */
+    public static function refundRows(Order $order, ?Money $balanceAfter): array
+    {
+        $refund = $order->refund;
+
+        if ($refund === null || $refund->status !== RefundStatus::Succeeded) {
+            return [];
+        }
+
+        $rows = [];
+
+        if ($refund->provider_amount->cents() > 0) {
+            $to = $order->payment_method === PaymentMethod::Stripe ? self::stripeCardShort($refund->payment) : 'PayPal';
+            $rows[] = ['label' => "Refunded to {$to}", 'value' => $refund->provider_amount->format(), 'bold' => true];
+        }
+
+        if ($refund->wallet_amount->cents() > 0) {
+            $rows[] = ['label' => 'Refunded to your wallet', 'value' => $refund->wallet_amount->format(), 'bold' => true];
+
+            if ($balanceAfter !== null) {
+                $rows[] = ['label' => 'Wallet balance after', 'value' => $balanceAfter->format(), 'bold' => false];
+            }
+        }
+
+        return $rows;
+    }
+
+    /**
+     * The refund receipt's note when part of the refund went back through
+     * Stripe or PayPal.
+     */
+    public static function refundDelayNote(): string
+    {
+        return 'Card and PayPal refunds can take 5–10 business days to show.';
     }
 
     public static function tag(Order $order): string
