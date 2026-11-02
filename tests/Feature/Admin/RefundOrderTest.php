@@ -7,6 +7,7 @@ use App\Enums\PaymentStatus;
 use App\Enums\RefundStatus;
 use App\Enums\WalletTransactionType;
 use App\Exceptions\AdminActionRefused;
+use App\Mail\OrderRefundedMail;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Refund;
@@ -91,7 +92,8 @@ it('refunds a wallet-only order to the wallet without calling a gateway', functi
         ->and($row->description)->toBe("Refund for order #{$order->id}")
         ->and($row->order_id)->toBe($order->id)
         ->and($this->fake->refunded)->toBe([]);
-    Mail::assertNothingQueued();
+    Mail::assertQueued(OrderRefundedMail::class, 1);
+    Mail::assertQueued(OrderRefundedMail::class, fn (OrderRefundedMail $mail) => $mail->hasTo($order->user->email) && $mail->order->is($order));
 });
 
 it('refunds a provider-only order through the gateway and writes no wallet row', function (PaymentMethod $method) {
@@ -113,7 +115,8 @@ it('refunds a provider-only order through the gateway and writes no wallet row',
         ->and($this->fake->refunded)->toHaveCount(1)
         ->and($this->fake->refunded[0][0]->id)->toBe($payment->id)
         ->and(refundKeysSeen($this->fake))->toBe(["refund-{$refund->id}-{$refund->created_at->getTimestamp()}-1"]);
-    Mail::assertNothingQueued();
+    Mail::assertQueued(OrderRefundedMail::class, 1);
+    Mail::assertQueued(OrderRefundedMail::class, fn (OrderRefundedMail $mail) => $mail->hasTo($order->user->email) && $mail->order->is($order));
 })->with('refund providers');
 
 it('refunds both parts of a split order', function (PaymentMethod $method) {
@@ -134,6 +137,8 @@ it('refunds both parts of a split order', function (PaymentMethod $method) {
         ->and($order->user->fresh()->balance->cents())->toBe(10000)
         ->and($order->fresh()->status)->toBe(OrderStatus::Refunded)
         ->and($this->fake->refunded)->toHaveCount(1);
+    Mail::assertQueued(OrderRefundedMail::class, 1);
+    Mail::assertQueued(OrderRefundedMail::class, fn (OrderRefundedMail $mail) => $mail->hasTo($order->user->email));
 })->with('refund providers');
 
 it('marks the refund failed when the provider refuses, and credits nothing', function (PaymentMethod $method, string $name) {
@@ -244,6 +249,7 @@ it('refuses a second refund after success and calls the gateway once', function 
     expect($this->fake->refunded)->toHaveCount(1)
         ->and(WalletTransaction::query()->where('type', WalletTransactionType::Refund)->count())->toBe(1)
         ->and($order->user->fresh()->balance->cents())->toBe(10000);
+    Mail::assertQueued(OrderRefundedMail::class, 1);
 })->with('refund providers');
 
 it('credits once when two clicks both reach the finish step', function (PaymentMethod $method) {
@@ -288,6 +294,7 @@ it('credits once when two clicks both reach the finish step', function (PaymentM
         ->and(WalletTransaction::query()->where('refund_id', $refund->id)->count())->toBe(1)
         ->and($order->user->fresh()->balance->cents())->toBe(10000)
         ->and($order->fresh()->status)->toBe(OrderStatus::Refunded);
+    Mail::assertQueued(OrderRefundedMail::class, 1);
 })->with('refund providers');
 
 it('refuses orders that are not placed', function (string $state) {

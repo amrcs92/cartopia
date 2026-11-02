@@ -114,24 +114,43 @@ final class PaymentWording
      */
     public static function refundLines(Order $order): array
     {
+        return array_map(
+            fn (array $row): string => "{$row['label']} · {$row['value']}",
+            self::refundRows($order, null),
+        );
+    }
+
+    /**
+     * The same destinations as label and amount rows, for the refund receipt.
+     * With a wallet part and a balance, a last row shows the balance after
+     * that credit. Empty until the refund succeeded.
+     *
+     * @return list<array{label: string, value: string, bold: bool}>
+     */
+    public static function refundRows(Order $order, ?Money $balanceAfter): array
+    {
         $refund = $order->refund;
 
         if ($refund === null || $refund->status !== RefundStatus::Succeeded) {
             return [];
         }
 
-        $lines = [];
+        $rows = [];
 
         if ($refund->provider_amount->cents() > 0) {
             $to = $order->payment_method === PaymentMethod::Stripe ? self::stripeCardShort($refund->payment) : 'PayPal';
-            $lines[] = "Refunded to {$to} · {$refund->provider_amount->format()}";
+            $rows[] = ['label' => "Refunded to {$to}", 'value' => $refund->provider_amount->format(), 'bold' => true];
         }
 
         if ($refund->wallet_amount->cents() > 0) {
-            $lines[] = "Refunded to your wallet · {$refund->wallet_amount->format()}";
+            $rows[] = ['label' => 'Refunded to your wallet', 'value' => $refund->wallet_amount->format(), 'bold' => true];
+
+            if ($balanceAfter !== null) {
+                $rows[] = ['label' => 'Wallet balance after', 'value' => $balanceAfter->format(), 'bold' => false];
+            }
         }
 
-        return $lines;
+        return $rows;
     }
 
     public static function tag(Order $order): string
