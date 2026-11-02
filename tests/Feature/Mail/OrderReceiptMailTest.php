@@ -78,6 +78,8 @@ it('renders the receipt', function (PaymentMethod $method, bool $useWallet, arra
     }
     expect($mail->envelope()->subject)->toBe("Your Cartopia Order #{$order->id} Is Confirmed!")
         ->and($html)->toContain('Your order is confirmed!')
+        ->and($html)->toContain('font-weight:700;line-height:36px;">✓</td>')
+        ->and($html)->not->toContain('&amp;#')
         ->and($html)->toContain("We've successfully received your order")
         ->and($html)->toContain('View your order')
         ->and($html)->toContain(route('orders.show', $order))

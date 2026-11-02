@@ -48,6 +48,8 @@ it('renders the top-up receipt', function (PaymentMethod $method, string $paidWi
     $reference = PaymentWording::reference($payment)['short'];
 
     expect($mail->envelope()->subject)->toBe('You added $25.00 to your Cartopia wallet')
+        ->and($html)->toContain('font-weight:700;line-height:36px;">+</td>')
+        ->and($html)->not->toContain('&amp;#')
         ->and($html)->toContain('$25.00 is in your wallet')
         ->and($html)->toContain('Your top-up went through. It is ready to spend at checkout.')
         ->and($html)->toContain('Go to your wallet');

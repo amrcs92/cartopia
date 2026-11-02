@@ -77,6 +77,8 @@ it('renders the order problem email with the returned wallet share', function ()
     $order = $payment->order;
 
     expect($mail->envelope()->subject)->toBe("Payment Not Completed – Cartopia Order #{$order->id}")
+        ->and($html)->toContain('font-weight:700;line-height:36px;">!</td>')
+        ->and($html)->not->toContain('&amp;#')
         ->and($order->wallet_amount->format())->toBe('$2.10');
 
     foreach ([
