@@ -8,12 +8,25 @@ it('lets an admin into the panel', function () {
         ->assertOk();
 });
 
-it('refuses a logged-in shopper', function () {
+it('shows a shopper the not-found page', function () {
     $this->actingAs(User::factory()->create())
         ->get('/admin')
-        ->assertForbidden();
+        ->assertNotFound();
 });
 
-it('sends a guest to log in', function () {
-    $this->get('/admin')->assertRedirect();
+it('sends a guest to the store login', function () {
+    $this->get('/admin')->assertRedirect(route('login'));
+});
+
+it('has no Filament login page', function () {
+    $this->get('/admin/login')->assertNotFound();
+});
+
+it('sends an admin back to the panel after the store login', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->get('/admin');
+
+    $this->post(route('login.store'), ['email' => $admin->email, 'password' => 'password'])
+        ->assertRedirect('/admin');
 });

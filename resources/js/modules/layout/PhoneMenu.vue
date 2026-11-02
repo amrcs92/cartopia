@@ -154,6 +154,14 @@ const links = computed<MenuLink[]>(() => [
                 <ThemeToggle variant="segmented" />
             </section>
 
+            <a
+                v-if="user?.is_admin"
+                href="/admin"
+                class="flex min-h-12 items-center rounded-xl px-2 text-[17px] font-bold text-ink transition-colors duration-200 ease-stall hover:bg-field"
+            >
+                Admin
+            </a>
+
             <Link
                 v-if="user"
                 :href="logout()"
