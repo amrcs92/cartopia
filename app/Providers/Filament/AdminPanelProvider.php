@@ -69,7 +69,7 @@ class AdminPanelProvider extends PanelProvider
                 // The store's green-tinted neutrals (resources/css/app.css):
                 // 50 is the light page, 200/300 the light lines, 700 the dark
                 // line, 800 the dark field, 900 the dark card and 950 the dark
-                // page. 400–600 sit between them, dark enough for AA text.
+                // page. 400-600 sit between them, dark enough for AA text.
                 'gray' => [
                     50 => '#edf2e4',
                     100 => '#e6efe4',
