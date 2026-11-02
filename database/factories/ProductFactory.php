@@ -43,6 +43,11 @@ class ProductFactory extends Factory
         return $this->state(['is_featured' => true]);
     }
 
+    public function hidden(): static
+    {
+        return $this->state(['is_visible' => false]);
+    }
+
     public function inCategory(Category $category): static
     {
         return $this->state(['category_id' => $category->id]);

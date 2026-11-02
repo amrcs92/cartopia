@@ -19,6 +19,7 @@ class HomeController extends Controller
     public function __invoke(): Response
     {
         $counter = Product::query()
+            ->visible()
             ->with('primaryImage')
             ->withRatingStats()
             ->sortBy('newest')

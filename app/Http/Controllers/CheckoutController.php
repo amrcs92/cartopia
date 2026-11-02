@@ -7,6 +7,7 @@ use App\Actions\StartOrderPayment;
 use App\Enums\PaymentMethod;
 use App\Exceptions\EmptyCart;
 use App\Exceptions\InsufficientBalance;
+use App\Exceptions\UnavailableProduct;
 use App\Http\Requests\CheckoutRequest;
 use App\Models\ShippingMethod;
 use App\Payments\Exceptions\AmountTooSmall;
@@ -35,6 +36,8 @@ class CheckoutController extends Controller
             return $this->refused('Your balance is too low for this order.');
         } catch (EmptyCart) {
             return $this->refused('Your basket is empty.');
+        } catch (UnavailableProduct $e) {
+            return $this->refused($e->getMessage());
         }
 
         // Inertia's native flash: delivered once, never kept in history state, so
@@ -54,6 +57,8 @@ class CheckoutController extends Controller
             $started = $startOrderPayment->handle($request->user(), $method, $paymentMethod, $request->boolean('use_wallet'));
         } catch (EmptyCart) {
             return $this->refused('Your basket is empty.');
+        } catch (UnavailableProduct $e) {
+            return $this->refused($e->getMessage());
         } catch (AmountTooSmall) {
             return $this->refused('Stripe and PayPal payments start at $0.50.');
         } catch (PaymentProviderUnavailable|PaymentProviderRejected $e) {

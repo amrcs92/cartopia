@@ -18,7 +18,7 @@ class CartItemController extends Controller
 
     public function store(AddToCartRequest $request, Cart $cart): RedirectResponse
     {
-        $product = Product::findOrFail($request->integer('product_id'));
+        $product = Product::query()->visible()->findOrFail($request->integer('product_id'));
         $quantity = $request->integer('quantity');
 
         $cart->add($product, $quantity);

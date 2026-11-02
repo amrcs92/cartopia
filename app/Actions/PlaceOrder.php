@@ -9,6 +9,7 @@ use App\Enums\PaymentMethod;
 use App\Enums\WalletTransactionType;
 use App\Exceptions\EmptyCart;
 use App\Exceptions\InsufficientBalance;
+use App\Exceptions\UnavailableProduct;
 use App\Mail\OrderReceiptMail;
 use App\Models\Order;
 use App\Models\ShippingMethod;
@@ -27,6 +28,7 @@ class PlaceOrder
 
     /**
      * @throws EmptyCart
+     * @throws UnavailableProduct
      * @throws InsufficientBalance
      */
     public function handle(User $user, ShippingMethod $method): Order

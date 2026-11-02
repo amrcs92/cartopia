@@ -5,6 +5,7 @@ export type CartLine = {
     quantity: number;
     unit_price: string;
     line_total: string;
+    available: boolean;
 };
 
 export type Cart = {
@@ -13,6 +14,7 @@ export type Cart = {
     subtotal: string;
     subtotal_cents: number;
     total_quantity: number;
+    has_unavailable: boolean;
 };
 
 export type ShippingMethod = {

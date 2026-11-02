@@ -26,10 +26,12 @@ class CartResource extends JsonResource
                 'quantity' => $line->quantity,
                 'unit_price' => $line->unitPrice->format(),
                 'line_total' => $line->lineTotal->format(),
+                'available' => $line->available,
             ], $this->lines),
             'subtotal' => $this->subtotal->format(),
             'subtotal_cents' => $this->subtotal->cents(),
             'total_quantity' => $this->totalQuantity(),
+            'has_unavailable' => $this->firstUnavailable() !== null,
         ];
     }
 }
