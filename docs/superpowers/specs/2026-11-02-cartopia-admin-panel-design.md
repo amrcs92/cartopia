@@ -88,7 +88,7 @@ Success means:
 ## 3. Admin access
 
 - The panel is at `/admin` and uses the store's own login. A guest is redirected to the store's login page; after logging in an admin lands on the dashboard.
-- `User` implements Filament's `FilamentUser`; `canAccessPanel()` returns `is_admin`. A logged-in non-admin gets a 403.
+- `User` implements Filament's `FilamentUser`; `canAccessPanel()` returns `is_admin`. A logged-in non-admin gets the store's not-found page (404), so the panel stays invisible to shoppers. Filament's own login page is turned off.
 - The store's account menu shows an **Admin** link to admins only (the shared `auth.user.is_admin` prop already exists).
 - **Make admin** and **Remove admin** are actions on the customer page, each with a confirmation. `SetAdminAccess` refuses:
   - removing your own admin access ("You can't remove your own admin access."), and the button is hidden on your own page
@@ -252,7 +252,7 @@ The unique `refunds.order_id` and `wallet_transactions.refund_id` make a double 
 - **Subject:** "Your Cartopia Order #14 Has Been Refunded"
 - Same layout, colours and dark-mode block as the other three emails, queued with `afterCommit()`, HTML and plain text.
 - Shows the order's items and total, and where the money went: the card or PayPal line and the wallet line, with the wallet balance after.
-- The wording and design are drawn on the canvas's **Emails** page, light and dark, and approved before the email is built.
+- The wording and design are drawn on the canvas's **Emails** page, light and dark. The user chose on 2026-11-02 to have it built straight from that drawing and reviewed afterwards.
 
 ## 10. Look
 
@@ -265,7 +265,7 @@ The unique `refunds.order_id` and `wallet_transactions.refund_id` make a double 
 
 ## 11. Security
 
-- Every panel route requires an admin. Actions check again on the server, not only by hiding buttons.
+- Every panel route requires an admin; anyone else gets the store's not-found page. Actions check again on the server, not only by hiding buttons.
 - Uploads are validated by type, size and dimensions on the server.
 - Refunds and adjustments run only through their action classes, each in a transaction with row locks, and each records the admin.
 - No live keys: the existing live-key guard covers refunds too.
@@ -286,7 +286,7 @@ The unique `refunds.order_id` and `wallet_transactions.refund_id` make a double 
 - **Gateways:** `refund()` request and response mapping for Stripe and PayPal, with HTTP fakes.
 - **Panel:** Filament's Livewire test helpers for each list, form and action, including the photo rules and admin-only access.
 - **Shop:** hidden products disappear and checkout refuses them.
-- **Browser:** an admin logs in, refunds an order and adjusts a wallet; a non-admin gets a 403.
+- **Browser:** an admin logs in, refunds an order and adjusts a wallet; a non-admin gets the not-found page.
 - **Checks:** Pint, Larastan level 7, the suites on SQLite and MySQL, and a sandbox refund walkthrough for both providers at the end.
 
 ## 14. Delivery
