@@ -179,6 +179,10 @@ class PayPalGateway implements PaymentGateway
                 'amount' => $this->money($payment->amount),
             ]), array_values(array_diff(range(400, 499), [401])));
 
+        if (in_array($response->status(), [409, 429], true)) {
+            throw new PaymentProviderUnavailable($this->describe($payment, 'PayPal asked to retry the refund').', HTTP '.$response->status().'.', 0, $response->toException());
+        }
+
         if ($response->clientError()) {
             $reason = (string) ($response->json('details.0.issue') ?? $response->json('message') ?? '');
 
@@ -188,7 +192,13 @@ class PayPalGateway implements PaymentGateway
         $status = (string) $response->json('status');
 
         if (in_array($status, ['COMPLETED', 'PENDING'], true)) {
-            return new RefundAccepted((string) $response->json('id'));
+            $id = (string) $response->json('id');
+
+            if ($id === '') {
+                throw new PaymentProviderUnavailable($this->describe($payment, 'PayPal gave no refund id').'.');
+            }
+
+            return new RefundAccepted($id);
         }
 
         return new RefundRefused('PayPal gave the refund status '.($status !== '' ? $status : 'UNKNOWN').'.');

@@ -157,11 +157,24 @@ class StripeGateway implements PaymentGateway
         } catch (PaymentProviderRejected $e) {
             $previous = $e->getPrevious();
 
-            if (! $previous instanceof ApiErrorException) {
+            if (! $previous instanceof ApiErrorException || $previous->getHttpStatus() === 401) {
                 throw $e;
             }
 
+            // The key is still in progress (409) or Stripe is rate limiting (429): try the same key again.
+            if (in_array($previous->getHttpStatus(), [409, 429], true)) {
+                throw new PaymentProviderUnavailable("Stripe asked to retry the refund for payment {$payment->id}.", 0, $previous);
+            }
+
             return new RefundRefused($previous->getMessage());
+        }
+
+        if (in_array($created->status, ['failed', 'canceled'], true)) {
+            return new RefundRefused((string) ($created->failure_reason ?? "Stripe couldn't complete the refund"));
+        }
+
+        if ((string) $created->id === '') {
+            throw new PaymentProviderUnavailable("Stripe gave no refund id for payment {$payment->id}.");
         }
 
         return new RefundAccepted((string) $created->id);

@@ -367,3 +367,21 @@ it('maps refund outages to unavailable', function () {
     Http::fake(paypalToken() + [PAYPAL.'/v2/payments/captures/CAP1/refund' => fn () => throw new ConnectionException('timeout')]);
     expect(fn () => $this->gateway->refund(paypalCapturePayment(), Refund::factory()->create()))->toThrow(PaymentProviderUnavailable::class);
 });
+
+it('retries a refund PayPal answers with 409 or 429', function (int $status) {
+    Http::fake(paypalToken() + [PAYPAL.'/v2/payments/captures/CAP1/refund' => Http::response(['name' => 'X', 'message' => 'Try again.'], $status)]);
+
+    expect(fn () => $this->gateway->refund(paypalCapturePayment(), Refund::factory()->create()))->toThrow(PaymentProviderUnavailable::class);
+})->with([409, 429]);
+
+it('treats a PayPal credentials error on a refund as a rejection', function () {
+    Http::fake(paypalToken() + [PAYPAL.'/v2/payments/captures/CAP1/refund' => Http::response(['name' => 'AUTHENTICATION_FAILURE'], 401)]);
+
+    expect(fn () => $this->gateway->refund(paypalCapturePayment(), Refund::factory()->create()))->toThrow(PaymentProviderRejected::class);
+});
+
+it('treats a PayPal refund reply without an id as unavailable', function () {
+    Http::fake(paypalToken() + [PAYPAL.'/v2/payments/captures/CAP1/refund' => Http::response(['status' => 'COMPLETED'], 201)]);
+
+    expect(fn () => $this->gateway->refund(paypalCapturePayment(), Refund::factory()->create()))->toThrow(PaymentProviderUnavailable::class);
+});

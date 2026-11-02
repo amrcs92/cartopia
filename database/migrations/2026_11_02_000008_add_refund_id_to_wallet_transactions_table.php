@@ -16,7 +16,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('wallet_transactions', function (Blueprint $table) {
-            $table->dropConstrainedForeignId('refund_id');
+            // Not dropConstrainedForeignId: on SQLite it leaves the unique index behind.
+            $table->dropForeign(['refund_id']);
+            $table->dropUnique(['refund_id']);
+            $table->dropColumn('refund_id');
         });
     }
 };

@@ -14,6 +14,7 @@ use App\Payments\Outcomes\RefundRefused;
 use App\Support\Money;
 use App\Wallet\Wallet;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Schema;
 
 it('belongs to an order, a payment and an admin', function () {
     $order = Order::factory()->create();
@@ -85,4 +86,17 @@ it('answers queued refund outcomes in order and throws queued throwables', funct
     expect($gateway->refund($payment, $refund))->toEqual(new RefundRefused('No.'));
     expect(fn () => $gateway->refund($payment, $refund))->toThrow(PaymentProviderUnavailable::class);
     expect($gateway->refunded)->toHaveCount(2);
+});
+
+it('rolls the 2026-11-02 migrations back and forward again', function () {
+    $this->artisan('migrate:rollback', ['--step' => 8])->assertSuccessful();
+
+    expect(Schema::hasTable('refunds'))->toBeFalse()
+        ->and(Schema::hasColumn('wallet_transactions', 'refund_id'))->toBeFalse()
+        ->and(Schema::hasColumn('wallet_transactions', 'payment_id'))->toBeFalse();
+
+    $this->artisan('migrate')->assertSuccessful();
+
+    expect(Schema::hasTable('refunds'))->toBeTrue()
+        ->and(Schema::hasColumn('wallet_transactions', 'refund_id'))->toBeTrue();
 });
