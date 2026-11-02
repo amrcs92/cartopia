@@ -126,6 +126,20 @@ it('shows the payment details, customer, order and provider link', function () {
         ->assertSee('https://dashboard.stripe.com/test/payments/pi_abc123');
 });
 
+it('names a pending payment by its checkout session or PayPal order, on the list and its page', function (PaymentMethod $method, string $reference, string $shown) {
+    $payment = Payment::factory()->state(['method' => $method])->withReference($reference)->create();
+
+    Livewire::test(ListPayments::class)
+        ->assertTableColumnStateSet('reference', $shown, $payment);
+
+    Livewire::test(ViewPayment::class, ['record' => $payment->getKey()])
+        ->assertSee('Provider reference')
+        ->assertSee($shown);
+})->with([
+    'Stripe' => [PaymentMethod::Stripe, 'cs_test_a1b2c3', 'Stripe checkout session cs_test_a1b2c3'],
+    'PayPal' => [PaymentMethod::PayPal, '5O190127TN364715T', 'PayPal order 5O190127TN364715T'],
+]);
+
 it('shows a top-up without an order or provider link', function () {
     $payment = Payment::factory()->topUp(1500)->paypal()->create();
 
