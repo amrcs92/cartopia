@@ -126,7 +126,7 @@ Sign in with the seeded admin from [Demo logins](#demo-logins). Anyone who is no
 - **Products:** add, edit, feature and move products between aisles. Photos are JPG or WebP, under 1 MB, square and at least 1200 × 1200px, up to five per product. Hide a product rather than deleting it.
 - **Aisles:** add and rename the store's categories, with a product count for each.
 - **Orders:** browse and open orders, and refund them.
-- **Payments:** every Stripe and PayPal payment. The "Needs attention" tab lists payments that need a look, and "Check with provider" asks Stripe or PayPal for the payment's current state.
+- **Payments:** every Stripe and PayPal payment. The "Needs attention" tab lists payments still pending more than 30 minutes after they started, and "Check with provider" asks Stripe or PayPal for the payment's current state.
 - **Customers:** accounts with their orders and wallet ledger. "Adjust wallet" credits or debits a balance, and "Make admin" or "Remove admin" changes who can sign in to the panel.
 
 ### Refunds in sandbox

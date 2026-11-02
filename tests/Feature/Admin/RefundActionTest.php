@@ -161,6 +161,60 @@ it('retries a failed refund with a fresh reason', function () {
         ->and($order->refund->reason)->toBe('Trying again');
 });
 
+it('asks a failed retry for a reason, but not a pending one', function () {
+    $order = splitPanelOrder();
+    $refund = Refund::factory()->for($order)->create([
+        'status' => RefundStatus::Failed, 'payment_id' => $order->succeededPayment->id,
+        'provider_amount' => 2274, 'wallet_amount' => 10000,
+    ]);
+    $breakdown = 'Visa ending in 4242, through Stripe: $22.74 Wallet: $100.00 Total: $122.74';
+
+    expect(modalText(openOrder($order)->mountAction('retryRefund')))->toBe("Refund \$122.74 | {$breakdown} Reason*");
+
+    $refund->update(['status' => RefundStatus::Pending]);
+
+    expect(modalText(openOrder($order)->mountAction('retryRefund')))->toBe("Retry refund | {$breakdown}");
+});
+
+it('resumes a pending refund with its first reason', function () {
+    $order = splitPanelOrder();
+    Refund::factory()->for($order)->create([
+        'status' => RefundStatus::Pending, 'reason' => 'Damaged in transit', 'payment_id' => $order->succeededPayment->id,
+        'provider_amount' => 2274, 'wallet_amount' => 10000,
+    ]);
+
+    openOrder($order)
+        ->callAction('retryRefund')
+        ->assertHasNoActionErrors()
+        ->assertNotified(Notification::make()->success()->title("Order #{$order->id} is refunded."));
+
+    expect($order->fresh()->status)->toBe(OrderStatus::Refunded)
+        ->and($order->refund->reason)->toBe('Damaged in transit');
+});
+
+it('shows a retry the amounts on its refund', function () {
+    $order = splitPanelOrder();
+    // Equal to the order's by construction; different here to show which are read.
+    Refund::factory()->for($order)->create([
+        'status' => RefundStatus::Failed, 'payment_id' => $order->succeededPayment->id,
+        'provider_amount' => 2000, 'wallet_amount' => 9000,
+    ]);
+
+    expect(modalText(openOrder($order)->mountAction('retryRefund')))
+        ->toContain('Visa ending in 4242, through Stripe: $20.00 Wallet: $90.00 Total: $110.00');
+});
+
+it('colours the refund status badge', function (RefundStatus $status, string $label, string $color) {
+    $order = splitPanelOrder();
+    Refund::factory()->for($order)->create(['status' => $status]);
+
+    expect(openOrder($order)->html())->toMatch("/class=\"fi-badge [^\"]*fi-color-{$color}[^\"]*\">\\s*{$label}\\s*</");
+})->with([
+    'succeeded' => [RefundStatus::Succeeded, 'Succeeded', 'success'],
+    'pending' => [RefundStatus::Pending, 'Pending', 'warning'],
+    'failed' => [RefundStatus::Failed, 'Failed', 'danger'],
+]);
+
 it('offers neither action for a succeeded refund or an order that is not placed', function () {
     $refunded = splitPanelOrder();
     Refund::factory()->for($refunded)->create(['status' => RefundStatus::Succeeded]);

@@ -59,6 +59,18 @@ it('starts the week on Monday at midnight', function () {
         ->and($figures->ordersThisWeek())->toBe(2);
 });
 
+it('starts the week on Monday even in a locale whose week starts on Sunday', function () {
+    app()->setLocale('en_US');
+    orderAt('2026-11-01 12:00:00', 5000); // Sunday, which starts en_US's week
+    orderAt('2026-11-02 00:00:00', 1000); // Monday
+
+    $figures = app(SalesFigures::class);
+
+    expect(now()->startOfWeek()->isSunday())->toBeTrue()
+        ->and($figures->thisWeek()->cents())->toBe(1000)
+        ->and($figures->ordersThisWeek())->toBe(1);
+});
+
 it('counts pending payments older than 30 minutes as needing attention', function () {
     Payment::factory()->create(['created_at' => now()->subMinutes(31)]);
     Payment::factory()->create(['created_at' => now()->subMinutes(5)]);

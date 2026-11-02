@@ -43,19 +43,23 @@ class ViewOrder extends ViewRecord
             ->icon('heroicon-o-arrow-uturn-left')
             ->color('danger')
             ->modalHeading($label)
-            ->modalSubmitActionLabel(fn (): string => 'Refund '.$this->getRecord()->total->format())
+            ->modalSubmitActionLabel(fn (): string => $this->resumesPendingRefund()
+                ? 'Retry refund'
+                : 'Refund '.$this->getRecord()->total->format())
             ->schema([
                 UnorderedList::make(fn (): array => $this->breakdown($this->getRecord()))->columns(1),
+                // A pending refund resumes with its first admin and reason, so it asks for none.
                 Textarea::make('reason')
                     ->required()
                     ->maxLength(255)
-                    ->rows(2),
+                    ->rows(2)
+                    ->hidden(fn (): bool => $this->resumesPendingRefund()),
             ])
             ->action(function (array $data, RefundOrder $refund): void {
                 $order = $this->getRecord();
 
                 try {
-                    $refund->handle($order, $this->admin(), $data['reason']);
+                    $refund->handle($order, $this->admin(), $data['reason'] ?? (string) $order->refund?->reason);
                 } catch (AdminActionRefused $e) {
                     Notification::make()->danger()->title($e->getMessage())->send();
                     $order->refresh();
@@ -79,16 +83,24 @@ class ViewOrder extends ViewRecord
         return $this->getRecord()->status === OrderStatus::Placed;
     }
 
+    private function resumesPendingRefund(): bool
+    {
+        return $this->getRecord()->refund?->status === RefundStatus::Pending;
+    }
+
     /**
      * What the refund will send back and where (spec 7.3): the provider's
-     * part, the wallet part when there is one, then the total.
+     * part, the wallet part when there is one, then the total. A retry shows
+     * the amounts on the refund it resumes.
      *
      * @return list<string>
      */
     private function breakdown(Order $order): array
     {
         $lines = [];
-        $providerPart = $order->total->subtract($order->wallet_amount);
+        $refund = $order->refund;
+        $providerPart = $refund === null ? $order->total->subtract($order->wallet_amount) : $refund->provider_amount;
+        $walletPart = $refund === null ? $order->wallet_amount : $refund->wallet_amount;
 
         if ($providerPart->cents() > 0) {
             $payment = $order->succeededPayment;
@@ -101,11 +113,11 @@ class ViewOrder extends ViewRecord
             $lines[] = "{$to}: {$providerPart->format()}";
         }
 
-        if ($order->wallet_amount->cents() > 0) {
-            $lines[] = "Wallet: {$order->wallet_amount->format()}";
+        if ($walletPart->cents() > 0) {
+            $lines[] = "Wallet: {$walletPart->format()}";
         }
 
-        $lines[] = "Total: {$order->total->format()}";
+        $lines[] = "Total: {$providerPart->add($walletPart)->format()}";
 
         return $lines;
     }

@@ -102,7 +102,7 @@ class OrderResource extends Resource
                 ->columns(2)
                 ->schema([
                     TextEntry::make('status')->badge()->state(fn (Order $record) => Str::headline($record->status->value)),
-                    TextEntry::make('paid_with')->label('Paid with')->state(fn (Order $record) => PaymentWording::tag($record)),
+                    TextEntry::make('paid_with')->label('Paid with')->state(fn (Order $record) => self::paidWith($record)),
                     TextEntry::make('method_detail')
                         ->label('Method')
                         ->state(fn (Order $record) => PaymentWording::paidWith($record)),
@@ -141,6 +141,12 @@ class OrderResource extends Resource
                     TextEntry::make('refund_status')
                         ->label('Status')
                         ->badge()
+                        ->color(fn (Order $record) => match ($record->refund?->status) {
+                            RefundStatus::Succeeded => 'success',
+                            RefundStatus::Pending => 'warning',
+                            RefundStatus::Failed => 'danger',
+                            null => 'gray',
+                        })
                         ->state(fn (Order $record) => Str::headline($record->refund->status->value ?? '')),
                     TextEntry::make('refund.provider_refund_id')->label('Provider refund ID')->placeholder('—'),
                     TextEntry::make('refund.failure_reason')
@@ -175,7 +181,7 @@ class OrderResource extends Resource
                     ->sortable(),
                 TextColumn::make('paid_with')
                     ->label('Paid with')
-                    ->state(fn (Order $record) => PaymentWording::tag($record)),
+                    ->state(fn (Order $record) => self::paidWith($record)),
                 TextColumn::make('status')
                     ->badge()
                     ->state(fn (Order $record) => Str::headline($record->status->value)),
@@ -234,6 +240,17 @@ class OrderResource extends Resource
             'wallet_paypal' => $query->where('payment_method', PaymentMethod::PayPal)->where('wallet_amount', '>', 0),
             default => $query,
         };
+    }
+
+    /**
+     * The "Paid with" value, as the filter names it: Wallet, Stripe, PayPal,
+     * Wallet + Stripe or Wallet + PayPal.
+     */
+    private static function paidWith(Order $order): string
+    {
+        $method = $order->payment_method->label();
+
+        return $order->isSplit() ? "Wallet + {$method}" : $method;
     }
 
     private static function reference(Order $order): ?string
