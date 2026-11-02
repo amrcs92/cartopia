@@ -101,6 +101,14 @@ class Order extends Model
             ->latestOfMany();
     }
 
+    /**
+     * @return HasOne<Refund, $this>
+     */
+    public function refund(): HasOne
+    {
+        return $this->hasOne(Refund::class);
+    }
+
     public function isSplit(): bool
     {
         return $this->payment_method->isHosted() && $this->wallet_amount->cents() > 0;
