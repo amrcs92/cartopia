@@ -33,10 +33,44 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogoHeight('2rem')
             ->favicon(asset('favicon.svg'))
             ->colors([
-                'primary' => Color::hex('#1F5A3D'),
+                // The store's greens: 600 is the green (#1F5A3D) behind
+                // primary buttons, 500 the dark-mode green, 300 the dark-mode
+                // chip text and 50 the chip; the rest are steps between them.
+                // Color::hex() would rebuild a brighter mint palette around it.
+                'primary' => [
+                    50 => '#e6efe4',
+                    100 => '#cfe6d6',
+                    200 => '#b0dcc2',
+                    300 => '#8fd3ae',
+                    400 => '#5fae84',
+                    500 => '#2e7a54',
+                    600 => '#1f5a3d',
+                    700 => '#1f4d38',
+                    800 => '#1a4030',
+                    900 => '#163526',
+                    950 => '#0e2219',
+                ],
                 'warning' => Color::hex('#F5B42E'),
+                // The store's green-tinted neutrals (resources/css/app.css):
+                // 50 is the light page, 200/300 the light lines, 700 the dark
+                // line, 800 the dark field, 900 the dark card and 950 the dark
+                // page. 400–600 sit between them, dark enough for AA text.
+                'gray' => [
+                    50 => '#edf2e4',
+                    100 => '#e6efe4',
+                    200 => '#d3dcc8',
+                    300 => '#c5d0b9',
+                    400 => '#8d9c90',
+                    500 => '#5f6f63',
+                    600 => '#4d5e52',
+                    700 => '#344a3d',
+                    800 => '#223029',
+                    900 => '#1a251f',
+                    950 => '#111915',
+                ],
             ])
             ->font('Figtree')
+            ->viteTheme('resources/css/filament/admin/theme.css')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([

@@ -1,0 +1,9 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+
+/* Dark fields: Filament tints them white/5; the store's field colour instead. */
+.dark .fi-input-wrp:not(.fi-disabled) {
+    background-color: var(--gray-800);
+}
