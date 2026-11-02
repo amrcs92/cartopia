@@ -3,6 +3,7 @@
 namespace App\Payments;
 
 use App\Enums\PaymentMethod;
+use App\Enums\RefundStatus;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Support\Money;
@@ -103,6 +104,34 @@ final class PaymentWording
             PaymentMethod::Stripe => [['label' => 'Paid through Stripe', 'value' => $hosted]],
             PaymentMethod::PayPal => [['label' => 'Paid through PayPal', 'value' => $hosted]],
         };
+    }
+
+    /**
+     * Where a succeeded refund went, one sentence per destination: the
+     * provider part first, then the wallet part. Empty until it succeeded.
+     *
+     * @return list<string>
+     */
+    public static function refundLines(Order $order): array
+    {
+        $refund = $order->refund;
+
+        if ($refund === null || $refund->status !== RefundStatus::Succeeded) {
+            return [];
+        }
+
+        $lines = [];
+
+        if ($refund->provider_amount->cents() > 0) {
+            $to = $order->payment_method === PaymentMethod::Stripe ? self::stripeCardShort($refund->payment) : 'PayPal';
+            $lines[] = "Refunded to {$to} · {$refund->provider_amount->format()}";
+        }
+
+        if ($refund->wallet_amount->cents() > 0) {
+            $lines[] = "Refunded to your wallet · {$refund->wallet_amount->format()}";
+        }
+
+        return $lines;
     }
 
     public static function tag(Order $order): string

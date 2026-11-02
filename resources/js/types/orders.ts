@@ -26,6 +26,8 @@ export type Order = {
     /** Up to two product photo URLs (first two lines of the order). */
     thumbnails: string[];
     payment: OrderPayment;
+    /** Where a succeeded refund went, e.g. "Refunded to your wallet · $100.00". */
+    refund_lines: string[];
     items: OrderItem[];
 };
 

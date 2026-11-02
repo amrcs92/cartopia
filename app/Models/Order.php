@@ -122,4 +122,15 @@ class Order extends Model
     {
         return $query->where('status', OrderStatus::Placed);
     }
+
+    /**
+     * What a shopper sees as their orders: placed ones, and those since refunded.
+     *
+     * @param  Builder<Order>  $query
+     * @return Builder<Order>
+     */
+    public function scopePlacedOrRefunded(Builder $query): Builder
+    {
+        return $query->whereIn('status', [OrderStatus::Placed, OrderStatus::Refunded]);
+    }
 }

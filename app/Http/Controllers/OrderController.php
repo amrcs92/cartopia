@@ -16,8 +16,8 @@ class OrderController extends Controller
     public function index(Request $request): Response
     {
         $orders = $request->user()->orders()
-            ->placed()
-            ->with(['shippingMethod', 'succeededPayment', 'items.product.primaryImage'])
+            ->placedOrRefunded()
+            ->with(['shippingMethod', 'succeededPayment', 'refund.payment', 'items.product.primaryImage'])
             ->latest()
             ->latest('id')
             ->paginate(self::PER_PAGE);
@@ -29,7 +29,7 @@ class OrderController extends Controller
 
     public function show(Order $order): Response
     {
-        $order->load(['shippingMethod', 'succeededPayment', 'items.product.primaryImage']);
+        $order->load(['shippingMethod', 'succeededPayment', 'refund.payment', 'items.product.primaryImage']);
 
         $balanceAfter = $order->walletTransactions()
             ->where('type', WalletTransactionType::Purchase)

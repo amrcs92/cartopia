@@ -1,6 +1,8 @@
 <?php
 
+use App\Actions\Admin\RefundOrder;
 use App\Admin\SalesFigures;
+use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Resources\Payments\PaymentResource;
@@ -142,4 +144,19 @@ it('keeps shoppers off the dashboard', function () {
     $this->actingAs(User::factory()->create())
         ->get('/admin')
         ->assertNotFound();
+});
+
+it('drops an order from the sales figures once it is refunded', function () {
+    $order = orderAt('2026-11-04 09:00:00', 4000);
+    orderAt('2026-11-04 10:00:00', 1000);
+    $figures = app(SalesFigures::class);
+
+    expect($figures->today()->cents())->toBe(5000);
+
+    app(RefundOrder::class)->handle($order, User::factory()->admin()->create(), 'Damaged in transit');
+
+    expect($order->fresh()->status)->toBe(OrderStatus::Refunded)
+        ->and($figures->today()->cents())->toBe(1000)
+        ->and($figures->thisWeek()->cents())->toBe(1000)
+        ->and($figures->ordersThisWeek())->toBe(1);
 });

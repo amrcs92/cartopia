@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Orders;
 
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
+use App\Enums\RefundStatus;
 use App\Filament\Resources\Customers\CustomerResource;
 use App\Filament\Resources\Orders\Pages\ListOrders;
 use App\Filament\Resources\Orders\Pages\ViewOrder;
@@ -120,6 +121,31 @@ class OrderResource extends Resource
                         ->state(fn (Order $record) => self::providerLink($record))
                         ->url(fn (Order $record) => self::providerLink($record), shouldOpenInNewTab: true)
                         ->placeholder('—'),
+                ]),
+            Section::make('Refund')
+                ->columns(2)
+                ->visible(fn (Order $record) => $record->refund !== null)
+                ->schema([
+                    TextEntry::make('refund.admin.name')->label('Refunded by'),
+                    TextEntry::make('refund_date')
+                        ->label('Date')
+                        ->state(fn (Order $record) => $record->refund?->completed_at ?: $record->refund?->created_at)
+                        ->dateTime(),
+                    TextEntry::make('refund.reason')->label('Reason')->columnSpanFull(),
+                    TextEntry::make('refund_wallet')
+                        ->label('Wallet amount')
+                        ->state(fn (Order $record) => $record->refund?->wallet_amount->format()),
+                    TextEntry::make('refund_provider')
+                        ->label('Stripe or PayPal amount')
+                        ->state(fn (Order $record) => $record->refund?->provider_amount->format()),
+                    TextEntry::make('refund_status')
+                        ->label('Status')
+                        ->badge()
+                        ->state(fn (Order $record) => Str::headline($record->refund->status->value ?? '')),
+                    TextEntry::make('refund.provider_refund_id')->label('Provider refund ID')->placeholder('—'),
+                    TextEntry::make('refund.failure_reason')
+                        ->label('Failure reason')
+                        ->visible(fn (Order $record) => $record->refund?->status === RefundStatus::Failed),
                 ]),
             Section::make('Placed')
                 ->schema([
