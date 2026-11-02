@@ -10,9 +10,11 @@ return new class extends Migration
     {
         Schema::create('refunds', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('order_id')->unique()->constrained();
+            // A refund goes with its order, as the rest of a deleted account does.
+            $table->foreignId('order_id')->unique()->constrained()->cascadeOnDelete();
             $table->foreignId('payment_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('admin_id')->constrained('users');
+            // Null once the admin who refunded is deleted; the refund stays.
+            $table->foreignId('admin_id')->nullable()->constrained('users')->nullOnDelete();
             $table->text('reason');
             $table->unsignedInteger('provider_amount');
             $table->unsignedInteger('wallet_amount');

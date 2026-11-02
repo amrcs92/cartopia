@@ -126,7 +126,7 @@ class OrderResource extends Resource
                 ->columns(2)
                 ->visible(fn (Order $record) => $record->refund !== null)
                 ->schema([
-                    TextEntry::make('refund.admin.name')->label('Refunded by'),
+                    TextEntry::make('refund.admin.name')->label('Refunded by')->placeholder('Deleted admin'),
                     TextEntry::make('refund_date')
                         ->label('Date')
                         ->state(fn (Order $record) => $record->refund?->completed_at ?: $record->refund?->created_at)

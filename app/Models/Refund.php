@@ -17,7 +17,7 @@ use LogicException;
  * @property int $id
  * @property int $order_id
  * @property int|null $payment_id
- * @property int $admin_id
+ * @property int|null $admin_id Null once that admin's account is deleted.
  * @property string $reason Shown only in the panel.
  * @property Money $provider_amount The payment's amount, or zero.
  * @property Money $wallet_amount The order's wallet part, or zero.
