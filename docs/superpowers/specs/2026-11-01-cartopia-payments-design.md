@@ -178,7 +178,7 @@ Tests and browser tests bind a `FakePaymentGateway` in place of the real gateway
 Uses the official `stripe/stripe-php` SDK through a `StripeClient` built from `services.stripe.secret`.
 
 - **start:** creates a Checkout Session with:
-  - `mode: payment` and `payment_method_types: ['card']`
+  - `mode: payment`, with no `payment_method_types`: current Stripe API versions refuse that parameter, so the Stripe Dashboard's payment method settings decide what Stripe's page offers (cards by default). A method that settles later (a bank debit, say) leaves the session complete but unpaid, which reads as still pending until the stale job's lookup finds it paid.
   - `line_items` from the request in USD cents, plus a "Delivery" line when the fee isn't zero
   - `client_reference_id` set to the payment id, and `metadata` holding `payment_id`, `purpose` and `order_id`
   - `customer_email` set to the user's email
