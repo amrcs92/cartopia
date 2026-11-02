@@ -3,6 +3,7 @@
 use App\Actions\Admin\RefundOrder;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
+use App\Enums\PaymentStatus;
 use App\Enums\RefundStatus;
 use App\Enums\WalletTransactionType;
 use App\Exceptions\AdminActionRefused;
@@ -19,6 +20,8 @@ use App\Payments\Outcomes\RefundOutcome;
 use App\Payments\Outcomes\RefundRefused;
 use App\Payments\PaymentGateway;
 use App\Payments\PaymentGateways;
+use App\Support\Money;
+use App\Wallet\Wallet;
 use Illuminate\Support\Facades\Mail;
 
 beforeEach(function () {
@@ -314,3 +317,101 @@ it('rejects a reason longer than the column holds', function () {
 
     expect(Refund::query()->count())->toBe(0);
 });
+
+it('finishes an accepted refund on retry without asking the provider again', function (PaymentMethod $method) {
+    $order = refundableOrder($method, walletCents: 10000);
+    // Were the provider asked again after its key expired, it would refuse.
+    $this->fake->willRefund(new RefundAccepted('re_kept'), new RefundRefused('Charge already refunded'));
+
+    // The process dies after the provider accepted, before the finish commits.
+    app()->instance(Wallet::class, new class extends Wallet
+    {
+        private bool $crashed = false;
+
+        public function credit(User $user, Money $amount, WalletTransactionType $type, ?string $description = null, ?Order $order = null, ?Payment $payment = null, ?User $admin = null, ?Refund $refund = null): WalletTransaction
+        {
+            if (! $this->crashed) {
+                $this->crashed = true;
+
+                throw new RuntimeException('The process died.');
+            }
+
+            return parent::credit($user, $amount, $type, $description, $order, $payment, $admin, $refund);
+        }
+    });
+
+    expect(fn () => app(RefundOrder::class)->handle($order, $this->admin, 'Out of stock'))
+        ->toThrow(RuntimeException::class, 'The process died.');
+
+    $pending = $order->refund()->sole();
+
+    expect($pending->status)->toBe(RefundStatus::Pending)
+        ->and($pending->provider_refund_id)->toBe('re_kept')
+        ->and($order->fresh()->status)->toBe(OrderStatus::Placed)
+        ->and(WalletTransaction::query()->where('order_id', $order->id)->exists())->toBeFalse();
+
+    $refund = app(RefundOrder::class)->handle($order, $this->admin, 'Out of stock');
+
+    expect($refund->status)->toBe(RefundStatus::Succeeded)
+        ->and($refund->provider_refund_id)->toBe('re_kept')
+        ->and($refund->attempt)->toBe(1)
+        ->and($this->fake->refunded)->toHaveCount(1)
+        ->and(WalletTransaction::query()->where('refund_id', $refund->id)->count())->toBe(1)
+        ->and($order->user->fresh()->balance->cents())->toBe(10000)
+        ->and($order->fresh()->status)->toBe(OrderStatus::Refunded);
+})->with('refund providers');
+
+it('says no reason was given when the provider refuses without one', function (PaymentMethod $method, string $name) {
+    $order = refundableOrder($method);
+    $this->fake->willRefund(new RefundRefused(''));
+
+    expect(fn () => app(RefundOrder::class)->handle($order, $this->admin, 'Out of stock'))
+        ->toThrow(AdminActionRefused::class, "{$name} refused the refund: no reason given.");
+
+    expect($order->refund()->sole()->status)->toBe(RefundStatus::Failed);
+})->with('refund providers');
+
+it('passes on a refusal another click got while this one waited', function (PaymentMethod $method, string $name) {
+    $order = refundableOrder($method);
+    $refund = Refund::factory()->create([
+        'order_id' => $order->id,
+        'payment_id' => $order->succeededPayment->id,
+        'provider_amount' => 2274,
+        'wallet_amount' => 0,
+    ]);
+
+    // The other click is refused between this click's open and its provider step.
+    $refusedMeanwhile = false;
+    Payment::retrieved(function () use (&$refusedMeanwhile, $refund) {
+        if ($refusedMeanwhile) {
+            return;
+        }
+
+        $refusedMeanwhile = true;
+        Refund::query()->whereKey($refund->id)->update(['status' => RefundStatus::Failed->value, 'failure_reason' => '']);
+    });
+
+    expect(fn () => app(RefundOrder::class)->handle($order, $this->admin, 'Out of stock'))
+        ->toThrow(AdminActionRefused::class, "{$name} refused the refund: no reason given.");
+
+    expect($refusedMeanwhile)->toBeTrue()
+        ->and($this->fake->refunded)->toBe([])
+        ->and($refund->fresh()->status)->toBe(RefundStatus::Failed)
+        ->and($order->fresh()->status)->toBe(OrderStatus::Placed);
+})->with('refund providers');
+
+it('refuses to open a refund without a succeeded payment for the provider part', function (string $case) {
+    $order = refundableOrder(PaymentMethod::Stripe, walletCents: 10000);
+    $payment = $order->succeededPayment;
+
+    match ($case) {
+        'no succeeded payment' => $payment->update(['status' => PaymentStatus::Failed]),
+        'a different amount' => $payment->update(['amount' => 2000]),
+    };
+
+    expect(fn () => app(RefundOrder::class)->handle($order, $this->admin, 'Out of stock'))
+        ->toThrow(LogicException::class, "Order {$order->id} has no succeeded payment matching its provider part.");
+
+    expect(Refund::query()->count())->toBe(0)
+        ->and($this->fake->refunded)->toBe([]);
+})->with(['no succeeded payment', 'a different amount']);

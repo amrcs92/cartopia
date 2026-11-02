@@ -14,7 +14,6 @@ use App\Models\User;
 use App\Payments\Exceptions\PaymentProviderRejected;
 use App\Payments\Exceptions\PaymentProviderUnavailable;
 use App\Payments\Outcomes\RefundAccepted;
-use App\Payments\Outcomes\RefundOutcome;
 use App\Payments\Outcomes\RefundRefused;
 use App\Payments\PaymentGateways;
 use App\Wallet\Wallet;
@@ -123,6 +122,11 @@ class RefundOrder
                 }
             }
 
+            // On MySQL the payment_id foreign key takes a shared lock on the payment
+            // row here, payment after order, against the usual order. It can't
+            // deadlock: rows are created only when the order has no refund yet, so no
+            // other click holds this payment in steps 2 or 3, and nothing else locks a
+            // succeeded payment and then waits on its order.
             return Refund::create([
                 'order_id' => $locked->id,
                 'payment_id' => $payment?->id,
@@ -150,7 +154,7 @@ class RefundOrder
         $payment = $refund->payment ?? throw new LogicException("Refund {$refund->id} has a provider part but no payment.");
         $provider = $this->providerName($payment->method);
 
-        $outcome = DB::transaction(function () use ($refund, $provider): RefundOutcome|Refund {
+        $outcome = DB::transaction(function () use ($refund, $provider): Refund|RefundRefused {
             $payment = Payment::query()->whereKey($refund->payment_id)->lockForUpdate()->firstOrFail();
             $locked = Refund::query()->whereKey($refund->id)->lockForUpdate()->firstOrFail();
 
@@ -161,6 +165,13 @@ class RefundOrder
 
             if ($locked->status === RefundStatus::Failed) {
                 return new RefundRefused((string) $locked->failure_reason);
+            }
+
+            // The provider took this attempt already but finishing never ran (a crash,
+            // say). Its key may have expired since (Stripe keeps them 24h), so the
+            // provider isn't asked again.
+            if ($locked->provider_refund_id !== null) {
+                return $locked;
             }
 
             try {
@@ -175,25 +186,28 @@ class RefundOrder
                     'status' => RefundStatus::Failed,
                     'failure_reason' => mb_substr($outcome->reason, 0, self::MAX_FAILURE_REASON_LENGTH),
                 ]);
+
+                return $outcome;
             }
 
-            return $outcome;
-        });
+            if (! $outcome instanceof RefundAccepted) {
+                throw new LogicException('Unknown refund outcome '.$outcome::class.'.');
+            }
 
-        if ($outcome instanceof Refund) {
-            return $outcome->provider_refund_id;
-        }
+            // Kept on the still-pending refund, so a retry can finish without the provider.
+            $locked->update(['provider_refund_id' => $outcome->providerRefundId]);
+
+            return $locked;
+        });
 
         // Thrown after the commit, so the failed refund is kept.
         if ($outcome instanceof RefundRefused) {
-            throw new AdminActionRefused("{$provider} refused the refund: {$outcome->reason}.");
+            $reason = trim($outcome->reason) === '' ? 'no reason given' : $outcome->reason;
+
+            throw new AdminActionRefused("{$provider} refused the refund: {$reason}.");
         }
 
-        if (! $outcome instanceof RefundAccepted) {
-            throw new LogicException('Unknown refund outcome '.$outcome::class.'.');
-        }
-
-        return $outcome->providerRefundId;
+        return $outcome->provider_refund_id;
     }
 
     /**
