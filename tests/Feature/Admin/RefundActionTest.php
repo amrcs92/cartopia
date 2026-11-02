@@ -173,6 +173,21 @@ it('offers neither action for a succeeded refund or an order that is not placed'
     }
 });
 
+it('shows a refund whose admin was deleted as by a deleted admin', function () {
+    $order = splitPanelOrder();
+    $admin = User::factory()->admin()->create(['name' => 'Ada Admin']);
+    Refund::factory()->for($order)->create([
+        'admin_id' => $admin->id, 'status' => RefundStatus::Succeeded, 'completed_at' => now(),
+    ]);
+
+    $admin->delete();
+
+    openOrder($order)
+        ->assertSuccessful()
+        ->assertSee('Deleted admin')
+        ->assertDontSee('Ada Admin');
+});
+
 it('shows a Refund section only when there is a refund', function () {
     $order = splitPanelOrder();
 
