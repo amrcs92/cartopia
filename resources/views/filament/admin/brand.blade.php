@@ -1,4 +1,4 @@
-<div class="flex items-center gap-2">
-    <img src="{{ asset('favicon.svg') }}" alt="" class="h-8 w-auto" />
-    <span class="text-lg font-bold text-gray-950 dark:text-white">Cartopia</span>
+<div style="display: flex; align-items: center; gap: 0.5rem">
+    <img src="{{ asset('favicon.svg') }}" alt="" width="32" height="32" style="height: 2rem; width: 2rem" />
+    <span>Cartopia</span>
 </div>
