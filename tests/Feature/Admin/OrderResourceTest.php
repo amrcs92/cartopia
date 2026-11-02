@@ -66,7 +66,8 @@ it('searches by order number, customer name and email', function () {
         ->assertCanSeeTableRecords([$kimOrder])
         ->assertCanNotSeeTableRecords([$samOrder])
         ->searchTable((string) $samOrder->id)
-        ->assertCanSeeTableRecords([$samOrder]);
+        ->assertCanSeeTableRecords([$samOrder])
+        ->assertCanNotSeeTableRecords([$kimOrder]);
 });
 
 it('filters by status', function () {
@@ -82,13 +83,17 @@ it('filters by status', function () {
 it('filters by payment combination', function () {
     $wallet = Order::factory()->create();
     $stripe = Order::factory()->create(['payment_method' => PaymentMethod::Stripe, 'wallet_amount' => 0]);
+    $paypal = Order::factory()->create(['payment_method' => PaymentMethod::PayPal, 'wallet_amount' => 0]);
     $splitStripe = Order::factory()->create(['payment_method' => PaymentMethod::Stripe, 'total' => 2000, 'subtotal' => 2000, 'shipping_fee' => 0, 'wallet_amount' => 500]);
     $splitPayPal = Order::factory()->create(['payment_method' => PaymentMethod::PayPal, 'total' => 2000, 'subtotal' => 2000, 'shipping_fee' => 0, 'wallet_amount' => 500]);
 
     Livewire::test(ListOrders::class)
+        ->filterTable('payment', 'paypal')
+        ->assertCanSeeTableRecords([$paypal])
+        ->assertCanNotSeeTableRecords([$wallet, $stripe, $splitStripe, $splitPayPal])
         ->filterTable('payment', 'stripe')
         ->assertCanSeeTableRecords([$stripe])
-        ->assertCanNotSeeTableRecords([$wallet, $splitStripe, $splitPayPal])
+        ->assertCanNotSeeTableRecords([$wallet, $paypal, $splitStripe, $splitPayPal])
         ->filterTable('payment', 'wallet_stripe')
         ->assertCanSeeTableRecords([$splitStripe])
         ->assertCanNotSeeTableRecords([$wallet, $stripe, $splitPayPal])
@@ -103,13 +108,17 @@ it('filters by payment combination', function () {
 it('filters by date range', function () {
     $old = Order::factory()->create(['created_at' => now()->subDays(10)]);
     $recent = Order::factory()->create(['created_at' => now()->subDays(2)]);
+    $day = now()->subDays(5);
+    $dayStart = Order::factory()->create(['created_at' => $day->copy()->startOfDay()]);
+    $dayEnd = Order::factory()->create(['created_at' => $day->copy()->endOfDay()]);
 
+    // Both ends are inclusive: orders at the very start and end of the picked day count.
     Livewire::test(ListOrders::class)
-        ->filterTable('created_at', ['from' => now()->subDays(5)->toDateString(), 'until' => null])
-        ->assertCanSeeTableRecords([$recent])
+        ->filterTable('created_at', ['from' => $day->toDateString(), 'until' => null])
+        ->assertCanSeeTableRecords([$recent, $dayStart, $dayEnd])
         ->assertCanNotSeeTableRecords([$old])
-        ->filterTable('created_at', ['from' => null, 'until' => now()->subDays(5)->toDateString()])
-        ->assertCanSeeTableRecords([$old])
+        ->filterTable('created_at', ['from' => null, 'until' => $day->toDateString()])
+        ->assertCanSeeTableRecords([$old, $dayStart, $dayEnd])
         ->assertCanNotSeeTableRecords([$recent]);
 });
 
@@ -132,9 +141,9 @@ it('does not run a query per row', function () {
 it('shows the receipt, customer and payment on the order page', function () {
     $shopper = User::factory()->create(['name' => 'Sam Shopper']);
     $order = Order::factory()->for($shopper)->create([
-        'payment_method' => PaymentMethod::Stripe, 'subtotal' => 1500, 'shipping_fee' => 500, 'total' => 2000, 'wallet_amount' => 500,
+        'payment_method' => PaymentMethod::Stripe, 'subtotal' => 1234, 'shipping_fee' => 678, 'total' => 1912, 'wallet_amount' => 412,
     ]);
-    OrderItem::factory()->for($order)->create(['product_name' => 'Saved Widget', 'unit_price' => 750, 'quantity' => 2, 'line_total' => 1500]);
+    OrderItem::factory()->for($order)->create(['product_name' => 'Saved Widget', 'unit_price' => 617, 'quantity' => 2, 'line_total' => 1234]);
     Payment::factory()->forOrder($order)->stripe()->succeeded()->create([
         'card_brand' => 'visa', 'card_last4' => '4242', 'provider_payment_id' => 'pi_abc123',
     ]);
@@ -142,10 +151,12 @@ it('shows the receipt, customer and payment on the order page', function () {
     Livewire::test(ViewOrder::class, ['record' => $order->getKey()])
         ->assertSuccessful()
         ->assertSee('Saved Widget')
-        ->assertSee('$7.50')
+        ->assertSee('$6.17')
+        ->assertSee('$12.34')
+        ->assertSee('$6.78')
+        ->assertSee('$19.12')
+        ->assertSee('$4.12')
         ->assertSee('$15.00')
-        ->assertSee('$5.00')
-        ->assertSee('$20.00')
         ->assertSee('Sam Shopper')
         ->assertSee(CustomerResource::getUrl('view', ['record' => $shopper]))
         ->assertSee('Wallet + Stripe')
@@ -170,4 +181,27 @@ it('has no create, edit or delete pages or actions', function () {
         ->and(OrderResource::canCreate())->toBeFalse()
         ->and(OrderResource::canEdit($order))->toBeFalse()
         ->and(OrderResource::canDelete($order))->toBeFalse();
+});
+
+it('hides the orders screens from shoppers', function () {
+    $order = Order::factory()->create();
+    $this->actingAs(User::factory()->create());
+
+    $this->get(OrderResource::getUrl('index'))->assertNotFound();
+    $this->get(OrderResource::getUrl('view', ['record' => $order]))->assertNotFound();
+});
+
+it('sends guests to the login page', function () {
+    $order = Order::factory()->create();
+    auth()->logout();
+
+    $this->get(OrderResource::getUrl('index'))->assertRedirect();
+    $this->get(OrderResource::getUrl('view', ['record' => $order]))->assertRedirect();
+});
+
+it('shows 0 items for an order with no items', function () {
+    $order = Order::factory()->create();
+
+    Livewire::test(ListOrders::class)
+        ->assertTableColumnStateSet('items_sum_quantity', 0, $order);
 });

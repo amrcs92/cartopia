@@ -143,7 +143,7 @@ class OrderResource extends Resource
                     ->searchable(query: fn (Builder $query, string $search) => $query->whereHas('user', fn (Builder $user) => $user
                         ->where('name', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%"))),
-                TextColumn::make('items_sum_quantity')->label('Items')->sortable(),
+                TextColumn::make('items_sum_quantity')->label('Items')->default(0)->sortable(),
                 TextColumn::make('total')
                     ->state(fn (Order $record) => $record->total->format())
                     ->sortable(),
