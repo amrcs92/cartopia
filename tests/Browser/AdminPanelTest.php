@@ -19,3 +19,23 @@ it('gives a shopper no Admin link', function () {
         ->assertSee('Account settings')
         ->assertDontSee('Admin');
 });
+
+it('lets an admin credit a customer, who then sees the reason in their wallet', function () {
+    $customer = User::factory()->create(['name' => 'Sam Shopper']);
+    $this->actingAs(User::factory()->admin()->create());
+
+    visit("/admin/customers/{$customer->id}")
+        ->click('Adjust wallet')
+        ->type('[id="mountedActionSchema0.amount"]', '5.00')
+        ->type('[id="mountedActionSchema0.reason"]', 'Late delivery')
+        ->click('Submit')
+        ->assertSee('Wallet adjusted')
+        ->click('Wallet')
+        ->assertSee('Adjustment')
+        ->assertSee('Late delivery')
+        ->assertNoJavaScriptErrors();
+
+    $this->actingAs($customer);
+
+    visit('/wallet')->assertSee('Adjustment · Late delivery');
+});
