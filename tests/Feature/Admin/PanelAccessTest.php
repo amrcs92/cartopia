@@ -30,3 +30,10 @@ it('sends an admin back to the panel after the store login', function () {
     $this->post(route('login.store'), ['email' => $admin->email, 'password' => 'password'])
         ->assertRedirect('/admin');
 });
+
+it('shows the logo and the Cartopia name in the panel brand', function () {
+    $this->actingAs(User::factory()->admin()->create())
+        ->get('/admin')
+        ->assertSee(asset('favicon.svg'), false)
+        ->assertSee('>Cartopia</span>', false);
+});

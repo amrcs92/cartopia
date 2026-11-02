@@ -27,7 +27,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->brandName('Cartopia')
-            ->brandLogo(asset('favicon.svg'))
+            ->brandLogo(fn () => view('filament.admin.brand'))
             ->brandLogoHeight('2rem')
             ->favicon(asset('favicon.svg'))
             ->colors([
