@@ -4,6 +4,7 @@ use App\Actions\Admin\CheckPaymentWithProvider;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
+use App\Enums\ProviderCheckOutcome;
 use App\Mail\OrderReceiptMail;
 use App\Mail\PaymentProblemMail;
 use App\Mail\TopUpReceiptMail;
@@ -47,7 +48,8 @@ it('places the order when the provider says an order payment is paid', function 
 
     $answer = app(CheckPaymentWithProvider::class)->handle($payment);
 
-    expect($answer)->toBe("Paid at {$name}. The order is placed.")
+    expect($answer->message)->toBe("Paid at {$name}. The order is placed.")
+        ->and($answer->outcome)->toBe(ProviderCheckOutcome::Paid)
         ->and($payment->fresh()->status)->toBe(PaymentStatus::Succeeded)
         ->and($payment->order->fresh()->status)->toBe(OrderStatus::Placed);
     Mail::assertQueued(OrderReceiptMail::class, 1);
@@ -59,7 +61,8 @@ it('credits the wallet when the provider says a top-up is paid', function (Payme
 
     $answer = app(CheckPaymentWithProvider::class)->handle($payment);
 
-    expect($answer)->toBe("Paid at {$name}. The top-up is credited.")
+    expect($answer->message)->toBe("Paid at {$name}. The top-up is credited.")
+        ->and($answer->outcome)->toBe(ProviderCheckOutcome::Paid)
         ->and($payment->fresh()->status)->toBe(PaymentStatus::Succeeded)
         ->and($payment->user->fresh()->balance->cents())->toBe(2500);
     Mail::assertQueued(TopUpReceiptMail::class, 1);
@@ -71,7 +74,8 @@ it('closes an order payment the provider no longer has', function (PaymentMethod
 
     $answer = app(CheckPaymentWithProvider::class)->handle($payment);
 
-    expect($answer)->toBe("{$name} no longer has this payment. It's closed.")
+    expect($answer->message)->toBe("{$name} no longer has this payment. It's closed.")
+        ->and($answer->outcome)->toBe(ProviderCheckOutcome::Closed)
         ->and($payment->fresh()->status)->toBe(PaymentStatus::Expired)
         ->and($payment->order->fresh()->status)->toBe(OrderStatus::Cancelled);
     Mail::assertQueued(PaymentProblemMail::class, 1);
@@ -83,7 +87,8 @@ it('closes a top-up the provider declined', function (PaymentMethod $method, str
 
     $answer = app(CheckPaymentWithProvider::class)->handle($payment);
 
-    expect($answer)->toBe("{$name} no longer has this payment. It's closed.")
+    expect($answer->message)->toBe("{$name} no longer has this payment. It's closed.")
+        ->and($answer->outcome)->toBe(ProviderCheckOutcome::Closed)
         ->and($payment->fresh()->status)->toBe(PaymentStatus::Expired)
         ->and($payment->user->fresh()->balance->cents())->toBe(0);
     Mail::assertQueued(PaymentProblemMail::class, 1);
@@ -95,7 +100,8 @@ it('changes nothing when the payment is still pending', function (PaymentMethod 
 
     $answer = app(CheckPaymentWithProvider::class)->handle($payment);
 
-    expect($answer)->toBe("Still pending at {$name}.")
+    expect($answer->message)->toBe("Still pending at {$name}.")
+        ->and($answer->outcome)->toBe(ProviderCheckOutcome::StillPending)
         ->and($payment->fresh()->status)->toBe(PaymentStatus::Pending)
         ->and($payment->fresh()->provider_payment_id)->toBeNull();
     Mail::assertNothingQueued();
@@ -112,7 +118,8 @@ it('records the capture id PayPal reports while still pending', function () {
 
     $answer = app(CheckPaymentWithProvider::class)->handle($payment);
 
-    expect($answer)->toBe('Still pending at PayPal.')
+    expect($answer->message)->toBe('Still pending at PayPal.')
+        ->and($answer->outcome)->toBe(ProviderCheckOutcome::StillPending)
         ->and($payment->fresh()->status)->toBe(PaymentStatus::Pending)
         ->and($payment->fresh()->provider_payment_id)->toBe('CAP1');
 });
@@ -123,7 +130,8 @@ it('asks the provider about a capture waiting on its webhook', function () {
 
     $answer = app(CheckPaymentWithProvider::class)->handle($payment);
 
-    expect($answer)->toBe('Paid at PayPal. The top-up is credited.')
+    expect($answer->message)->toBe('Paid at PayPal. The top-up is credited.')
+        ->and($answer->outcome)->toBe(ProviderCheckOutcome::Paid)
         ->and($this->fake->lookedUp)->toBe([$payment->id]);
 });
 
@@ -132,7 +140,8 @@ it('closes a payment that never reached the provider without asking it', functio
 
     $answer = app(CheckPaymentWithProvider::class)->handle($payment);
 
-    expect($answer)->toBe("{$name} no longer has this payment. It's closed.")
+    expect($answer->message)->toBe("{$name} no longer has this payment. It's closed.")
+        ->and($answer->outcome)->toBe(ProviderCheckOutcome::Closed)
         ->and($payment->fresh()->status)->toBe(PaymentStatus::Expired)
         ->and($this->fake->lookedUp)->toBe([]);
     Mail::assertQueued(PaymentProblemMail::class, 1);
@@ -143,7 +152,8 @@ it('does not call the provider for a settled payment', function (PaymentStatus $
 
     $answer = app(CheckPaymentWithProvider::class)->handle($payment);
 
-    expect($answer)->toBe("This payment is already {$status->value}.")
+    expect($answer->message)->toBe("This payment is already {$status->value}.")
+        ->and($answer->outcome)->toBe(ProviderCheckOutcome::AlreadySettled)
         ->and($payment->fresh()->status)->toBe($status)
         ->and($this->fake->lookedUp)->toBe([]);
     Mail::assertNothingQueued();
@@ -176,7 +186,8 @@ it('says so when the provider reports a different amount on an order payment', f
 
     $answer = app(CheckPaymentWithProvider::class)->handle($payment);
 
-    expect($answer)->toBe("{$name} reported a different amount. The payment is marked failed.")
+    expect($answer->message)->toBe("{$name} reported a different amount. The payment is marked failed.")
+        ->and($answer->outcome)->toBe(ProviderCheckOutcome::AmountMismatch)
         ->and($payment->fresh()->status)->toBe(PaymentStatus::Failed)
         ->and($payment->order->fresh()->status)->toBe(OrderStatus::Cancelled);
     Mail::assertNothingQueued();
@@ -188,7 +199,8 @@ it('says so when the provider reports a different amount on a top-up', function 
 
     $answer = app(CheckPaymentWithProvider::class)->handle($payment);
 
-    expect($answer)->toBe("{$name} reported a different amount. The payment is marked failed.")
+    expect($answer->message)->toBe("{$name} reported a different amount. The payment is marked failed.")
+        ->and($answer->outcome)->toBe(ProviderCheckOutcome::AmountMismatch)
         ->and($payment->fresh()->status)->toBe(PaymentStatus::Failed)
         ->and($payment->user->fresh()->balance->cents())->toBe(0);
     Mail::assertNothingQueued();
