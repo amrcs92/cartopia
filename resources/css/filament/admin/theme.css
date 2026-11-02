@@ -1,0 +1,244 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+@import '@fontsource/young-serif/400.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+
+/*
+  Cartopia's admin panel in the store's market-stall look (spec §10, "The
+  store's look"). The page, card, field and line colours come from the green
+  `gray` palette in AdminPanelProvider; this file adds what a palette can't:
+  the chalkboard frame, the marigold active item, Young Serif titles, and the
+  store's card border and offset shadows. Values are the store's tokens from
+  resources/css/app.css.
+
+  Rules sit outside any layer so they win over Filament's component layer
+  without `!important`.
+*/
+
+:root {
+    --cartopia-chalkboard: #22382b;
+    --cartopia-chalkboard-hover: color-mix(in oklab, #22382b, #ffffff 10%);
+    --cartopia-chalk: #f4f1e6;
+    --cartopia-cream: #fff4d6;
+    --cartopia-sage: #b3c0b6;
+    --cartopia-marigold: #f5b42e;
+    --cartopia-ink: #1a2b21;
+    --cartopia-line: #d3dcc8;
+    --cartopia-shadow-green: #1f5a3d;
+    --cartopia-shadow-ink: #1a2b21;
+    --cartopia-radius: 0.75rem;
+    --cartopia-serif: 'Young Serif', ui-serif, Georgia, serif;
+}
+
+:root.dark {
+    --cartopia-line: #344a3d;
+    --cartopia-shadow-green: #2e7a54;
+    --cartopia-shadow-ink: #2e7a54;
+}
+
+/* Dark fields: Filament tints them white/5; the store's field colour instead. */
+.dark .fi-input-wrp:not(.fi-disabled) {
+    background-color: var(--gray-800);
+}
+
+/* Dark placeholders: gray-400 (#8d9c90) is 4.8:1 on the #223029 field, where
+   Filament's gray-500 is about 3:1. Light mode keeps gray-400 on white. */
+.dark .fi-input::placeholder,
+.dark .fi-fo-textarea textarea::placeholder,
+.dark .fi-select-input-placeholder {
+    color: var(--gray-400);
+}
+
+/* ---- The chalkboard frame: top bar and sidebar read as one green L ---- */
+
+.fi-topbar,
+.fi-sidebar,
+.fi-body-has-topbar .fi-sidebar-header {
+    background-color: var(--cartopia-chalkboard);
+    color: var(--cartopia-chalk);
+    box-shadow: none;
+}
+
+/* Dropdowns that open from the top bar (user menu, search results) are white
+   or card-coloured panels, so they go back to the page's text colour. */
+.fi-topbar :is(.fi-dropdown-panel, .fi-global-search-results-ctn) {
+    color: var(--gray-950);
+}
+
+:root.dark .fi-topbar :is(.fi-dropdown-panel, .fi-global-search-results-ctn) {
+    color: #ffffff;
+}
+
+.fi-topbar .fi-logo,
+.fi-sidebar .fi-logo {
+    color: var(--cartopia-cream);
+}
+
+/* The wordmark in Young Serif, as in the store header (brand.blade.php). */
+.cartopia-brand-name {
+    font-family: var(--cartopia-serif);
+    font-weight: 400;
+    font-size: 1.375rem;
+    letter-spacing: 0;
+}
+
+.fi-topbar .fi-icon-btn,
+.fi-sidebar .fi-icon-btn {
+    color: var(--cartopia-sage);
+
+    &:hover,
+    &:focus-visible {
+        color: var(--cartopia-chalk);
+        background-color: var(--cartopia-chalkboard-hover);
+    }
+}
+
+/* Global search: a darker well on the green with chalk text. */
+.fi-topbar .fi-input-wrp {
+    background-color: rgb(0 0 0 / 0.2);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.2);
+
+    &:focus-within {
+        box-shadow: inset 0 0 0 2px var(--cartopia-marigold);
+    }
+
+    & .fi-input {
+        color: var(--cartopia-chalk);
+
+        &::placeholder {
+            color: var(--cartopia-sage);
+        }
+    }
+
+    & .fi-icon {
+        color: var(--cartopia-sage);
+    }
+}
+
+.fi-sidebar-group-label {
+    color: var(--cartopia-sage);
+}
+
+.fi-sidebar-group-btn .fi-icon,
+.fi-sidebar-group-dropdown-trigger-btn .fi-icon,
+.fi-sidebar-item-btn > .fi-icon,
+.fi-sidebar-database-notifications-btn > .fi-icon,
+.fi-sidebar .fi-user-menu-trigger .fi-icon {
+    color: var(--cartopia-sage);
+}
+
+.fi-sidebar-item-label,
+.fi-sidebar-database-notifications-btn-label,
+.fi-sidebar .fi-user-menu-trigger {
+    color: var(--cartopia-chalk);
+}
+
+.fi-sidebar-item.fi-sidebar-item-has-url > .fi-sidebar-item-btn,
+.fi-sidebar-group-dropdown-trigger-btn,
+.fi-sidebar-database-notifications-btn {
+    &:hover,
+    &:focus-visible {
+        background-color: var(--cartopia-chalkboard-hover);
+    }
+}
+
+.fi-sidebar-item-grouped-border-part {
+    background-color: var(--cartopia-sage);
+}
+
+.fi-sidebar-item-grouped-border-part-not-first,
+.fi-sidebar-item-grouped-border-part-not-last {
+    background-color: rgb(255 255 255 / 0.2);
+}
+
+.fi-sidebar-header-controls::after,
+.fi-sidebar-footer {
+    border-color: rgb(255 255 255 / 0.15);
+}
+
+/* The active item: a marigold pill with ink text and icon, as in the store. */
+.fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
+    background-color: var(--cartopia-marigold);
+
+    &:hover,
+    &:focus-visible {
+        background-color: var(--cartopia-marigold);
+    }
+
+    & > .fi-icon,
+    & > .fi-sidebar-item-label {
+        color: var(--cartopia-ink);
+    }
+
+    & > .fi-sidebar-item-grouped-border > .fi-sidebar-item-grouped-border-part {
+        background-color: var(--cartopia-ink);
+    }
+}
+
+.fi-sidebar-group.fi-active .fi-sidebar-group-dropdown-trigger-btn .fi-icon {
+    color: var(--cartopia-marigold);
+}
+
+/* ---- Titles in Young Serif; body text stays Figtree ---- */
+
+.fi-header-heading,
+.fi-section-header-heading,
+.fi-ta-header-heading,
+.fi-modal-heading,
+.fi-empty-state-heading,
+.fi-ta-empty-state-heading {
+    font-family: var(--cartopia-serif);
+    font-weight: 400;
+}
+
+/* ---- Cards: the store's line border, radius and offset green shadow ---- */
+
+/* Top-level cards only, so a card inside a card or a modal keeps Filament's
+   flat ring and the page shows one shadow per card. */
+:is(
+    .fi-section:not(.fi-section-not-contained):not(.fi-aside),
+    .fi-section.fi-aside > .fi-section-content-ctn,
+    .fi-ta-ctn,
+    .fi-wi-stats-overview-stat
+):not(
+    :is(
+            .fi-section:not(.fi-section-not-contained),
+            .fi-ta-ctn,
+            .fi-modal-window
+        )
+        *
+) {
+    border: 1px solid var(--cartopia-line);
+    border-radius: var(--cartopia-radius);
+    box-shadow: 5px 5px 0 var(--cartopia-shadow-green);
+}
+
+.fi-modal > .fi-modal-window-ctn > .fi-modal-window {
+    border: 1px solid var(--cartopia-line);
+    box-shadow: 5px 5px 0 var(--cartopia-shadow-green);
+}
+
+a.fi-wi-stats-overview-stat:focus-visible {
+    outline: 3px solid var(--cartopia-marigold);
+    outline-offset: 3px;
+}
+
+/* ---- Primary buttons: the store's press shadow and press motion ---- */
+
+.fi-btn.fi-color-primary:not(.fi-outlined) {
+    box-shadow: 3px 3px 0 var(--cartopia-shadow-ink);
+    transition-property: translate, box-shadow, background-color, color;
+    transition-duration: 200ms;
+
+    &:focus-visible {
+        outline: 3px solid var(--cartopia-marigold);
+        outline-offset: 3px;
+    }
+
+    &:not(.fi-disabled):not([disabled]):active {
+        translate: 3px 3px;
+        box-shadow: none;
+        transition-duration: 120ms;
+    }
+}

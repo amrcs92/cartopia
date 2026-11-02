@@ -262,6 +262,12 @@ The unique `refunds.order_id` and `wallet_transactions.refund_id` make a double 
   - Figtree as the font
   - light and dark, following the system, with Filament's switch
 - The store's components are not reused.
+- **The store's look** (the user chose this on 2026-11-02 after seeing the default panel). A custom Filament theme brings the shop's market-stall style into the panel:
+  - **Pages:** forest green `#111915` in dark mode instead of near-black, and sage paper `#edf2e4` in light mode. Cards are `#1a251f` in dark and white in light, with lines in the store's line colours.
+  - **Sidebar and top bar:** solid chalkboard green `#22382b` in both modes, with cream text. The active item is a marigold pill with ink text.
+  - **Titles:** page and section titles in Young Serif. Body text stays in Figtree.
+  - **Cards and buttons:** tables, sections, stats and widgets use the store's border and offset green shadow, and primary buttons get the store's press shadow.
+  - **Contrast:** text meets WCAG AA in both modes.
 
 ## 11. Security
 
