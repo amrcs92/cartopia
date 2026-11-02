@@ -307,6 +307,20 @@ it('refuses orders that are not placed', function (string $state) {
         ->and($this->fake->refunded)->toBe([]);
 })->with(['awaitingPayment', 'cancelled']);
 
+it('refuses an actor who is no longer an admin, read fresh', function () {
+    $order = refundableOrder(PaymentMethod::Stripe);
+
+    // Demoted elsewhere; this model still says admin.
+    User::query()->whereKey($this->admin->id)->update(['is_admin' => false]);
+
+    expect(fn () => app(RefundOrder::class)->handle($order, $this->admin, 'Out of stock'))
+        ->toThrow(AdminActionRefused::class, 'Only admins can refund orders.');
+
+    expect(Refund::query()->count())->toBe(0)
+        ->and($this->fake->refunded)->toBe([])
+        ->and($order->fresh()->status)->toBe(OrderStatus::Placed);
+});
+
 it('requires a reason', function (string $reason) {
     $order = refundableOrder(PaymentMethod::Wallet);
 

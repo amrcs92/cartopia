@@ -61,6 +61,11 @@ class RefundOrder
             throw new InvalidArgumentException('The reason is too long.');
         }
 
+        // Read fresh, so an admin removed since the page loaded can't refund.
+        if (! User::query()->whereKey($admin->getKey())->value('is_admin')) {
+            throw new AdminActionRefused('Only admins can refund orders.');
+        }
+
         try {
             $refund = $this->open($order, $admin, $reason);
         } catch (UniqueConstraintViolationException) {

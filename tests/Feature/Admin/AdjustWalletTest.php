@@ -88,3 +88,18 @@ it('accepts a reason of exactly 120 characters', function () {
 
     expect($transaction->description)->toHaveLength(120);
 });
+
+it('refuses an actor who is no longer an admin, read fresh', function () {
+    $admin = User::factory()->admin()->create();
+    $customer = User::factory()->withBalance(Money::fromDollars('12.00'))->create();
+    $before = WalletTransaction::count();
+
+    // Demoted elsewhere; this model still says admin.
+    User::query()->whereKey($admin->id)->update(['is_admin' => false]);
+
+    expect(fn () => app(AdjustWallet::class)->handle($customer, $admin, Money::fromDollars('5.00'), true, 'Goodwill credit'))
+        ->toThrow(AdminActionRefused::class, 'Only admins can adjust wallets.');
+
+    expect(WalletTransaction::count())->toBe($before)
+        ->and($customer->fresh()->balance->cents())->toBe(1200);
+});

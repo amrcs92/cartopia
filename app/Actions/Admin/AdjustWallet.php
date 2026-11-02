@@ -39,6 +39,11 @@ class AdjustWallet
             throw new InvalidArgumentException('Reason must be 1 to '.self::MAX_REASON_LENGTH.' characters.');
         }
 
+        // Read fresh, so an admin removed since the page loaded can't adjust.
+        if (! User::query()->whereKey($admin->getKey())->value('is_admin')) {
+            throw new AdminActionRefused('Only admins can adjust wallets.');
+        }
+
         if ($credit) {
             return $this->wallet->credit($customer, $amount, WalletTransactionType::AdminAdjustment, $reason, admin: $admin);
         }
