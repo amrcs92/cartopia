@@ -153,6 +153,15 @@ final class PaymentWording
         return $rows;
     }
 
+    /**
+     * The refund receipt's note when part of the refund went back through
+     * Stripe or PayPal.
+     */
+    public static function refundDelayNote(): string
+    {
+        return 'Card and PayPal refunds can take 5–10 business days to show.';
+    }
+
     public static function tag(Order $order): string
     {
         if ($order->isSplit()) {

@@ -34,7 +34,7 @@ We've refunded your order in full. Here's where the money went.
 
 @if ($hasProviderPart)
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="bg-slip" style="margin-top:18px;background-color:#FFF4D6;border-radius:14px;font-size:14px;">
-<tr><td class="body" style="padding:14px 20px;color:#3D4F43;line-height:1.5;">Card and PayPal refunds can take 5–10 business days to show.</td></tr>
+<tr><td class="body" style="padding:14px 20px;color:#3D4F43;line-height:1.5;">{{ \App\Payments\PaymentWording::refundDelayNote() }}</td></tr>
 </table>
 @endif
 @endsection

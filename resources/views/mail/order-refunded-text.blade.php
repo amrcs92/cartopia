@@ -17,7 +17,7 @@ Total: {!! $order->total->format() !!}
 @endforeach
 @if ($hasProviderPart)
 
-Card and PayPal refunds can take 5–10 business days to show.
+{!! \App\Payments\PaymentWording::refundDelayNote() !!}
 @endif
 
 View your order: {!! $url !!}
