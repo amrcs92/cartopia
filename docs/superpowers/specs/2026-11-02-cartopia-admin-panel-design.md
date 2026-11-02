@@ -217,7 +217,7 @@ public function refund(Payment $payment, Refund $refund): RefundOutcome;
 
 `RefundOrder::handle(Order $order, User $admin, string $reason): Refund`
 
-1. **Open the refund.** In a transaction, lock the order. Refuse unless it is `placed` ("Only placed orders can be refunded.") and has no succeeded or pending refund ("This order is already refunded."). Create the `refunds` row with status `pending`, the two amounts, the admin and the reason; or, when the order's refund `failed`, set it back to `pending`, raise its `attempt` and record the new admin and reason. Commit.
+1. **Open the refund.** In a transaction, lock the order. Refuse unless it is `placed` ("Only placed orders can be refunded.") and has no succeeded refund ("This order is already refunded."). A `pending` refund (the provider couldn't be reached last time) is resumed at step 2 with its current `attempt`. Create the `refunds` row with status `pending`, the two amounts, the admin and the reason; or, when the order's refund `failed`, set it back to `pending`, raise its `attempt` and record the new admin and reason. Commit.
 2. **Provider part.** When `provider_amount` is above 0, call `refund()` on the payment's gateway, under the payment's row lock as the other provider calls are.
    - **Refused:** mark the refund `failed` with the reason. The order stays placed. The admin sees "Stripe refused the refund: {reason}." A later retry uses the next `attempt`, because Stripe and PayPal replay a key's earlier answer, refusals included.
    - **Unavailable:** leave the refund `pending`. The admin sees "Stripe couldn't be reached. Try again in a moment." and **Retry refund** repeats the call with the same idempotency key, so the provider can't refund twice.
