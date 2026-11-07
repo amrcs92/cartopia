@@ -31,6 +31,21 @@ class StoreSettings extends Model
     }
 
     /**
+     * The credit as the store's copy says it ("$100", "$25.50"), or null
+     * when it's zero and the copy promising it is hidden.
+     */
+    public function signupCreditLabel(): ?string
+    {
+        $cents = $this->signup_credit->cents();
+
+        if ($cents === 0) {
+            return null;
+        }
+
+        return $cents % 100 === 0 ? '$'.number_format(intdiv($cents, 100)) : $this->signup_credit->format();
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array

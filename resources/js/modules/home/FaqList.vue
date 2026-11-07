@@ -1,12 +1,16 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import SectionHeading from '@/common/stall/SectionHeading.vue';
+import { useSignupCredit } from '@/modules/auth/useSignupCredit';
 
 // "Questions": four native disclosures; the first is open by default. The
-// plus chip turns into a cross when an item opens (200ms).
-const questions = [
+// plus chip turns into a cross when an item opens (200ms). The wallet answer
+// names the sign-up credit only while admins have it on.
+const credit = useSignupCredit();
+const questions = computed(() => [
     {
         question: 'How does the wallet work?',
-        answer: 'Every new account starts with $100 of credit. Your balance pays for orders at checkout, and you can top up from $5 to $500 at a time.',
+        answer: `${credit.value ? `Every new account starts with ${credit.value} of credit. ` : ''}Your balance pays for orders at checkout, and you can top up from $5 to $500 at a time.`,
     },
     {
         question: 'Can I shop without an account?',
@@ -20,7 +24,7 @@ const questions = [
         question: 'Can I see what I paid before?',
         answer: 'Yes. The Orders page keeps every order with the exact prices and delivery fee you paid at the time.',
     },
-];
+]);
 </script>
 
 <template>

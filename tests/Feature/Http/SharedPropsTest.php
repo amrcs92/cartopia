@@ -3,6 +3,7 @@
 use App\Cart\Cart;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\StoreSettings;
 use App\Models\User;
 use App\Payments\PaymentGateways;
 use App\Support\Money;
@@ -99,3 +100,16 @@ it('shares no payment methods without keys', function () {
     $this->get(route('home'))
         ->assertInertia(fn (Assert $page) => $page->where('paymentMethods', []));
 });
+
+it('shares the sign-up credit as the copy says it', function (int $cents, ?string $label) {
+    StoreSettings::current()->update(['signup_credit' => Money::fromCents($cents)]);
+
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->where('signupCredit', $label));
+})->with([
+    'the default' => [10000, '$100'],
+    'whole dollars' => [25000, '$250'],
+    'with cents' => [2550, '$25.50'],
+    'turned off' => [0, null],
+]);

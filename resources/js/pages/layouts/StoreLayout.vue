@@ -10,6 +10,7 @@ import {
 } from 'vue';
 import Breadcrumbs from '@/common/app/Breadcrumbs.vue';
 import FlashToast from '@/common/flash-toast/FlashToast.vue';
+import { useSignupCredit } from '@/modules/auth/useSignupCredit';
 import AddedToBasketPanel from '@/modules/cart/AddedToBasketPanel.vue';
 import Awning from '@/modules/layout/Awning.vue';
 import PhoneHeader from '@/modules/layout/PhoneHeader.vue';
@@ -24,6 +25,10 @@ import type { BreadcrumbItem } from '@/types';
 const { breadcrumbs = [] } = defineProps<{
     breadcrumbs?: BreadcrumbItem[];
 }>();
+
+// The sign-up credit admins set ("$100"), or null when it's off and the bar
+// only mentions pickup.
+const credit = useSignupCredit();
 
 const isPhone = useMediaQuery('(max-width: 639.98px)');
 const menuOpen = ref(false);
@@ -86,13 +91,16 @@ onUnmounted(() => {
             ref="announcement"
             class="bg-announce px-4 py-2 text-center text-[13px] font-bold text-announce-ink sm:text-sm"
         >
-            <span class="sm:hidden">
-                Free pickup. New accounts get $100 credit.
-            </span>
-            <span class="max-sm:hidden">
-                Free pickup on every order. New accounts start with $100 of
-                credit.
-            </span>
+            <template v-if="credit">
+                <span class="sm:hidden">
+                    Free pickup. New accounts get {{ credit }} credit.
+                </span>
+                <span class="max-sm:hidden">
+                    Free pickup on every order. New accounts start with
+                    {{ credit }} of credit.
+                </span>
+            </template>
+            <template v-else>Free pickup on every order.</template>
         </p>
 
         <div
