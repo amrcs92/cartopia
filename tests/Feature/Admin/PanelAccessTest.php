@@ -1,8 +1,10 @@
 <?php
 
+use App\Filament\Pages\EditStoreSettings;
 use App\Filament\Resources\Customers\CustomerResource;
 use App\Filament\Resources\Customers\Pages\ViewCustomer;
 use App\Http\Middleware\AuthenticateAdmin;
+use App\Models\StoreSettings;
 use App\Models\User;
 use Livewire\Livewire;
 use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
@@ -95,6 +97,35 @@ it('re-checks admin access on Livewire requests, so a removed admin can no longe
     $admin->forceFill(['is_admin' => false])->save();
 
     $openAdjustWallet()->assertNotFound();
+});
+
+it('refuses a Store settings save from an open tab once admin access is removed', function () {
+    $admin = User::factory()->admin()->create();
+    $this->actingAs($admin);
+
+    $html = $this->get(EditStoreSettings::getUrl())->assertOk()->getContent();
+    $snapshot = panelPageSnapshot($html, EditStoreSettings::class);
+
+    // A click on Save with a new amount, as the browser sends it.
+    $save = function (string $amount) use ($snapshot) {
+        Livewire::flushState();
+
+        return $this->withHeader('X-Livewire', 'true')->postJson(Livewire::getUpdateUri(), [
+            'components' => [[
+                'snapshot' => json_encode($snapshot),
+                'updates' => ['data.signup_credit' => $amount],
+                'calls' => [['method' => 'save', 'params' => [], 'path' => '']],
+            ]],
+        ]);
+    };
+
+    $save('1')->assertOk();
+    expect(StoreSettings::current()->signup_credit->cents())->toBe(100);
+
+    $admin->forceFill(['is_admin' => false])->save();
+
+    $save('2')->assertNotFound();
+    expect(StoreSettings::current()->signup_credit->cents())->toBe(100);
 });
 
 it('lists the admin check among Livewire\'s persistent middleware', function () {
