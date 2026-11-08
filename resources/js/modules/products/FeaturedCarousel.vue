@@ -6,7 +6,8 @@ import FeaturedCard from '@/modules/products/FeaturedCard.vue';
 import type { Product } from '@/types';
 
 // "Featured products": a cream panel under a hanging wooden sign. It shows
-// 3 cards on desktop and 2 on tablets; the arrows and dots glide the row one
+// 4 cards on wide screens (1200px up), 3 on smaller desktops and 2 on
+// tablets, like the shop grid beside it; the arrows and dots glide the row one
 // card at a time (500ms, ease-stall) and wrap at the ends. Cards out of view
 // are hidden from the keyboard and screen readers, and a live region announces
 // the position. When every product fits, the controls are left out and the
@@ -20,8 +21,11 @@ const GAP = 24;
 
 const isPhone = useMediaQuery('(max-width: 639.98px)');
 const isDesktop = useMediaQuery('(min-width: 980px)');
+const isWide = useMediaQuery('(min-width: 1200px)');
 
-const perView = computed(() => (isPhone.value ? 1 : isDesktop.value ? 3 : 2));
+const perView = computed(() =>
+    isPhone.value ? 1 : isWide.value ? 4 : isDesktop.value ? 3 : 2,
+);
 const total = computed(() => props.products.length);
 const positions = computed(() => Math.max(1, total.value - perView.value + 1));
 const slides = computed(() => !isPhone.value && total.value > perView.value);

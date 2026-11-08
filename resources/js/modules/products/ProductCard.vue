@@ -13,7 +13,8 @@ import type { Product } from '@/types';
 // A product on the counter: the photo on `well` with its price tag, the name,
 // the rating line and, on desktop, the joined quantity-and-basket bar. Below
 // 640px (the store's phone breakpoint) the card is narrower and shows the
-// full-width "Add" button instead.
+// full-width "Add" button instead. From 640px, a card under 256px wide (four
+// to a row in the shop) tightens its photo, padding and title to fit.
 const props = defineProps<{
     product: Product;
 }>();
@@ -28,20 +29,20 @@ function add(): void {
 
 <template>
     <article
-        class="flex flex-col overflow-hidden rounded-[26px] border-[1.5px] border-line bg-surface"
+        class="@container flex flex-col overflow-hidden rounded-[26px] border-[1.5px] border-line bg-surface"
     >
         <Link
             :href="show(props.product)"
             tabindex="-1"
             aria-hidden="true"
-            class="relative flex h-[130px] items-center justify-center bg-well p-3 sm:h-[270px] sm:p-5"
+            class="relative flex h-[130px] items-center justify-center bg-well p-3 sm:h-[270px] sm:p-5 sm:@max-3xs:h-[200px] sm:@max-3xs:p-4"
         >
             <img
                 v-if="props.product.image_url"
                 :src="props.product.image_url"
                 alt=""
                 loading="lazy"
-                class="max-h-[106px] max-w-full object-contain mix-blend-multiply sm:max-h-[228px]"
+                class="max-h-[106px] max-w-full object-contain mix-blend-multiply sm:max-h-[228px] sm:@max-3xs:max-h-[150px]"
             />
             <Icon
                 v-else
@@ -54,9 +55,11 @@ function add(): void {
             </span>
         </Link>
 
-        <div class="flex flex-1 flex-col gap-2 p-3 sm:gap-3 sm:p-5">
+        <div
+            class="flex flex-1 flex-col gap-2 p-3 sm:gap-3 sm:p-5 sm:@max-3xs:gap-2 sm:@max-3xs:p-4"
+        >
             <h3
-                class="font-serif text-[19px] leading-[1.2] font-normal wrap-anywhere text-ink sm:text-[25px]"
+                class="font-serif text-[19px] leading-[1.2] font-normal wrap-anywhere text-ink sm:text-[25px] sm:@max-3xs:text-[20px]"
             >
                 <Link
                     :href="show(props.product)"

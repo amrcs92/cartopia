@@ -148,7 +148,7 @@ function isOnlyAisle(slug: string): boolean {
             >
                 <template v-if="props.products.data.length > 0">
                     <ul
-                        class="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(250px,1fr))] sm:gap-6"
+                        class="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(190px,1fr))] sm:gap-6"
                     >
                         <li
                             v-for="product in props.products.data"

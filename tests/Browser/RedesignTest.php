@@ -90,11 +90,11 @@ it('logs out from the account menu in the desktop header', function () {
 });
 
 it('slides the featured carousel when Next is pressed', function () {
-    Product::factory()->count(5)->featured()->create();
+    Product::factory()->count(6)->featured()->create();
 
-    visit('/')->assertScript('document.querySelector("[aria-roledescription=carousel] [aria-live]").textContent.includes("1 to 3")', true)
+    visit('/')->assertScript('document.querySelector("[aria-roledescription=carousel] [aria-live]").textContent.includes("1 to 4")', true)
         ->click('[aria-label="Next featured products"]')
-        ->assertScript('document.querySelector("[aria-roledescription=carousel] [aria-live]").textContent.includes("2 to 4")', true);
+        ->assertScript('document.querySelector("[aria-roledescription=carousel] [aria-live]").textContent.includes("2 to 5")', true);
 });
 
 // The arrows have no visible text, so "don't see" is checked on the DOM; the
@@ -122,30 +122,30 @@ const CAROUSEL_LIVE = 'document.querySelector("[aria-roledescription=carousel] [
 const CAROUSEL_SLIDES = '[...document.querySelectorAll("[aria-roledescription=slide]")].map(s => (s.inert ? "i" : "-") + (s.getAttribute("aria-hidden") === "true" ? "h" : "-")).join("")';
 
 it('wraps the featured carousel to the last position when Previous is pressed', function () {
-    Product::factory()->count(5)->featured()->create();
+    Product::factory()->count(6)->featured()->create();
 
-    visit('/')->assertScript(CAROUSEL_LIVE.'.includes("1 to 3")', true)
+    visit('/')->assertScript(CAROUSEL_LIVE.'.includes("1 to 4")', true)
         ->click('[aria-label="Previous featured products"]')
-        ->assertScript(CAROUSEL_LIVE.'.includes("3 to 5")', true)
+        ->assertScript(CAROUSEL_LIVE.'.includes("3 to 6")', true)
         ->click('[aria-label="Next featured products"]')
-        ->assertScript(CAROUSEL_LIVE.'.includes("1 to 3")', true);
+        ->assertScript(CAROUSEL_LIVE.'.includes("1 to 4")', true);
 });
 
 it('moves the featured carousel to the position of a pressed dot', function () {
-    Product::factory()->count(5)->featured()->create();
+    Product::factory()->count(6)->featured()->create();
 
-    visit('/')->click('[aria-label="Show products 3 to 5"]')
-        ->assertScript(CAROUSEL_LIVE.'.includes("3 to 5")', true)
-        ->assertScript('document.querySelector("[aria-label=\'Show products 3 to 5\']").getAttribute("aria-current")', 'true')
-        ->assertScript('document.querySelector("[aria-label=\'Show products 1 to 3\']").hasAttribute("aria-current")', false);
+    visit('/')->click('[aria-label="Show products 3 to 6"]')
+        ->assertScript(CAROUSEL_LIVE.'.includes("3 to 6")', true)
+        ->assertScript('document.querySelector("[aria-label=\'Show products 3 to 6\']").getAttribute("aria-current")', 'true')
+        ->assertScript('document.querySelector("[aria-label=\'Show products 1 to 4\']").hasAttribute("aria-current")', false);
 });
 
 it('keeps out-of-view featured slides away from the keyboard and screen readers', function () {
-    Product::factory()->count(5)->featured()->create();
+    Product::factory()->count(6)->featured()->create();
 
-    visit('/')->assertScript(CAROUSEL_SLIDES, '------ihih')
+    visit('/')->assertScript(CAROUSEL_SLIDES, '--------ihih')
         ->click('[aria-label="Next featured products"]')
-        ->assertScript(CAROUSEL_SLIDES, 'ih------ih');
+        ->assertScript(CAROUSEL_SLIDES, 'ih--------ih');
 });
 
 it('labels shipping methods as pickup or delivery by name, not by fee', function () {
@@ -163,6 +163,15 @@ it('keeps the delivery copy neutral when there are no shipping methods', functio
     visit('/')->assertSee('Choose how to get it at checkout.')
         ->assertSee('Delivery options are shown at checkout.')
         ->assertPresent('#delivery');
+});
+
+// Four cards to a row at 1280px, each card's quantity-and-basket bar inside it.
+it('shows the shop four to a row with every basket bar inside its card', function () {
+    Product::factory()->count(5)->create();
+
+    visit('/products')->resize(1280, 900)
+        ->assertScript('getComputedStyle(document.querySelector("ul:has(> li > article)")).gridTemplateColumns.split(" ").length', 4)
+        ->assertScript('[...document.querySelectorAll("ul > li > article")].every(c => { const bar = c.querySelector("[role=group]"); return bar && bar.getBoundingClientRect().right <= c.getBoundingClientRect().right; })', true);
 });
 
 it('narrows the grid when an aisle is ticked', function () {
