@@ -84,11 +84,11 @@ class User extends Authenticatable implements FilamentUser, PasskeyUser
     }
 
     /**
-     * @return HasMany<Rating, $this>
+     * @return HasMany<Review, $this>
      */
-    public function ratings(): HasMany
+    public function reviews(): HasMany
     {
-        return $this->hasMany(Rating::class);
+        return $this->hasMany(Review::class);
     }
 
     /**

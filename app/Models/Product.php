@@ -37,7 +37,8 @@ class Product extends Model
 
     public const array SORTS = ['newest', 'price_asc', 'price_desc', 'rating'];
 
-    private const string AVG_STARS_SQL = '(select avg(stars) from ratings where ratings.product_id = products.id)';
+    // Hidden reviews don't count anywhere in the shop.
+    private const string AVG_STARS_SQL = '(select avg(stars) from reviews where reviews.product_id = products.id and reviews.hidden_at is null)';
 
     /**
      * @return array<string, string>
@@ -77,11 +78,11 @@ class Product extends Model
     }
 
     /**
-     * @return HasMany<Rating, $this>
+     * @return HasMany<Review, $this>
      */
-    public function ratings(): HasMany
+    public function reviews(): HasMany
     {
-        return $this->hasMany(Rating::class);
+        return $this->hasMany(Review::class);
     }
 
     /**
@@ -158,7 +159,10 @@ class Product extends Model
     #[Scope]
     protected function withRatingStats(Builder $query): void
     {
-        $query->withAvg('ratings', 'stars')->withCount('ratings');
+        $visible = fn (Builder $q) => $q->whereNull('hidden_at');
+
+        $query->withAvg(['reviews as ratings_avg_stars' => $visible], 'stars')
+            ->withCount(['reviews as ratings_count' => $visible]);
     }
 
     /**
@@ -199,6 +203,6 @@ class Product extends Model
     #[Scope]
     protected function rated(Builder $query): void
     {
-        $query->whereHas('ratings');
+        $query->whereHas('reviews', fn (Builder $q) => $q->whereNull('hidden_at'));
     }
 }

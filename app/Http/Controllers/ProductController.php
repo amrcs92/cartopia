@@ -48,9 +48,11 @@ class ProductController extends Controller
     {
         abort_unless($product->is_visible, 404);
 
+        $visible = fn ($query) => $query->whereNull('hidden_at');
+
         $product->load(['images', 'primaryImage', 'category'])
-            ->loadAvg('ratings', 'stars')
-            ->loadCount('ratings');
+            ->loadAvg(['reviews as ratings_avg_stars' => $visible], 'stars')
+            ->loadCount(['reviews as ratings_count' => $visible]);
 
         return Inertia::render('products/ProductShowPage', [
             'product' => (new ProductDetailResource($product))->resolve(),

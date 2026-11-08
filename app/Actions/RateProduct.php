@@ -3,7 +3,7 @@
 namespace App\Actions;
 
 use App\Models\Product;
-use App\Models\Rating;
+use App\Models\Review;
 use App\Models\User;
 
 /**
@@ -11,9 +11,9 @@ use App\Models\User;
  */
 class RateProduct
 {
-    public function handle(User $user, Product $product, int $stars): Rating
+    public function handle(User $user, Product $product, int $stars): Review
     {
-        return Rating::updateOrCreate(
+        return Review::updateOrCreate(
             ['user_id' => $user->id, 'product_id' => $product->id],
             ['stars' => $stars],
         );

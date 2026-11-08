@@ -2,7 +2,7 @@
 
 use App\Actions\RateProduct;
 use App\Models\Product;
-use App\Models\Rating;
+use App\Models\Review;
 use App\Models\User;
 
 it('creates then updates a single rating', function () {
@@ -12,6 +12,6 @@ it('creates then updates a single rating', function () {
     app(RateProduct::class)->handle($user, $product, 3);
     app(RateProduct::class)->handle($user, $product, 5);
 
-    expect(Rating::count())->toBe(1)
-        ->and(Rating::first()->stars)->toBe(5);
+    expect(Review::count())->toBe(1)
+        ->and(Review::first()->stars)->toBe(5);
 });

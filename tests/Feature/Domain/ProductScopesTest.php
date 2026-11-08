@@ -2,7 +2,7 @@
 
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\Rating;
+use App\Models\Review;
 
 it('searches name and description case-insensitively', function () {
     $apple = Product::factory()->create(['name' => 'Apple', 'description' => 'Crunchy fruit']);
@@ -39,10 +39,10 @@ it('filters by minimum average rating and excludes unrated', function () {
     $good = Product::factory()->create();
     $mid = Product::factory()->create();
     Product::factory()->create();
-    Rating::factory()->for($good)->create(['stars' => 5]);
-    Rating::factory()->for($good)->create(['stars' => 4]);
-    Rating::factory()->for($mid)->create(['stars' => 3]);
-    Rating::factory()->for($mid)->create(['stars' => 4]);
+    Review::factory()->for($good)->create(['stars' => 5]);
+    Review::factory()->for($good)->create(['stars' => 4]);
+    Review::factory()->for($mid)->create(['stars' => 3]);
+    Review::factory()->for($mid)->create(['stars' => 4]);
 
     expect(Product::query()->minRating(4)->pluck('id')->all())->toBe([$good->id])
         ->and(Product::query()->minRating(null)->count())->toBe(3);
@@ -52,8 +52,8 @@ it('sorts by each option and defaults to newest', function (string $sort, array 
     $a = Product::factory()->create(['price' => 300]);
     $b = Product::factory()->create(['price' => 100]);
     $c = Product::factory()->create(['price' => 200]);
-    Rating::factory()->for($a)->create(['stars' => 2]);
-    Rating::factory()->for($b)->create(['stars' => 5]);
+    Review::factory()->for($a)->create(['stars' => 2]);
+    Review::factory()->for($b)->create(['stars' => 5]);
 
     $ids = ['a' => $a->id, 'b' => $b->id, 'c' => $c->id];
     $expectedIds = array_map(fn ($k) => $ids[$k], $expected);
@@ -73,8 +73,8 @@ it('keeps SORTS in sync with the sort options', function () {
 
 it('exposes rating stats', function () {
     $product = Product::factory()->create();
-    Rating::factory()->for($product)->create(['stars' => 5]);
-    Rating::factory()->for($product)->create(['stars' => 4]);
+    Review::factory()->for($product)->create(['stars' => 5]);
+    Review::factory()->for($product)->create(['stars' => 4]);
 
     $found = Product::query()->withRatingStats()->findOrFail($product->id);
 
@@ -107,8 +107,27 @@ it('filters by aisle slugs and ignores null or empty', function () {
 it('keeps only products with at least one rating', function () {
     $rated = Product::factory()->create();
     Product::factory()->create();
-    Rating::factory()->for($rated)->create(['stars' => 3]);
-    Rating::factory()->for($rated)->create(['stars' => 4]);
+    Review::factory()->for($rated)->create(['stars' => 3]);
+    Review::factory()->for($rated)->create(['stars' => 4]);
 
     expect(Product::query()->rated()->pluck('id')->all())->toBe([$rated->id]);
+});
+
+it('leaves hidden reviews out of the stats, filters and sort', function () {
+    $a = Product::factory()->create(['name' => 'a']);
+    $b = Product::factory()->create(['name' => 'b']);
+    Review::factory()->for($a)->create(['stars' => 5]);
+    Review::factory()->for($a)->hidden()->create(['stars' => 1]);
+    Review::factory()->for($b)->create(['stars' => 4]);
+    Review::factory()->for($b)->hidden()->create(['stars' => 5]);
+    $onlyHidden = Product::factory()->create(['name' => 'c']);
+    Review::factory()->for($onlyHidden)->hidden()->create(['stars' => 5]);
+
+    $found = Product::query()->withRatingStats()->findOrFail($a->id);
+
+    expect((float) $found->ratings_avg_stars)->toBe(5.0)
+        ->and($found->ratings_count)->toBe(1)
+        ->and(Product::query()->rated()->orderBy('id')->pluck('id')->all())->toBe([$a->id, $b->id])
+        ->and(Product::query()->minRating(5)->pluck('id')->all())->toBe([$a->id])
+        ->and(Product::query()->rated()->sortBy('rating')->pluck('name')->all())->toBe(['a', 'b']);
 });

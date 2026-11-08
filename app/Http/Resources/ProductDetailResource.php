@@ -33,7 +33,7 @@ class ProductDetailResource extends ProductResource
                 ->all(),
             'my_rating' => $user === null
                 ? null
-                : $this->ratings()->whereBelongsTo($user)->value('stars'),
+                : $this->reviews()->whereBelongsTo($user)->value('stars'),
         ];
     }
 }

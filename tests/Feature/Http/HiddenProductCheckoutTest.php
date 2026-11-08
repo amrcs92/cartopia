@@ -151,5 +151,5 @@ it('404s a rating for a hidden product', function () {
         ->put(route('products.rating.update', $product), ['stars' => 5])
         ->assertNotFound();
 
-    expect($product->ratings()->count())->toBe(0);
+    expect($product->reviews()->count())->toBe(0);
 });
