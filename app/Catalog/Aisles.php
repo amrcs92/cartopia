@@ -17,8 +17,8 @@ class Aisles
     public static function forHome(): Collection
     {
         return Category::query()
-            ->has('products')
-            ->withCount('products')
+            ->has('products', '>=', 1, 'and', fn ($query) => $query->visible())
+            ->withCount(['products' => fn ($query) => $query->visible()])
             ->with('latestProductWithImage.primaryImage')
             ->orderByDesc('products_count')
             ->orderBy('name')
@@ -34,8 +34,8 @@ class Aisles
     public static function all(): Collection
     {
         return Category::query()
-            ->has('products')
-            ->withCount('products')
+            ->has('products', '>=', 1, 'and', fn ($query) => $query->visible())
+            ->withCount(['products' => fn ($query) => $query->visible()])
             ->with('latestProductWithImage.primaryImage')
             ->orderBy('name')
             ->get();

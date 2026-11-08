@@ -19,6 +19,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int|null $category_id
  * @property bool $is_featured
+ * @property bool $is_visible Whether the shop shows the product; hidden ones stay in the admin and in baskets already holding them
  * @property string $name
  * @property string|null $short_name A shorter name for tight spots, such as the home page's price board
  * @property string $slug
@@ -28,7 +29,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['category_id', 'is_featured', 'name', 'short_name', 'slug', 'description', 'price', 'sku'])]
+#[Fillable(['category_id', 'is_featured', 'is_visible', 'name', 'short_name', 'slug', 'description', 'price', 'sku'])]
 class Product extends Model
 {
     /** @use HasFactory<ProductFactory> */
@@ -43,7 +44,7 @@ class Product extends Model
      */
     protected function casts(): array
     {
-        return ['price' => MoneyCast::class, 'is_featured' => 'bool'];
+        return ['price' => MoneyCast::class, 'is_featured' => 'bool', 'is_visible' => 'bool'];
     }
 
     public function getRouteKeyName(): string
@@ -158,6 +159,15 @@ class Product extends Model
     protected function withRatingStats(Builder $query): void
     {
         $query->withAvg('ratings', 'stars')->withCount('ratings');
+    }
+
+    /**
+     * @param  Builder<Product>  $query
+     */
+    #[Scope]
+    protected function visible(Builder $query): void
+    {
+        $query->where('products.is_visible', true);
     }
 
     /**

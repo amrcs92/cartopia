@@ -24,7 +24,7 @@ class MergeGuestCart
         }
 
         $cart = Cart::forUser($event->user);
-        $products = Product::query()->whereKey(array_keys($lines))->get()->keyBy('id');
+        $products = Product::query()->visible()->whereKey(array_keys($lines))->get()->keyBy('id');
 
         foreach ($lines as $productId => $quantity) {
             $product = $products->get($productId);

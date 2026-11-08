@@ -15,6 +15,7 @@ class FeaturedProducts
     public static function take(int $limit = 8, ?int $exceptId = null): Collection
     {
         return Product::query()
+            ->visible()
             ->featured()
             ->when($exceptId !== null, fn ($query) => $query->whereKeyNot($exceptId))
             ->with(['primaryImage', 'category'])

@@ -75,6 +75,12 @@ class Cart
                 continue;
             }
 
+            if (! $product->is_visible) {
+                $lines[] = new CartLine($product, $quantity, $product->price, Money::zero(), available: false);
+
+                continue;
+            }
+
             $lineTotal = $product->price->multiply($quantity);
             $lines[] = new CartLine($product, $quantity, $product->price, $lineTotal);
             $subtotal = $subtotal->add($lineTotal);

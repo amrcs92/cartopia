@@ -49,7 +49,7 @@ class Category extends Model
     public function latestProductWithImage(): HasOne
     {
         return $this->hasOne(Product::class)
-            ->ofMany(['id' => 'max'], fn (Builder $query) => $query->whereHas('primaryImage'));
+            ->ofMany(['id' => 'max'], fn (Builder $query) => $query->where('is_visible', true)->whereHas('primaryImage'));
     }
 
     /**

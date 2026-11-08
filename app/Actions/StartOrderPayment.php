@@ -10,6 +10,7 @@ use App\Enums\PaymentPurpose;
 use App\Enums\PaymentStatus;
 use App\Enums\WalletTransactionType;
 use App\Exceptions\EmptyCart;
+use App\Exceptions\UnavailableProduct;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
@@ -46,6 +47,7 @@ class StartOrderPayment
 
     /**
      * @throws EmptyCart
+     * @throws UnavailableProduct
      * @throws AmountTooSmall
      * @throws PaymentProviderUnavailable
      * @throws PaymentProviderRejected
