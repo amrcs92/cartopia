@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\RedirectToHttps;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -18,6 +19,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Before anything else, an http page goes to https when APP_URL is https.
+        $middleware->prepend(RedirectToHttps::class);
+
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
         // Provider webhooks are authenticated by their signatures, not a CSRF token.
