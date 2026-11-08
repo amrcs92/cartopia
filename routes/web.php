@@ -11,12 +11,17 @@ use App\Http\Controllers\PaymentReturnController;
 use App\Http\Controllers\PayPalWebhookController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RatingController;
+use App\Http\Controllers\SearchSuggestionController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\TopUpController;
 use App\Http\Controllers\WalletController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
+
+Route::get('search/suggestions', SearchSuggestionController::class)
+    ->middleware('throttle:60,1')
+    ->name('search.suggestions');
 
 Route::get('products', [ProductController::class, 'index'])->name('products.index');
 Route::get('products/{product}', [ProductController::class, 'show'])->name('products.show');
