@@ -6,7 +6,7 @@ it('shows the log in form beside the Why sign up chalkboard', function () {
     visit('/login')
         ->assertSee('Log in to your account')
         ->assertSee('Why sign up?')
-        ->assertSee('$100 of credit when you create an account')
+        ->assertSee('$20 of credit when you create an account')
         ->assertSee('Shop as a guest; your basket comes with you when you log in')
         ->assertSee('Every order kept with the exact prices you paid')
         ->assertNoJavaScriptErrors();

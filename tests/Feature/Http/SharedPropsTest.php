@@ -108,7 +108,7 @@ it('shares the sign-up credit as the copy says it', function (int $cents, ?strin
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page->where('signupCredit', $label));
 })->with([
-    'the default' => [10000, '$100'],
+    'the default' => [2000, '$20'],
     'whole dollars' => [25000, '$250'],
     'with cents' => [2550, '$25.50'],
     'turned off' => [0, null],

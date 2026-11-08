@@ -19,7 +19,7 @@ use Illuminate\Support\Carbon;
 #[Fillable(['signup_credit'])]
 class StoreSettings extends Model
 {
-    public const int DEFAULT_SIGNUP_CREDIT_CENTS = 10000;
+    public const int DEFAULT_SIGNUP_CREDIT_CENTS = 2000;
 
     public const int MAX_SIGNUP_CREDIT_CENTS = 50000;
 

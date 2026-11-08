@@ -50,7 +50,7 @@ it('seeds the legacy catalog, shipping, demo and admin users', function () {
     $demo = User::query()->where('email', 'amrcs1992@gmail.com')->firstOrFail();
     expect($demo->name)->toBe('amrcs92')
         ->and(Hash::check('12345', $demo->password))->toBeTrue()
-        ->and($demo->balance->cents())->toBe(10000)
+        ->and($demo->balance->cents())->toBe(2000)
         ->and($demo->walletTransactions()->where('type', 'signup_bonus')->count())->toBe(1);
 
     $admin = User::query()->where('email', 'admin@cartopia.test')->firstOrFail();

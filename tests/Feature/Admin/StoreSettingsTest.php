@@ -11,7 +11,7 @@ it('shows the current sign-up credit to an admin', function () {
     $this->get('/admin/store-settings')->assertOk()->assertSee('Sign-up credit');
 
     Livewire::test(EditStoreSettings::class)
-        ->assertSchemaStateSet(['signup_credit' => '100.00']);
+        ->assertSchemaStateSet(['signup_credit' => '20.00']);
 });
 
 it('saves a new sign-up credit', function () {
@@ -45,7 +45,7 @@ it('refuses amounts outside $0 to $500 or with more than two decimals', function
         ->call('save')
         ->assertHasFormErrors(['signup_credit']);
 
-    expect(StoreSettings::current()->signup_credit->cents())->toBe(10000);
+    expect(StoreSettings::current()->signup_credit->cents())->toBe(2000);
 })->with(['-1', '500.01', '12.345', 'abc', '']);
 
 it('shows a shopper the not-found page', function () {

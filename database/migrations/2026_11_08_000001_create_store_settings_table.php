@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\StoreSettings;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -15,9 +16,9 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // The one row, with the $100 the store has always given.
+        // The one row, starting at the default credit ($20).
         DB::table('store_settings')->insert([
-            'signup_credit' => 10000,
+            'signup_credit' => StoreSettings::DEFAULT_SIGNUP_CREDIT_CENTS,
             'created_at' => now(),
             'updated_at' => now(),
         ]);

@@ -36,7 +36,7 @@ It started in 2018 as a plain-PHP project and was rebuilt in 2026 as a Laravel s
 - Checkout paid from the wallet balance, priced entirely on the server
 - Order history with price and name snapshots
 - Wallet top-ups ($5-$500) with an append-only transaction ledger
-- $100 signup bonus for new accounts
+- A $20 sign-up credit for new accounts, which admins can change under Store settings
 - Light and dark themes, with a toggle in the header
 - A friendly not-found page that points back to the home page and the shop
 - A Filament admin panel at `/admin` for products, aisles, orders, payments, customers and refunds

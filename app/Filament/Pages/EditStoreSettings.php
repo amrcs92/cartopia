@@ -46,7 +46,7 @@ class EditStoreSettings extends Page
             ->components([
                 TextInput::make('signup_credit')
                     ->label('Sign-up credit (dollars)')
-                    ->placeholder('100.00')
+                    ->placeholder('20.00')
                     ->prefix('$')
                     ->required()
                     ->numeric()
