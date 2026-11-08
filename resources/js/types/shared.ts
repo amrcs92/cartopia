@@ -26,6 +26,8 @@ export type SharedProps = {
     };
     /** The hosted payment methods with credentials configured. */
     paymentMethods: ('stripe' | 'paypal')[];
+    /** The sign-up credit as the copy says it ("$100"), or null when it's off. */
+    signupCredit: string | null;
     sidebarOpen: boolean;
     /** Sent only on request (a partial reload), for the phone menu and footer. */
     menuAisles?: Aisle[];

@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import Icon from '@/common/icon/Icon.vue';
 import Chalkboard from '@/common/stall/Chalkboard.vue';
 import SectionHeading from '@/common/stall/SectionHeading.vue';
 import StallButton from '@/common/stall/StallButton.vue';
 import { useCurrentUser } from '@/modules/auth/useCurrentUser';
+import { useSignupCredit } from '@/modules/auth/useSignupCredit';
 import DeliveryOptions from '@/modules/home/DeliveryOptions.vue';
 import FaqList from '@/modules/home/FaqList.vue';
 import HowItWorks from '@/modules/home/HowItWorks.vue';
@@ -32,11 +34,17 @@ function tintFor(index: number): 1 | 2 | 3 {
     return ((index % 3) + 1) as 1 | 2 | 3;
 }
 
-const walletPoints = [
-    '$100 of credit when you create an account',
+// The sign-up credit admins set ("$100"). The copy promising it goes when
+// it's turned off.
+const credit = useSignupCredit();
+
+const walletPoints = computed(() => [
+    ...(credit.value
+        ? [`${credit.value} of credit when you create an account`]
+        : []),
     'Shop as a guest; your basket comes with you when you log in',
     'Every order kept with the exact prices you paid',
-];
+]);
 </script>
 
 <template>
@@ -68,11 +76,11 @@ const walletPoints = [
                         Browse the shop
                     </StallButton>
                     <Link
-                        v-if="!user"
+                        v-if="!user && credit"
                         :href="register()"
                         class="inline-flex min-h-11 items-center rounded-lg font-bold text-link underline underline-offset-4 hover:no-underline"
                     >
-                        Sign up and get $100 credit
+                        Sign up and get {{ credit }} credit
                     </Link>
                 </div>
             </div>
@@ -137,9 +145,9 @@ const walletPoints = [
                     class="mt-5 border-t-2 border-dashed border-chalk/40 pt-3 text-[24px] lg:text-[26px]"
                 >
                     {{
-                        user
-                            ? 'Fresh picks, every day.'
-                            : 'New here? Your first $100 is on us.'
+                        !user && credit
+                            ? `New here? Your first ${credit} is on us.`
+                            : 'Fresh picks, every day.'
                     }}
                 </p>
             </Chalkboard>

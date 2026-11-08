@@ -1,13 +1,19 @@
 <script setup lang="ts">
 import Icon from '@/common/icon/Icon.vue';
+import { computed } from 'vue';
 import Chalkboard from '@/common/stall/Chalkboard.vue';
+import { useSignupCredit } from '@/modules/auth/useSignupCredit';
 
-// The "Why sign up?" chalkboard beside every account form.
-const reasons = [
-    '$100 of credit when you create an account',
+// The "Why sign up?" chalkboard beside every account form. The credit line
+// goes when admins turn the sign-up credit off.
+const credit = useSignupCredit();
+const reasons = computed(() => [
+    ...(credit.value
+        ? [`${credit.value} of credit when you create an account`]
+        : []),
     'Shop as a guest; your basket comes with you when you log in',
     'Every order kept with the exact prices you paid',
-];
+]);
 </script>
 
 <template>

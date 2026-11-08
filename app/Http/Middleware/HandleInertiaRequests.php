@@ -6,6 +6,7 @@ use App\Cart\Cart;
 use App\Catalog\Aisles;
 use App\Enums\PaymentMethod;
 use App\Http\Resources\AisleResource;
+use App\Models\StoreSettings;
 use App\Models\User;
 use App\Payments\PaymentGateways;
 use Closure;
@@ -65,6 +66,8 @@ class HandleInertiaRequests extends Middleware
                 fn (PaymentMethod $method): string => $method->value,
                 app(PaymentGateways::class)->available(),
             ),
+            // "$100", or null when admins turned the sign-up credit off.
+            'signupCredit' => fn (): ?string => StoreSettings::current()->signupCreditLabel(),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             // Only sent when the phone menu or the footer asks for it; once
             // loaded, the client keeps it across visits instead of refetching.

@@ -1,7 +1,9 @@
 <?php
 
 use App\Enums\WalletTransactionType;
+use App\Models\StoreSettings;
 use App\Models\User;
+use App\Support\Money;
 
 function registrationPayload(array $extra = []): array
 {
@@ -28,6 +30,37 @@ it('grants exactly one signup bonus', function () {
         ->and($user->phone)->toBe('01000000000')
         ->and($user->address)->toBe('Alexandria')
         ->and($user->is_admin)->toBeFalse();
+});
+
+it('grants the sign-up credit set in the panel', function () {
+    StoreSettings::current()->update(['signup_credit' => Money::fromCents(2550)]);
+
+    $this->post(route('register.store'), registrationPayload())->assertSessionHasNoErrors();
+
+    $user = User::where('email', 'amr@example.com')->firstOrFail();
+
+    expect($user->balance->format())->toBe('$25.50')
+        ->and($user->walletTransactions()->sole()->amount->cents())->toBe(2550);
+});
+
+it('grants nothing and writes no ledger line when the sign-up credit is zero', function () {
+    StoreSettings::current()->update(['signup_credit' => Money::zero()]);
+
+    $this->post(route('register.store'), registrationPayload())->assertSessionHasNoErrors();
+
+    $user = User::where('email', 'amr@example.com')->firstOrFail();
+
+    expect($user->balance->cents())->toBe(0)
+        ->and($user->walletTransactions()->count())->toBe(0);
+});
+
+it('starts at $100 and recreates the row if it goes missing', function () {
+    expect(StoreSettings::current()->signup_credit->cents())->toBe(10000);
+
+    StoreSettings::query()->delete();
+
+    expect(StoreSettings::current()->signup_credit->cents())->toBe(StoreSettings::DEFAULT_SIGNUP_CREDIT_CENTS)
+        ->and(StoreSettings::query()->count())->toBe(1);
 });
 
 it('registers without phone and address', function () {

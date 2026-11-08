@@ -3,8 +3,8 @@
 namespace App\Listeners;
 
 use App\Enums\WalletTransactionType;
+use App\Models\StoreSettings;
 use App\Models\User;
-use App\Support\Money;
 use App\Wallet\Wallet;
 use Illuminate\Auth\Events\Registered;
 
@@ -18,9 +18,16 @@ class GrantSignupBonus
             return;
         }
 
+        // Admins set the amount in the panel. Zero means no bonus and no ledger line.
+        $credit = StoreSettings::current()->signup_credit;
+
+        if ($credit->cents() === 0) {
+            return;
+        }
+
         $this->wallet->credit(
             $event->user,
-            Money::fromCents(10000),
+            $credit,
             WalletTransactionType::SignupBonus,
             'Welcome to Cartopia',
         );
