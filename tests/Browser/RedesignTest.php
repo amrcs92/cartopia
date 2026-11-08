@@ -2,6 +2,8 @@
 
 use App\Cart\Cart;
 use App\Models\Category;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ShippingMethod;
 use App\Models\User;
@@ -219,21 +221,27 @@ it('clears a filter from its chip when nothing matches', function () {
         ->assertDontSee('No products match that');
 });
 
-it('shows the aisle in the breadcrumb and rates a product with the stars', function () {
+it('shows the aisle in the breadcrumb and picks review stars with the keyboard', function () {
     $drinks = Category::factory()->create(['name' => 'Drinks', 'slug' => 'drinks']);
     $product = Product::factory()->inCategory($drinks)->create(['name' => 'Sparkling Water']);
-    $this->actingAs(User::factory()->create());
+    $buyer = User::factory()->create();
+    $order = Order::factory()->for($buyer)->create();
+    OrderItem::factory()->for($order)->create(['product_id' => $product->id]);
+    $this->actingAs($buyer);
 
     visit('/products/'.$product->slug)
         ->assertSeeIn('nav[aria-label="Breadcrumb"]', 'Drinks')
         ->assertSee('Add to basket')
         ->click('[aria-label="4 stars"]')
-        ->assertSee('You rated this 4 out of 5.')
-        ->assertScript('document.querySelector("[aria-label=\'4 stars\']").getAttribute("aria-checked")', 'true')
+        ->assertAttribute('[aria-label="4 stars"]', 'aria-checked', 'true')
         ->keys('[aria-label="4 stars"]', 'ArrowRight')
         ->assertScript('document.activeElement.getAttribute("aria-label")', '5 stars')
+        ->assertAttribute('[aria-label="4 stars"]', 'aria-checked', 'true')
         ->keys('[aria-label="5 stars"]', 'Enter')
-        ->waitForText('You rated this 5 out of 5.');
+        ->assertAttribute('[aria-label="5 stars"]', 'aria-checked', 'true')
+        ->press('Post review')
+        ->waitForText('Thanks for your review!')
+        ->assertSee('5.0 from 1 rating');
 });
 
 it('opens the added-to-basket panel and closes it with Escape', function () {

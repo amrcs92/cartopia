@@ -9,20 +9,22 @@ import { addToCart } from '@/modules/cart/useCartActions';
 import FeaturedCarousel from '@/modules/products/FeaturedCarousel.vue';
 import ProductGallery from '@/modules/products/ProductGallery.vue';
 import ProductZoomPanel from '@/modules/products/ProductZoomPanel.vue';
-import RatingInput from '@/modules/products/RatingInput.vue';
 import StarRating from '@/modules/products/StarRating.vue';
+import ReviewsSection from '@/modules/products/reviews/ReviewsSection.vue';
 import { index as productsIndex } from '@/routes/products';
-import type { Product, ProductDetail } from '@/types';
+import type { Product, ProductDetail, ProductReviews, Review } from '@/types';
 
 // One product: the breadcrumb (Shop / aisle / product, without the aisle when
 // it has none), the photo gallery (ProductGallery), the
 // name, rating line, large price tag and description, the quantity stepper
-// with "Add to basket", "Your rating", then the featured carousel (which the
-// server already sends without this product). While the mouse is on the
-// photo, the zoom panel covers the details column with the marked area.
+// with "Add to basket", then the Reviews section and the featured carousel
+// (which the server already sends without this product). While the mouse is
+// on the photo, the zoom panel covers the details column with the marked area.
 const props = defineProps<{
     product: ProductDetail;
     featured: Product[];
+    reviews: ProductReviews;
+    reviewList: { data: Review[] };
 }>();
 
 const selected = ref(0);
@@ -137,27 +139,16 @@ const currentImage = computed(() => images.value[selected.value] ?? null);
                                 Add to basket
                             </StallButton>
                         </div>
-
-                        <section
-                            aria-labelledby="your-rating"
-                            class="flex w-full flex-col gap-3 rounded-[22px] border-[1.5px] border-line bg-surface p-5 sm:p-6"
-                        >
-                            <h2
-                                id="your-rating"
-                                class="font-serif text-[22px] leading-tight font-normal text-ink lg:text-[24px]"
-                            >
-                                Your rating
-                            </h2>
-                            <RatingInput
-                                :slug="props.product.slug"
-                                :name="props.product.name"
-                                :my-rating="props.product.my_rating"
-                            />
-                        </section>
                     </div>
                 </div>
             </div>
         </div>
+
+        <ReviewsSection
+            :product="props.product"
+            :reviews="props.reviews"
+            :review-list="props.reviewList"
+        />
 
         <!-- The hanging sign rises about 58px above the carousel panel, so
              the padding leaves the mockup's 56px clear above the sign. -->
