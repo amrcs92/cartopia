@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
+import Heading from '@/common/app/Heading.vue';
 import InputError from '@/common/app/InputError.vue';
 import PasswordInput from '@/common/app/PasswordInput.vue';
 import StallButton from '@/common/stall/StallButton.vue';
@@ -11,18 +12,29 @@ import {
     store as confirmStore,
 } from '@/actions/Laravel/Passkeys/Http/Controllers/PasskeyConfirmationController';
 import PasskeyVerify from '@/common/app/PasskeyVerify.vue';
+import { edit as editSecurity } from '@/routes/security';
 
+// Shown on the way into Security, inside the store and settings layouts with
+// Security still selected, so it reads as a step of that page.
 defineOptions({
     layout: {
-        title: 'Confirm password',
-        description:
-            'This is a secure area of the application. Please confirm your password before continuing.',
+        breadcrumbs: [
+            {
+                title: 'Security settings',
+                href: editSecurity(),
+            },
+        ],
     },
 });
 </script>
 
 <template>
     <Head title="Confirm password" />
+
+    <Heading
+        title="Confirm password"
+        description="This is a secure area of the application. Please confirm your password before continuing."
+    />
 
     <PasskeyVerify
         :routes="{
@@ -48,7 +60,6 @@ defineOptions({
                     class="mt-1 block w-full"
                     required
                     autocomplete="current-password"
-                    autofocus
                 />
 
                 <InputError :message="errors.password" />
@@ -59,7 +70,6 @@ defineOptions({
                     variant="marigold"
                     size="lg"
                     type="submit"
-                    class="w-full"
                     :disabled="processing"
                     data-test="confirm-password-button"
                 >
