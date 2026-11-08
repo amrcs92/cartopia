@@ -21,6 +21,12 @@ it('shows a shopper the not-found page', function () {
         ->assertNotFound();
 });
 
+it('shows a shopper the not-found page for the Reviews screen', function () {
+    $this->actingAs(User::factory()->create())
+        ->get('/admin/reviews')
+        ->assertNotFound();
+});
+
 it('sends a guest to the store login', function () {
     $this->get('/admin')->assertRedirect(route('login'));
 });
