@@ -38,13 +38,18 @@ it('renders the settings pages for a signed-in user', function (string $path, st
     ['/settings/appearance', 'Light'],
 ]);
 
-// The security settings ask for the password first; that screen shares the
-// account layout and its chalkboard.
+// The security settings ask for the password first, inside the same store
+// and settings layout, with Security still selected in the settings menu.
 it('asks for the password before the security settings', function () {
     $this->actingAs(User::factory()->create());
 
     visit('/settings/security')
         ->assertSee('Confirm password')
-        ->assertSee('Why sign up?')
+        ->assertSee('Manage your profile and account settings')
+        ->assertDontSee('Why sign up?')
+        ->assertPresent('[data-test="header-bar"]')
+        ->assertScript('document.querySelectorAll("footer").length', 1)
+        ->assertScript('[...document.querySelectorAll("nav[aria-label=Settings] a")].map(a => a.textContent.trim() + (a.getAttribute("aria-current") === "page" ? "*" : "")).join(",")', 'Profile,Security*,Appearance')
+        ->assertScript('window.scrollY', 0)
         ->assertNoJavaScriptErrors();
 });

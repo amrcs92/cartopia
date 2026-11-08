@@ -18,6 +18,10 @@ void createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     layout: (name) => {
         switch (true) {
+            // Only Security asks for it, so it stays inside the settings page
+            // rather than looking like a sign-in screen.
+            case name === 'auth/ConfirmPasswordPage':
+                return [StoreLayout, SettingsLayout];
             case name.startsWith('auth/'):
                 return AuthLayout;
             case name.startsWith('settings/'):

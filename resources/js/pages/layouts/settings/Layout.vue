@@ -2,6 +2,7 @@
 import { Link } from '@inertiajs/vue3';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { cn, toUrl } from '@/lib/utils';
+import { confirm as confirmPassword } from '@/routes/password';
 import { edit as editAppearance } from '@/routes/appearance';
 import { edit as editProfile } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
@@ -22,7 +23,17 @@ const sidebarNavItems: NavItem[] = [
     },
 ];
 
-const { isCurrentOrParentUrl } = useCurrentUrl();
+const { isCurrentOrParentUrl, isCurrentUrl } = useCurrentUrl();
+
+// Confirming the password is the first step into Security, so Security stays
+// selected on that page too.
+function isActive(item: NavItem): boolean {
+    return (
+        isCurrentOrParentUrl(item.href) ||
+        (toUrl(item.href) === toUrl(editSecurity()) &&
+            isCurrentUrl(confirmPassword()))
+    );
+}
 </script>
 
 <template>
@@ -46,13 +57,11 @@ const { isCurrentOrParentUrl } = useCurrentUrl();
                     v-for="item in sidebarNavItems"
                     :key="toUrl(item.href)"
                     :href="item.href"
-                    :aria-current="
-                        isCurrentOrParentUrl(item.href) ? 'page' : undefined
-                    "
+                    :aria-current="isActive(item) ? 'page' : undefined"
                     :class="
                         cn(
                             'inline-flex min-h-11 items-center rounded-xl px-4 text-base font-bold text-ink transition-colors duration-200 ease-stall hover:bg-surface',
-                            isCurrentOrParentUrl(item.href) &&
+                            isActive(item) &&
                                 'bg-surface shadow-[inset_0_-3px_0_var(--marigold)]',
                         )
                     "
