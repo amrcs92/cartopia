@@ -4,7 +4,6 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Review;
 use App\Models\ShippingMethod;
-use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -131,10 +130,9 @@ it('accepts the largest dollar amount', function () {
         );
 });
 
-it("shows a product by slug with images and the viewer's rating", function () {
+it('shows a product by slug with images and its rating stats', function () {
     $product = Product::factory()->withImages(2)->create(['description' => 'Fresh and crunchy']);
-    $rater = User::factory()->create();
-    Review::factory()->for($product)->for($rater)->create(['stars' => 4]);
+    Review::factory()->for($product)->create(['stars' => 4]);
     Review::factory()->for($product)->create(['stars' => 5]);
     $urls = $product->images()->pluck('path')
         ->map(fn (string $path) => Storage::disk('public')->url($path))
@@ -151,13 +149,8 @@ it("shows a product by slug with images and the viewer's rating", function () {
             ->where('product.image_url', $urls[0])
             ->where('product.rating_average', 4.5)
             ->where('product.rating_count', 2)
-            ->where('product.my_rating', null)
+            ->missing('product.my_rating')
         );
-
-    $this->actingAs($rater)
-        ->get('/products/'.$product->slug)
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page->where('product.my_rating', 4));
 });
 
 it('returns 404 for an unknown slug', function () {
