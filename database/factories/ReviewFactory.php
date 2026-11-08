@@ -3,14 +3,14 @@
 namespace Database\Factories;
 
 use App\Models\Product;
-use App\Models\Rating;
+use App\Models\Review;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<Rating>
+ * @extends Factory<Review>
  */
-class RatingFactory extends Factory
+class ReviewFactory extends Factory
 {
     /**
      * @return array<string, mixed>
@@ -22,5 +22,15 @@ class RatingFactory extends Factory
             'product_id' => Product::factory(),
             'stars' => fake()->numberBetween(1, 5),
         ];
+    }
+
+    public function hidden(): static
+    {
+        return $this->state(['hidden_at' => now()]);
+    }
+
+    public function withBody(string $body): static
+    {
+        return $this->state(['body' => $body]);
     }
 }

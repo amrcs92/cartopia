@@ -8,7 +8,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductImage;
-use App\Models\Rating;
+use App\Models\Review;
 use App\Models\User;
 use App\Models\WalletTransaction;
 use App\Support\Money;
@@ -27,12 +27,12 @@ it('casts money columns to Money', function () {
     expect($product->getRawOriginal('price'))->toBe(99);
 });
 
-it('allows one rating per user per product', function () {
+it('allows one review per user per product', function () {
     $user = User::factory()->create();
     $product = Product::factory()->create();
 
-    Rating::create(['user_id' => $user->id, 'product_id' => $product->id, 'stars' => 4]);
-    Rating::create(['user_id' => $user->id, 'product_id' => $product->id, 'stars' => 5]);
+    Review::create(['user_id' => $user->id, 'product_id' => $product->id, 'stars' => 4]);
+    Review::create(['user_id' => $user->id, 'product_id' => $product->id, 'stars' => 5]);
 })->throws(QueryException::class);
 
 it('allows one cart line per product', function () {

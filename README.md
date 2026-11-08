@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/amrcs92/cartopia/actions/workflows/ci.yml/badge.svg)](https://github.com/amrcs92/cartopia/actions/workflows/ci.yml)
 
-Cartopia is a small online store with a virtual wallet. Browse and search a catalog, rate products, fill a basket (as a guest or logged in), and pay for orders from your balance. Top up the wallet whenever you like and review every order and ledger entry.
+Cartopia is a small online store with a virtual wallet. Browse and search a catalog, review what you bought, fill a basket (as a guest or logged in), and pay for orders from your balance. Top up the wallet whenever you like and review every order and ledger entry.
 
 It started in 2018 as a plain-PHP project and was rebuilt in 2026 as a Laravel showcase: modern idioms, a current front end, real tests and CI.
 
@@ -29,13 +29,14 @@ It started in 2018 as a plain-PHP project and was rebuilt in 2026 as a Laravel s
 
 - Product catalog with search, price and rating filters, sorting and pagination
 - Aisles (categories) with a filter for each, and a featured carousel on the home, shop and product pages
-- Product detail with a photo gallery (thumbnails and arrows, a zoom panel on hover, and a full-screen view with swipe on phones) and 1-5 star ratings (one rating per user and product)
+- Product detail with a photo gallery (thumbnails and arrows, a zoom panel on hover, and a full-screen view with swipe on phones)
+- Reviews from buyers only: 1-5 stars with optional text, one per customer and product, editable and deletable. Written reviews show on the product page five at a time, and a refund removes the review of what that order held.
 - Basket for guests (session) and users (database); a guest basket is merged into the account on login or registration
 - An added-to-basket panel that confirms each addition and links to the basket
 - Checkout paid from the wallet balance, priced entirely on the server
 - Order history with price and name snapshots
 - Wallet top-ups ($5-$500) with an append-only transaction ledger
-- $100 signup bonus for new accounts
+- A $20 sign-up credit for new accounts, which admins can change under Store settings
 - Light and dark themes, with a toggle in the header
 - A friendly not-found page that points back to the home page and the shop
 - A Filament admin panel at `/admin` for products, aisles, orders, payments, customers and refunds
@@ -128,6 +129,8 @@ Sign in with the seeded admin from [Demo logins](#demo-logins). Anyone who is no
 - **Orders:** browse and open orders, and refund them.
 - **Payments:** every Stripe and PayPal payment. The "Needs attention" tab lists payments still pending more than 30 minutes after they started, and "Check with provider" asks Stripe or PayPal for the payment's current state.
 - **Customers:** accounts with their orders and wallet ledger. "Adjust wallet" credits or debits a balance, and "Make admin" or "Remove admin" changes who can sign in to the panel.
+- **Reviews:** every customer review, filterable by product and by hidden or visible. "Hide" takes a review off the product page and out of its average without deleting it, "Unhide" brings it back, and "Delete" removes it.
+- **Store settings:** the sign-up credit new accounts get, from $0 to $500. The store's copy follows it, and $0 turns the credit and the copy off.
 
 ### Refunds in sandbox
 

@@ -24,7 +24,7 @@ it('grants exactly one signup bonus', function () {
 
     $user = User::where('email', 'amr@example.com')->firstOrFail();
 
-    expect($user->balance->format())->toBe('$100.00')
+    expect($user->balance->format())->toBe('$20.00')
         ->and($user->walletTransactions()->where('type', WalletTransactionType::SignupBonus)->count())->toBe(1)
         ->and($user->walletTransactions()->count())->toBe(1)
         ->and($user->phone)->toBe('01000000000')
@@ -54,8 +54,8 @@ it('grants nothing and writes no ledger line when the sign-up credit is zero', f
         ->and($user->walletTransactions()->count())->toBe(0);
 });
 
-it('starts at $100 and recreates the row if it goes missing', function () {
-    expect(StoreSettings::current()->signup_credit->cents())->toBe(10000);
+it('starts at $20 and recreates the row if it goes missing', function () {
+    expect(StoreSettings::current()->signup_credit->cents())->toBe(2000);
 
     StoreSettings::query()->delete();
 
@@ -70,7 +70,7 @@ it('registers without phone and address', function () {
 
     expect($user->phone)->toBeNull()
         ->and($user->address)->toBeNull()
-        ->and($user->balance->cents())->toBe(10000);
+        ->and($user->balance->cents())->toBe(2000);
 });
 
 it('updates phone and address from profile settings', function () {

@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ShippingMethod;
+use App\Models\StoreSettings;
 use App\Models\User;
 use App\Support\Money;
 use App\Wallet\Wallet;
@@ -72,7 +73,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'amrcs1992@gmail.com',
             'password' => '12345',
         ]);
-        app(Wallet::class)->credit($demo, Money::fromCents(10000), WalletTransactionType::SignupBonus);
+        app(Wallet::class)->credit($demo, Money::fromCents(StoreSettings::DEFAULT_SIGNUP_CREDIT_CENTS), WalletTransactionType::SignupBonus);
 
         User::factory()->admin()->create([
             'name' => 'Admin',

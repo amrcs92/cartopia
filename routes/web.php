@@ -10,7 +10,7 @@ use App\Http\Controllers\PaymentCancelController;
 use App\Http\Controllers\PaymentReturnController;
 use App\Http\Controllers\PayPalWebhookController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\RatingController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SearchSuggestionController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\TopUpController;
@@ -26,9 +26,12 @@ Route::get('search/suggestions', SearchSuggestionController::class)
 Route::get('products', [ProductController::class, 'index'])->name('products.index');
 Route::get('products/{product}', [ProductController::class, 'show'])->name('products.show');
 
-Route::put('products/{product}/rating', [RatingController::class, 'update'])
-    ->middleware('auth')
-    ->name('products.rating.update');
+Route::middleware('auth')->group(function () {
+    // The guest's "Log in to review" link: login remembers this URL and comes back.
+    Route::get('products/{product}/review', [ReviewController::class, 'create'])->name('products.review.create');
+    Route::put('products/{product}/review', [ReviewController::class, 'update'])->name('products.review.update');
+    Route::delete('products/{product}/review', [ReviewController::class, 'destroy'])->name('products.review.destroy');
+});
 
 Route::post('webhooks/stripe', StripeWebhookController::class)->name('webhooks.stripe');
 Route::post('webhooks/paypal', PayPalWebhookController::class)->name('webhooks.paypal');

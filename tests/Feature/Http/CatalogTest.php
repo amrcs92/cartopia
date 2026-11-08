@@ -2,9 +2,8 @@
 
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\Rating;
+use App\Models\Review;
 use App\Models\ShippingMethod;
-use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -65,10 +64,10 @@ it('applies filters and echoes them back', function () {
     Product::factory()->create(['name' => 'Pricey Apple', 'price' => 350]);
     Product::factory()->create(['name' => 'Golden Beer', 'price' => 200]);
     $lowRated = Product::factory()->create(['name' => 'Sour Apple', 'price' => 200]);
-    Rating::factory()->for($match)->create(['stars' => 5]);
-    Rating::factory()->for($match)->create(['stars' => 4]);
-    Rating::factory()->for($cheaper)->create(['stars' => 4]);
-    Rating::factory()->for($lowRated)->create(['stars' => 2]);
+    Review::factory()->for($match)->create(['stars' => 5]);
+    Review::factory()->for($match)->create(['stars' => 4]);
+    Review::factory()->for($cheaper)->create(['stars' => 4]);
+    Review::factory()->for($lowRated)->create(['stars' => 2]);
 
     $query = ['q' => 'apple', 'min_price' => '1.00', 'max_price' => '3.00', 'rating' => '4', 'sort' => 'price_desc'];
 
@@ -131,11 +130,10 @@ it('accepts the largest dollar amount', function () {
         );
 });
 
-it("shows a product by slug with images and the viewer's rating", function () {
+it('shows a product by slug with images and its rating stats', function () {
     $product = Product::factory()->withImages(2)->create(['description' => 'Fresh and crunchy']);
-    $rater = User::factory()->create();
-    Rating::factory()->for($product)->for($rater)->create(['stars' => 4]);
-    Rating::factory()->for($product)->create(['stars' => 5]);
+    Review::factory()->for($product)->create(['stars' => 4]);
+    Review::factory()->for($product)->create(['stars' => 5]);
     $urls = $product->images()->pluck('path')
         ->map(fn (string $path) => Storage::disk('public')->url($path))
         ->all();
@@ -151,13 +149,8 @@ it("shows a product by slug with images and the viewer's rating", function () {
             ->where('product.image_url', $urls[0])
             ->where('product.rating_average', 4.5)
             ->where('product.rating_count', 2)
-            ->where('product.my_rating', null)
+            ->missing('product.my_rating')
         );
-
-    $this->actingAs($rater)
-        ->get('/products/'.$product->slug)
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page->where('product.my_rating', 4));
 });
 
 it('returns 404 for an unknown slug', function () {
@@ -233,7 +226,7 @@ it('filters the shop by one or more aisles', function () {
 
 it('filters the shop to rated products and to featured products', function () {
     $rated = Product::factory()->create();
-    Rating::factory()->for($rated)->create(['stars' => 3]);
+    Review::factory()->for($rated)->create(['stars' => 3]);
     $featured = Product::factory()->featured()->create();
     Product::factory()->create();
 

@@ -19,8 +19,6 @@ class ProductDetailResource extends ProductResource
      */
     public function toArray(Request $request): array
     {
-        $user = $request->user();
-
         return [
             ...parent::toArray($request),
             'description' => $this->description,
@@ -31,9 +29,6 @@ class ProductDetailResource extends ProductResource
                 ->map(fn (ProductImage $image): string => Storage::disk('public')->url($image->path))
                 ->values()
                 ->all(),
-            'my_rating' => $user === null
-                ? null
-                : $this->ratings()->whereBelongsTo($user)->value('stars'),
         ];
     }
 }

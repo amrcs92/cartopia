@@ -17,7 +17,24 @@ export type ProductDetail = Product & {
     /** The product's aisle, for the breadcrumb; null when it has none. */
     category: { name: string; slug: string } | null;
     images: string[];
-    my_rating: number | null;
+};
+
+/** A review as the product page shows it. */
+export type Review = {
+    id: number;
+    /** "Amr S.": the first name and the last name's initial. */
+    author: string;
+    stars: number;
+    body: string | null;
+    /** "8 Nov 2026" */
+    date: string;
+    edited: boolean;
+};
+
+/** Whether the viewer may review the product, and their own review. */
+export type ProductReviews = {
+    can_review: 'guest' | 'not_buyer' | 'yes';
+    mine: Review | null;
 };
 
 /**

@@ -143,13 +143,3 @@ it('refuses a basket whose product was hidden after the page was loaded', functi
 
     expect(Order::count())->toBe(0);
 });
-
-it('404s a rating for a hidden product', function () {
-    $product = Product::factory()->hidden()->create();
-
-    $this->actingAs(User::factory()->create())
-        ->put(route('products.rating.update', $product), ['stars' => 5])
-        ->assertNotFound();
-
-    expect($product->ratings()->count())->toBe(0);
-});

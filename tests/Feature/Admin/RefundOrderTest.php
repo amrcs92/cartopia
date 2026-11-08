@@ -9,8 +9,11 @@ use App\Enums\WalletTransactionType;
 use App\Exceptions\AdminActionRefused;
 use App\Mail\OrderRefundedMail;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Payment;
+use App\Models\Product;
 use App\Models\Refund;
+use App\Models\Review;
 use App\Models\User;
 use App\Models\WalletTransaction;
 use App\Payments\Exceptions\PaymentProviderRejected;
@@ -436,3 +439,23 @@ it('refuses to open a refund without a succeeded payment for the provider part',
     expect(Refund::query()->count())->toBe(0)
         ->and($this->fake->refunded)->toBe([]);
 })->with(['no succeeded payment', 'a different amount']);
+
+it("deletes the customer's reviews of the products in the refunded order", function () {
+    $order = refundableOrder(PaymentMethod::Wallet);
+    $kept = Product::factory()->create();
+    $gone = Product::factory()->create();
+    OrderItem::factory()->for($order)->create(['product_id' => $gone->id]);
+    OrderItem::factory()->for($order)->create(['product_id' => $kept->id]);
+
+    // The same customer bought $kept again in another placed order.
+    $other = Order::factory()->for($order->user)->create();
+    OrderItem::factory()->for($other)->create(['product_id' => $kept->id]);
+
+    Review::factory()->for($order->user)->for($gone)->create();
+    $keptReview = Review::factory()->for($order->user)->for($kept)->create();
+    $someoneElse = Review::factory()->for($gone)->create();
+
+    app(RefundOrder::class)->handle($order, $this->admin, 'Damaged');
+
+    expect(Review::query()->orderBy('id')->pluck('id')->all())->toBe([$keptReview->id, $someoneElse->id]);
+});

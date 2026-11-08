@@ -2,6 +2,7 @@
 
 namespace App\Actions\Admin;
 
+use App\Actions\RemoveReviewsForRefundedOrder;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\RefundStatus;
@@ -43,6 +44,7 @@ class RefundOrder
     public function __construct(
         private readonly PaymentGateways $gateways,
         private readonly Wallet $wallet,
+        private readonly RemoveReviewsForRefundedOrder $removeReviews,
     ) {}
 
     /**
@@ -260,6 +262,10 @@ class RefundOrder
             ]);
 
             $order->update(['status' => OrderStatus::Refunded]);
+
+            // Only buyers may review, so the refund takes back reviews of
+            // what this order held, unless another placed order holds it too.
+            $this->removeReviews->handle($order);
 
             // afterCommit, so it waits for this transaction; only the click that finishes gets here.
             Mail::to($order->user)->queue(new OrderRefundedMail($order));
