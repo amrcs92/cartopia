@@ -30,19 +30,25 @@ it('lists orders with the number, customer, items, total, paid with and status',
         ->assertTableColumnStateSet('user.name', 'Sam Shopper', $order)
         ->assertTableColumnStateSet('items_sum_quantity', 5, $order)
         ->assertTableColumnStateSet('total', '$15.00', $order)
-        ->assertTableColumnStateSet('paid_with', 'Paid with wallet', $order)
+        ->assertTableColumnStateSet('paid_with', 'Wallet', $order)
         ->assertTableColumnStateSet('status', 'Placed', $order)
         ->assertTableColumnExists('created_at');
 });
 
-it('words a split order as Wallet + Stripe', function () {
+it('names how each order was paid as the filter does', function (PaymentMethod $method, int $walletCents, string $paidWith) {
     $order = Order::factory()->create([
-        'payment_method' => PaymentMethod::Stripe, 'total' => 2000, 'subtotal' => 2000, 'shipping_fee' => 0, 'wallet_amount' => 500,
+        'payment_method' => $method, 'total' => 2000, 'subtotal' => 2000, 'shipping_fee' => 0, 'wallet_amount' => $walletCents,
     ]);
 
     Livewire::test(ListOrders::class)
-        ->assertTableColumnStateSet('paid_with', 'Wallet + Stripe', $order);
-});
+        ->assertTableColumnStateSet('paid_with', $paidWith, $order);
+})->with([
+    'wallet' => [PaymentMethod::Wallet, 2000, 'Wallet'],
+    'Stripe' => [PaymentMethod::Stripe, 0, 'Stripe'],
+    'PayPal' => [PaymentMethod::PayPal, 0, 'PayPal'],
+    'wallet and Stripe' => [PaymentMethod::Stripe, 500, 'Wallet + Stripe'],
+    'wallet and PayPal' => [PaymentMethod::PayPal, 500, 'Wallet + PayPal'],
+]);
 
 it('lists newest first', function () {
     $older = Order::factory()->create(['created_at' => now()->subDays(2)]);
@@ -170,7 +176,8 @@ it('shows a wallet order without a provider link', function () {
 
     Livewire::test(ViewOrder::class, ['record' => $order->getKey()])
         ->assertSuccessful()
-        ->assertSee('Paid with wallet')
+        ->assertSee('Cartopia wallet')
+        ->assertDontSee('Paid with wallet')
         ->assertDontSee('dashboard.stripe.com');
 });
 

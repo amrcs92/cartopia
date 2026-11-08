@@ -101,6 +101,10 @@ class PaymentResource extends Resource
                         ->label('Reference')
                         ->state(fn (Payment $record) => PaymentWording::reference($record)['full'] ?? null)
                         ->placeholder('—'),
+                    TextEntry::make('provider_reference')
+                        ->label('Provider reference')
+                        ->state(fn (Payment $record) => self::providerReference($record))
+                        ->placeholder('—'),
                     TextEntry::make('provider_payment_id')->label('Provider payment id')->placeholder('—'),
                     TextEntry::make('provider_link')
                         ->label("In the provider's dashboard")
@@ -149,9 +153,11 @@ class PaymentResource extends Resource
                 TextColumn::make('status')
                     ->badge()
                     ->state(fn (Payment $record) => Str::headline($record->status->value)),
+                // Falls back to the checkout session or PayPal order, so a pending
+                // payment (no provider payment id yet) can still be found.
                 TextColumn::make('reference')
                     ->label('Reference')
-                    ->state(fn (Payment $record) => PaymentWording::reference($record)['full'] ?? null)
+                    ->state(fn (Payment $record) => PaymentWording::reference($record)['full'] ?? self::providerReference($record))
                     ->placeholder('—'),
             ])
             ->defaultSort('created_at', 'desc')
@@ -183,5 +189,23 @@ class PaymentResource extends Resource
     private static function purpose(Payment $payment): string
     {
         return $payment->purpose === PaymentPurpose::Order ? "Order #{$payment->order_id}" : 'Top-up';
+    }
+
+    /**
+     * What the shopper was sent to pay on: a Stripe Checkout Session or a
+     * PayPal order. It exists from the start, before the provider payment id.
+     */
+    private static function providerReference(Payment $payment): ?string
+    {
+        $reference = $payment->provider_reference;
+        if ($reference === null || $reference === '') {
+            return null;
+        }
+
+        return match ($payment->method) {
+            PaymentMethod::Stripe => "Stripe checkout session {$reference}",
+            PaymentMethod::PayPal => "PayPal order {$reference}",
+            PaymentMethod::Wallet => null,
+        };
     }
 }

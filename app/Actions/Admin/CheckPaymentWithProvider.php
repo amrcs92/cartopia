@@ -7,6 +7,7 @@ use App\Actions\CompletePayment;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentPurpose;
 use App\Enums\PaymentStatus;
+use App\Enums\ProviderCheckOutcome;
 use App\Models\Payment;
 use App\Payments\Exceptions\PaymentProviderRejected;
 use App\Payments\Exceptions\PaymentProviderUnavailable;
@@ -31,18 +32,18 @@ class CheckPaymentWithProvider
     ) {}
 
     /**
-     * @return string what the provider answered, for the admin
+     * @return ProviderCheck what the provider answered, for the admin
      *
      * @throws PaymentProviderUnavailable
      * @throws PaymentProviderRejected
      */
-    public function handle(Payment $payment): string
+    public function handle(Payment $payment): ProviderCheck
     {
-        return DB::transaction(function () use ($payment): string {
+        return DB::transaction(function () use ($payment): ProviderCheck {
             $locked = Payment::query()->whereKey($payment->id)->lockForUpdate()->firstOrFail();
 
             if (! $locked->isPending()) {
-                return "This payment is already {$locked->status->value}.";
+                return new ProviderCheck(ProviderCheckOutcome::AlreadySettled, "This payment is already {$locked->status->value}.");
             }
 
             $provider = match ($locked->method) {
@@ -63,12 +64,12 @@ class CheckPaymentWithProvider
 
                 // A mismatched amount or currency closes the payment as failed instead.
                 if ($completed->status !== PaymentStatus::Succeeded) {
-                    return "{$provider} reported a different amount. The payment is marked failed.";
+                    return new ProviderCheck(ProviderCheckOutcome::AmountMismatch, "{$provider} reported a different amount. The payment is marked failed.");
                 }
 
-                return $locked->purpose === PaymentPurpose::TopUp
+                return new ProviderCheck(ProviderCheckOutcome::Paid, $locked->purpose === PaymentPurpose::TopUp
                     ? "Paid at {$provider}. The top-up is credited."
-                    : "Paid at {$provider}. The order is placed.";
+                    : "Paid at {$provider}. The order is placed.");
             }
 
             if ($outcome instanceof StillPending) {
@@ -76,17 +77,17 @@ class CheckPaymentWithProvider
                     $locked->update(['provider_payment_id' => $outcome->providerPaymentId]);
                 }
 
-                return "Still pending at {$provider}.";
+                return new ProviderCheck(ProviderCheckOutcome::StillPending, "Still pending at {$provider}.");
             }
 
             return $this->close($locked, $provider);
         });
     }
 
-    private function close(Payment $payment, string $provider): string
+    private function close(Payment $payment, string $provider): ProviderCheck
     {
         $this->closePayment->handle($payment, PaymentStatus::Expired, notify: true);
 
-        return "{$provider} no longer has this payment. It's closed.";
+        return new ProviderCheck(ProviderCheckOutcome::Closed, "{$provider} no longer has this payment. It's closed.");
     }
 }

@@ -101,6 +101,14 @@ class Order extends Model
             ->latestOfMany();
     }
 
+    /**
+     * @return HasOne<Refund, $this>
+     */
+    public function refund(): HasOne
+    {
+        return $this->hasOne(Refund::class);
+    }
+
     public function isSplit(): bool
     {
         return $this->payment_method->isHosted() && $this->wallet_amount->cents() > 0;
@@ -113,5 +121,16 @@ class Order extends Model
     public function scopePlaced(Builder $query): Builder
     {
         return $query->where('status', OrderStatus::Placed);
+    }
+
+    /**
+     * What a shopper sees as their orders: placed ones, and those since refunded.
+     *
+     * @param  Builder<Order>  $query
+     * @return Builder<Order>
+     */
+    public function scopePlacedOrRefunded(Builder $query): Builder
+    {
+        return $query->whereIn('status', [OrderStatus::Placed, OrderStatus::Refunded]);
     }
 }

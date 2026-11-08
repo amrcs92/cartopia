@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Customers\RelationManagers;
 
+use App\Filament\Resources\Orders\OrderResource;
 use App\Models\Order;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
@@ -32,6 +33,7 @@ class OrdersRelationManager extends RelationManager
                     ->state(fn (Order $record) => Str::headline($record->status->value)),
             ])
             ->defaultSort('id', 'desc')
+            ->recordUrl(fn (Order $record) => OrderResource::getUrl('view', ['record' => $record]))
             ->emptyStateHeading('No orders yet');
     }
 }

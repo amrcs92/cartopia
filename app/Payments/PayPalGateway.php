@@ -3,11 +3,15 @@
 namespace App\Payments;
 
 use App\Models\Payment;
+use App\Models\Refund;
 use App\Payments\Exceptions\PaymentProviderRejected;
 use App\Payments\Exceptions\PaymentProviderUnavailable;
 use App\Payments\Outcomes\Cancelled;
 use App\Payments\Outcomes\Declined;
 use App\Payments\Outcomes\PaymentOutcome;
+use App\Payments\Outcomes\RefundAccepted;
+use App\Payments\Outcomes\RefundOutcome;
+use App\Payments\Outcomes\RefundRefused;
 use App\Payments\Outcomes\StillPending;
 use App\Payments\Outcomes\Succeeded;
 use App\Support\Money;
@@ -161,6 +165,43 @@ class PayPalGateway implements PaymentGateway
     public function cancel(Payment $payment): PaymentOutcome
     {
         return new Cancelled;
+    }
+
+    /**
+     * Refunds the capture in full. Any 4xx answer except a bad token (401) is a
+     * refusal; PayPal's issue code, or its message, says why.
+     */
+    public function refund(Payment $payment, Refund $refund): RefundOutcome
+    {
+        $response = $this->call($payment, fn (PendingRequest $http): Response => $http
+            ->withHeaders(['PayPal-Request-Id' => $refund->idempotencyKey()])
+            ->post("/v2/payments/captures/{$payment->provider_payment_id}/refund", [
+                'amount' => $this->money($payment->amount),
+            ]), array_values(array_diff(range(400, 499), [401])));
+
+        if (in_array($response->status(), [409, 429], true)) {
+            throw new PaymentProviderUnavailable($this->describe($payment, 'PayPal asked to retry the refund').', HTTP '.$response->status().'.', 0, $response->toException());
+        }
+
+        if ($response->clientError()) {
+            $reason = (string) ($response->json('details.0.issue') ?? $response->json('message') ?? '');
+
+            return new RefundRefused($reason !== '' ? $reason : 'PayPal refused the refund, HTTP '.$response->status().'.');
+        }
+
+        $status = (string) $response->json('status');
+
+        if (in_array($status, ['COMPLETED', 'PENDING'], true)) {
+            $id = (string) $response->json('id');
+
+            if ($id === '') {
+                throw new PaymentProviderUnavailable($this->describe($payment, 'PayPal gave no refund id').'.');
+            }
+
+            return new RefundAccepted($id);
+        }
+
+        return new RefundRefused('PayPal gave the refund status '.($status !== '' ? $status : 'UNKNOWN').'.');
     }
 
     public function accessToken(): string

@@ -4,9 +4,12 @@ namespace App\Payments;
 
 use App\Enums\PaymentMethod;
 use App\Models\Payment;
+use App\Models\Refund;
 use App\Payments\Exceptions\PaymentProviderUnavailable;
 use App\Payments\Outcomes\Cancelled;
 use App\Payments\Outcomes\PaymentOutcome;
+use App\Payments\Outcomes\RefundAccepted;
+use App\Payments\Outcomes\RefundOutcome;
 use App\Payments\Outcomes\Succeeded;
 use Throwable;
 
@@ -24,11 +27,17 @@ class FakePaymentGateway implements PaymentGateway
     /** @var list<int> */
     public array $lookedUp = [];
 
+    /** @var list<array{0: Payment, 1: Refund}> */
+    public array $refunded = [];
+
     /** @var list<PaymentOutcome> */
     private array $confirmOutcomes = [];
 
     /** @var list<PaymentOutcome|Throwable> */
     private array $lookupOutcomes = [];
+
+    /** @var list<RefundOutcome|Throwable> */
+    private array $refundOutcomes = [];
 
     private ?PaymentOutcome $cancelOutcome = null;
 
@@ -50,6 +59,17 @@ class FakePaymentGateway implements PaymentGateway
     public function willLookUp(PaymentOutcome|Throwable ...$outcomes): static
     {
         array_push($this->lookupOutcomes, ...$outcomes);
+
+        return $this;
+    }
+
+    /**
+     * Queues what the next refunds answer; a Throwable is thrown instead.
+     * Once the queue is empty, a refund is accepted.
+     */
+    public function willRefund(RefundOutcome|Throwable ...$outcomes): static
+    {
+        array_push($this->refundOutcomes, ...$outcomes);
 
         return $this;
     }
@@ -138,5 +158,18 @@ class FakePaymentGateway implements PaymentGateway
         $this->cancelOutcome = null;
 
         return $outcome;
+    }
+
+    public function refund(Payment $payment, Refund $refund): RefundOutcome
+    {
+        $this->refunded[] = [$payment, $refund];
+
+        $next = array_shift($this->refundOutcomes) ?? new RefundAccepted("re_fake_{$refund->id}");
+
+        if ($next instanceof Throwable) {
+            throw $next;
+        }
+
+        return $next;
     }
 }

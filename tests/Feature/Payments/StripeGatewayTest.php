@@ -2,9 +2,12 @@
 
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\Refund;
 use App\Payments\Exceptions\PaymentProviderRejected;
 use App\Payments\Exceptions\PaymentProviderUnavailable;
 use App\Payments\Outcomes\Cancelled;
+use App\Payments\Outcomes\RefundAccepted;
+use App\Payments\Outcomes\RefundRefused;
 use App\Payments\Outcomes\StillPending;
 use App\Payments\Outcomes\Succeeded;
 use App\Payments\PaymentLine;
@@ -283,3 +286,77 @@ it('still rejects a lookup Stripe refuses for another reason', function (int $st
     'not found, other code' => [404, ['type' => 'invalid_request_error', 'message' => 'Not found']],
     'bad key' => [401, ['type' => 'invalid_request_error', 'message' => 'Invalid API Key']],
 ]);
+
+function stripeRefundPayment(): Payment
+{
+    return Payment::find(42) ?? Payment::factory()->stripe()->topUp(2274)->withReference('cs_test_1')->create(['id' => 42, 'provider_payment_id' => 'pi_123']);
+}
+
+it('refunds the payment intent for the payment amount', function () {
+    $payment = stripeRefundPayment();
+    $refund = Refund::factory()->create(['id' => 7, 'attempt' => 2]);
+    $this->stripe->queue(200, ['id' => 're_1', 'object' => 'refund', 'status' => 'succeeded']);
+
+    $outcome = $this->gateway->refund($payment, $refund);
+
+    $sent = $this->stripe->last();
+    expect($outcome)->toEqual(new RefundAccepted('re_1'))
+        ->and($sent['method'])->toBe('post')
+        ->and($sent['url'])->toEndWith('/v1/refunds')
+        ->and($sent['params']['payment_intent'])->toBe('pi_123')
+        ->and($sent['params']['amount'])->toBe(2274)
+        ->and($this->stripe->header('Idempotency-Key'))->toBe("refund-7-{$refund->created_at->getTimestamp()}-2");
+});
+
+it('accepts a refund Stripe has not finished yet', function () {
+    $this->stripe->queue(200, ['id' => 're_2', 'object' => 'refund', 'status' => 'pending']);
+
+    expect($this->gateway->refund(stripeRefundPayment(), Refund::factory()->create()))->toEqual(new RefundAccepted('re_2'));
+});
+
+it('reads a refused refund as a refusal with the provider message', function () {
+    $this->stripe->queue(400, ['error' => ['type' => 'invalid_request_error', 'code' => 'charge_already_refunded', 'message' => 'Charge ch_1 has already been refunded.']]);
+
+    expect($this->gateway->refund(stripeRefundPayment(), Refund::factory()->create()))
+        ->toEqual(new RefundRefused('Charge ch_1 has already been refunded.'));
+});
+
+it('maps refund outages to unavailable', function () {
+    $this->stripe->queue(500, ['error' => ['type' => 'api_error', 'message' => 'Boom']])->queueConnectionError();
+
+    expect(fn () => $this->gateway->refund(stripeRefundPayment(), Refund::factory()->create()))->toThrow(PaymentProviderUnavailable::class);
+    expect(fn () => $this->gateway->refund(stripeRefundPayment(), Refund::factory()->create()))->toThrow(PaymentProviderUnavailable::class);
+});
+
+it('retries a refund Stripe answers with 409 or 429', function (int $status) {
+    $this->stripe->queue($status, ['error' => ['type' => 'invalid_request_error', 'message' => 'Try again.']]);
+
+    expect(fn () => $this->gateway->refund(stripeRefundPayment(), Refund::factory()->create()))->toThrow(PaymentProviderUnavailable::class);
+})->with([409, 429]);
+
+it('treats a Stripe credentials error on a refund as a rejection, not a refusal', function () {
+    $this->stripe->queue(401, ['error' => ['type' => 'invalid_request_error', 'message' => 'Invalid API Key']]);
+
+    expect(fn () => $this->gateway->refund(stripeRefundPayment(), Refund::factory()->create()))->toThrow(PaymentProviderRejected::class);
+});
+
+it('reads a failed or canceled Stripe refund as a refusal', function (string $status, ?string $failure, string $reason) {
+    $this->stripe->queue(200, array_filter(['id' => 're_9', 'object' => 'refund', 'status' => $status, 'failure_reason' => $failure]));
+
+    expect($this->gateway->refund(stripeRefundPayment(), Refund::factory()->create()))->toEqual(new RefundRefused($reason));
+})->with([
+    'failed with reason' => ['failed', 'expired_or_canceled_card', 'expired_or_canceled_card'],
+    'canceled without reason' => ['canceled', null, "Stripe couldn't complete the refund"],
+]);
+
+it('accepts a Stripe refund that needs action', function () {
+    $this->stripe->queue(200, ['id' => 're_3', 'object' => 'refund', 'status' => 'requires_action']);
+
+    expect($this->gateway->refund(stripeRefundPayment(), Refund::factory()->create()))->toEqual(new RefundAccepted('re_3'));
+});
+
+it('treats a Stripe refund reply without an id as unavailable', function () {
+    $this->stripe->queue(200, ['object' => 'refund', 'status' => 'succeeded']);
+
+    expect(fn () => $this->gateway->refund(stripeRefundPayment(), Refund::factory()->create()))->toThrow(PaymentProviderUnavailable::class);
+});

@@ -11,10 +11,10 @@ class OrderPolicy
 {
     /**
      * Someone else's order, or one that was never placed, answers 404, so its
-     * id is not confirmed to exist.
+     * id is not confirmed to exist. A refunded order was placed, so it stays.
      */
     public function view(User $user, Order $order): Response
     {
-        return $order->user_id === $user->id && $order->status === OrderStatus::Placed ? Response::allow() : Response::denyAsNotFound();
+        return $order->user_id === $user->id && in_array($order->status, [OrderStatus::Placed, OrderStatus::Refunded], true) ? Response::allow() : Response::denyAsNotFound();
     }
 }

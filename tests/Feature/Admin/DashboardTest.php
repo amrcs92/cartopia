@@ -1,6 +1,8 @@
 <?php
 
+use App\Actions\Admin\RefundOrder;
 use App\Admin\SalesFigures;
+use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Resources\Payments\PaymentResource;
@@ -55,6 +57,18 @@ it('starts the week on Monday at midnight', function () {
 
     expect($figures->thisWeek()->cents())->toBe(3000)
         ->and($figures->ordersThisWeek())->toBe(2);
+});
+
+it('starts the week on Monday even in a locale whose week starts on Sunday', function () {
+    app()->setLocale('en_US');
+    orderAt('2026-11-01 12:00:00', 5000); // Sunday, which starts en_US's week
+    orderAt('2026-11-02 00:00:00', 1000); // Monday
+
+    $figures = app(SalesFigures::class);
+
+    expect(now()->startOfWeek()->isSunday())->toBeTrue()
+        ->and($figures->thisWeek()->cents())->toBe(1000)
+        ->and($figures->ordersThisWeek())->toBe(1);
 });
 
 it('counts pending payments older than 30 minutes as needing attention', function () {
@@ -142,4 +156,19 @@ it('keeps shoppers off the dashboard', function () {
     $this->actingAs(User::factory()->create())
         ->get('/admin')
         ->assertNotFound();
+});
+
+it('drops an order from the sales figures once it is refunded', function () {
+    $order = orderAt('2026-11-04 09:00:00', 4000);
+    orderAt('2026-11-04 10:00:00', 1000);
+    $figures = app(SalesFigures::class);
+
+    expect($figures->today()->cents())->toBe(5000);
+
+    app(RefundOrder::class)->handle($order, User::factory()->admin()->create(), 'Damaged in transit');
+
+    expect($order->fresh()->status)->toBe(OrderStatus::Refunded)
+        ->and($figures->today()->cents())->toBe(1000)
+        ->and($figures->thisWeek()->cents())->toBe(1000)
+        ->and($figures->ordersThisWeek())->toBe(1);
 });

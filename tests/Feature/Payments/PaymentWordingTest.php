@@ -112,3 +112,7 @@ it('tags a split', function () {
     expect(PaymentWording::tag(splitOrder(PaymentMethod::Stripe)))->toBe('Wallet + Stripe')
         ->and(PaymentWording::tag(splitOrder(PaymentMethod::PayPal)))->toBe('Wallet + PayPal');
 });
+
+it('words the refund delay note once, for both refund receipt views', function () {
+    expect(PaymentWording::refundDelayNote())->toBe('Card and PayPal refunds can take 5–10 business days to show.');
+});

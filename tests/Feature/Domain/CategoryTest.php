@@ -16,7 +16,7 @@ it('keeps products when their aisle is deleted', function () {
 });
 
 it('uses the aisle image, then the newest product photo, then nothing', function () {
-    Storage::fake('public');
+    fakePublicDisk();
     $aisle = Category::factory()->create(['image_path' => null]);
     expect($aisle->imageUrl())->toBeNull();
 
@@ -30,7 +30,7 @@ it('uses the aisle image, then the newest product photo, then nothing', function
 });
 
 it('lists aisles with their images in a fixed number of queries', function () {
-    Storage::fake('public');
+    fakePublicDisk();
 
     $count = function (int $aisles): int {
         Category::query()->delete();
