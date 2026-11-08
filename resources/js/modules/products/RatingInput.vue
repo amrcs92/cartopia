@@ -2,7 +2,7 @@
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { computed, ref, useTemplateRef } from 'vue';
 import { login } from '@/routes';
-import { update } from '@/routes/products/rating';
+import { update } from '@/routes/products/review';
 
 // "Your rating": five 48px stars in a radio group. A star fills marigold up
 // to your rating (or up to the star you're pointing at), and every star keeps
