@@ -131,12 +131,14 @@ function deleteReview(): void {
             </template>
         </div>
 
+        <!-- No items-element: InfiniteScroll watches its own wrapper, which
+             always exists. The list itself isn't rendered when there are no
+             written reviews, and watching it threw on those products. -->
         <InfiniteScroll
             data="reviewList"
             manual
             only-next
             preserve-url
-            items-element="[data-test=review-list]"
             class="flex flex-col gap-5 lg:max-w-3xl"
         >
             <ul
