@@ -13,6 +13,15 @@ use Inertia\Inertia;
 
 class ReviewController extends Controller
 {
+    /**
+     * Where a guest's "Log in" link points: after login the customer lands
+     * back on the product's Reviews section.
+     */
+    public function create(Product $product): RedirectResponse
+    {
+        return redirect()->to(route('products.show', $product).'#reviews');
+    }
+
     public function update(SaveReviewRequest $request, Product $product, SaveReview $saveReview): RedirectResponse
     {
         $user = $this->reviewer($request, $product);

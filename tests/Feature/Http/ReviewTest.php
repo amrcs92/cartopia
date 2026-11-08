@@ -126,3 +126,16 @@ it('keeps a hidden review hidden when its author edits it', function () {
 it('no longer has the old rating route', function () {
     expect(Route::has('products.rating.update'))->toBeFalse();
 });
+
+it('sends a guest who wants to review to log in, then back to the product\'s reviews', function () {
+    $product = Product::factory()->create();
+    $user = User::factory()->create();
+
+    $this->get(route('products.review.create', $product))->assertRedirect(route('login'));
+
+    $this->post(route('login.store'), ['email' => $user->email, 'password' => 'password'])
+        ->assertRedirect(route('products.review.create', $product));
+
+    $this->actingAs($user)->get(route('products.review.create', $product))
+        ->assertRedirect(route('products.show', $product).'#reviews');
+});

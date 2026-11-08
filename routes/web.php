@@ -27,6 +27,8 @@ Route::get('products', [ProductController::class, 'index'])->name('products.inde
 Route::get('products/{product}', [ProductController::class, 'show'])->name('products.show');
 
 Route::middleware('auth')->group(function () {
+    // The guest's "Log in to review" link: login remembers this URL and comes back.
+    Route::get('products/{product}/review', [ReviewController::class, 'create'])->name('products.review.create');
     Route::put('products/{product}/review', [ReviewController::class, 'update'])->name('products.review.update');
     Route::delete('products/{product}/review', [ReviewController::class, 'destroy'])->name('products.review.destroy');
 });

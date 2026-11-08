@@ -15,8 +15,7 @@ import {
 import StarRating from '@/modules/products/StarRating.vue';
 import ReviewForm from '@/modules/products/reviews/ReviewForm.vue';
 import ReviewItem from '@/modules/products/reviews/ReviewItem.vue';
-import { login } from '@/routes';
-import { destroy } from '@/routes/products/review';
+import { create as reviewAfterLogin, destroy } from '@/routes/products/review';
 import type { ProductDetail, ProductReviews, Review } from '@/types';
 
 // "Reviews" (#reviews) under the product: the average and count, then the
@@ -76,7 +75,7 @@ function deleteReview(): void {
                 class="text-base text-body"
             >
                 <Link
-                    :href="login()"
+                    :href="reviewAfterLogin(props.product.slug)"
                     class="font-bold text-link underline underline-offset-4"
                     >Log in</Link
                 >

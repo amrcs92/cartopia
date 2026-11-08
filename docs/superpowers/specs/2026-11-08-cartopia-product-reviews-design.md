@@ -1,7 +1,7 @@
 # Cartopia: Product Reviews Design
 
 - **Date:** 2026-11-08
-- **Status:** Approved in chat, awaiting spec review
+- **Status:** Implemented
 - **Builds on:** the core store's ratings (amrcs92/cartopia#1) and the admin panel (amrcs92/cartopia#18 to #24).
 
 ## 1. Goal and context
