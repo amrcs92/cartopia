@@ -128,6 +128,14 @@ it('refuses a Store settings save from an open tab once admin access is removed'
     expect(StoreSettings::current()->signup_credit->cents())->toBe(100);
 });
 
+it('ends the panel menu with a Go to store link to the home page', function () {
+    $this->actingAs(User::factory()->admin()->create())
+        ->get('/admin')
+        ->assertOk()
+        ->assertSeeInOrder(['Store settings', 'Go to store'])
+        ->assertSee('href="'.route('home').'"', false);
+});
+
 it('lists the admin check among Livewire\'s persistent middleware', function () {
     expect(app(PersistentMiddleware::class)->getPersistentMiddleware())->toContain(AuthenticateAdmin::class);
 });
