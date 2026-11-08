@@ -3,6 +3,7 @@
 use App\Enums\PaymentMethod;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\Product;
 use App\Models\User;
 use App\Payments\PaymentGateways;
 
@@ -70,5 +71,23 @@ it('lets an admin refund a split order, and the shopper sees where the money wen
     visit("/orders/{$order->id}")
         ->assertSee('Refunded to Visa ending in 4242 · $22.74')
         ->assertSee('Refunded to your wallet · $100.00')
+        ->assertNoJavaScriptErrors();
+});
+
+// Opening a panel page while logged out goes through the store's login. The
+// way back must load the panel as a full page: inside Inertia's pop-up frame
+// the product photos never finish loading ("Waiting for size").
+it('opens the panel page as a full page after logging in from the store', function () {
+    $admin = User::factory()->admin()->create();
+    $product = Product::factory()->create(['name' => 'Sparkling Water']);
+
+    visit('/admin/products/'.$product->slug.'/edit')
+        ->assertPathIs('/login')
+        ->fill('email', $admin->email)
+        ->fill('password', 'password')
+        ->press('Log in')
+        ->assertPathIs('/admin/products/'.$product->slug.'/edit')
+        ->assertSee('Edit Sparkling Water')
+        ->assertScript('document.querySelectorAll("iframe").length', 0)
         ->assertNoJavaScriptErrors();
 });

@@ -44,6 +44,25 @@ it('sends an admin back to the panel after the store login', function () {
         ->assertRedirect('/admin');
 });
 
+// The store is an Inertia app and the panel isn't. When an Inertia request
+// lands on a panel page (the redirect after logging in, or a store link), the
+// panel asks for a full page load. Otherwise Inertia shows the panel inside a
+// pop-up frame, where product photos never finish loading.
+it('asks the store to load panel pages as full pages', function (string $path) {
+    $this->actingAs(User::factory()->admin()->create())
+        ->withHeaders(['X-Inertia' => 'true', 'X-Requested-With' => 'XMLHttpRequest'])
+        ->get($path)
+        ->assertStatus(409)
+        ->assertHeader('X-Inertia-Location', url($path));
+})->with(['/admin', '/admin/products']);
+
+it('loads panel pages normally without the store asking', function () {
+    $this->actingAs(User::factory()->admin()->create())
+        ->get('/admin')
+        ->assertOk()
+        ->assertHeaderMissing('X-Inertia-Location');
+});
+
 it('shows the logo and the Cartopia name in the panel brand', function () {
     $this->actingAs(User::factory()->admin()->create())
         ->get('/admin')

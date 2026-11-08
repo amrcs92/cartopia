@@ -6,6 +6,7 @@ use App\Filament\Widgets\LatestOrders;
 use App\Filament\Widgets\SalesChart;
 use App\Filament\Widgets\SalesOverview;
 use App\Http\Middleware\AuthenticateAdmin;
+use App\Http\Middleware\LoadPanelAsFullPage;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -105,6 +106,8 @@ class AdminPanelProvider extends PanelProvider
                 LatestOrders::class,
             ])
             ->middleware([
+                // First: a request from the store's Inertia app gets a full page load instead.
+                LoadPanelAsFullPage::class,
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
