@@ -5,7 +5,8 @@ import StallButton from './StallButton.vue';
 
 // The product card's add-to-basket control: a joined minus / quantity / plus /
 // basket bar, or, when `compact`, the phone's full-width "Add" button. The
-// quantity is v-model; `add` asks the caller to put it in the basket.
+// quantity is v-model; `add` asks the caller to put it in the basket. In a
+// narrow card (four to a row) the buttons shrink so the bar never overflows.
 const props = withDefaults(
     defineProps<{
         productName: string;
@@ -37,7 +38,7 @@ function step(by: number): void {
 }
 
 const stepper =
-    'inline-flex w-11 shrink-0 focus-visible:outline-none items-center justify-center text-ink transition-colors duration-200 ease-stall hover:bg-field disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent';
+    'inline-flex w-11 min-w-8 shrink focus-visible:outline-none items-center justify-center text-ink transition-colors duration-200 ease-stall hover:bg-field disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent';
 </script>
 
 <template>
@@ -55,7 +56,7 @@ const stepper =
         v-else
         role="group"
         :aria-label="`Quantity and basket for ${props.productName}`"
-        class="inline-flex h-12 items-stretch overflow-hidden rounded-xl border-[2.5px] border-outline bg-surface shadow-press has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-marigold has-[:focus-visible]:outline-solid"
+        class="inline-flex h-12 max-w-full items-stretch overflow-hidden rounded-xl border-[2.5px] border-outline bg-surface shadow-press has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-marigold has-[:focus-visible]:outline-solid"
     >
         <button
             type="button"
@@ -87,7 +88,7 @@ const stepper =
         </button>
         <button
             type="button"
-            class="inline-flex w-14 shrink-0 items-center justify-center border-l-[2.5px] border-outline bg-marigold text-on-marigold transition-colors duration-200 ease-stall hover:bg-marigold/90 focus-visible:outline-none"
+            class="inline-flex w-14 min-w-11 shrink items-center justify-center border-l-[2.5px] border-outline bg-marigold text-on-marigold transition-colors duration-200 ease-stall hover:bg-marigold/90 focus-visible:outline-none"
             :aria-label="`Add ${props.productName} to basket`"
             @click="emit('add')"
         >
