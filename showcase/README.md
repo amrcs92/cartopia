@@ -54,6 +54,25 @@ npm run voice           # the whole script, in the voice from voice/config.json
 
 `voice/script.json` holds the seven lines and the pause after each one. `npm run voice` writes `video/public/voice/narration.wav` and `timings.json`, which records when each word is spoken so the subtitles can follow along. It fails if the narration doesn't last 80–88 seconds: lower `speed` in `voice/config.json` to slow it down, or raise it to speed it up.
 
+## The video
+
+```bash
+npm run music     # video/public/music/music.wav and the click sound
+npx remotion studio   # preview and scrub the edit in a browser
+npm run render    # the final files, copied to your Downloads folder
+```
+
+The composition in `video/src/` is built from the clips, the narration and the music. `timeline.ts` places each narration line and subtitle. `edit.ts` picks which moments of each recording a scene keeps, using the marks and clicks in the clips' manifest, so a fresh recording lines up without retiming anything by hand.
+
+`npm run render` writes five files to `out/` and then copies them to your Downloads folder, or to `SHOWCASE_DELIVER_DIR` if it's set:
+- `cartopia-walkthrough-1080p.mp4`, at −14 LUFS for YouTube
+- `cartopia-walkthrough-720p.mp4`, under GitHub's 10 MB limit for the README
+- `cartopia-thumbnail.png`
+- `cartopia-walkthrough.srt`, the subtitles
+- `youtube.md`, with the title, description, chapters and tags to paste into YouTube
+
+It fails if any of them misses its size, length or loudness. `npm run render -- --reuse` skips the slow 1080p render when an earlier run already made it.
+
 ## Product photos
 
 `photos/process.sh <raw-dir> <out-dir>` turns downloaded photos into catalogue images: 1200 × 1200 squares of 250 KB or less. `photos/candidates.md` lists where each one came from, and `docs/photo-credits.md` credits the photographers.
