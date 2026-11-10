@@ -23,6 +23,8 @@ export async function launch(
         ignoreHTTPSErrors: true,
         reducedMotion: 'no-preference',
     });
+    // tsx keeps function names with an injected __name() helper, which the page doesn't have.
+    await context.addInitScript('globalThis.__name = (fn) => fn;');
     const host = new URL(baseUrl).hostname;
     await context.addCookies([{ name: 'appearance', value: options.theme, domain: host, path: '/' }]);
     // The store keeps the choice in localStorage, Filament in its own "theme" key.

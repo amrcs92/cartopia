@@ -26,6 +26,21 @@ This writes every still to `docs/screenshots/` as a JPG of 400 KB or less:
 - the product page at phone width
 - `responsive.jpg`, which shows the desktop and phone views side by side
 
+## Scene clips
+
+```bash
+npm run clips              # every scene, after resetting the database
+npx tsx capture/clips.ts checkout admin   # just these, without a reset
+```
+
+These record the walkthrough's scenes into `video/public/clips/` (git-ignored). Each scene is a 30 fps H.264 clip with a drawn pointer, and `manifest.json` notes each clip's length plus the moments and screen areas the edit zooms into.
+
+The checkout scene pays in Stripe's sandbox with the test card `4242 4242 4242 4242`. Before you record:
+- `.env` needs the Stripe sandbox keys.
+- `stripe listen --forward-to https://cartopia.test/webhooks/stripe --skip-verify` must be running. See [payments in sandbox mode](../docs/payments-sandbox.md).
+
+If a scene fails, the page it stopped on is saved to `out/failed-<scene>.png` and `.html`.
+
 ## Product photos
 
 `photos/process.sh <raw-dir> <out-dir>` turns downloaded photos into catalogue images: 1200 × 1200 squares of 250 KB or less. `photos/candidates.md` lists where each one came from, and `docs/photo-credits.md` credits the photographers.
