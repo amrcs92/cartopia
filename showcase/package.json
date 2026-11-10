@@ -6,9 +6,9 @@
     "scripts": {
         "screenshots": "tsx capture/screenshots.ts",
         "clips": "tsx capture/clips.ts",
-        "voice:samples": "voice/.venv/Scripts/python voice/narrate.py --samples",
-        "voice": "voice/.venv/Scripts/python voice/narrate.py --final",
-        "music": "voice/.venv/Scripts/python video/music/compose.py",
+        "voice:samples": "voice\\.venv\\Scripts\\python voice\\narrate.py --samples",
+        "voice": "voice\\.venv\\Scripts\\python voice\\narrate.py --final",
+        "music": "voice\\.venv\\Scripts\\python video\\music\\compose.py",
         "render": "tsx video/scripts/render.ts",
         "test": "vitest run"
     },

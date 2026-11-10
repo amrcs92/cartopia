@@ -1,0 +1,6 @@
+# The narrator: Kokoro text-to-speech on the CPU. Install into showcase/voice/.venv (see showcase/README.md).
+kokoro==0.9.4
+misaki[en]==0.9.4
+torch==2.15.0
+soundfile==0.14.0
+numpy==2.5.4

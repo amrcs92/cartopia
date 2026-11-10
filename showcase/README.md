@@ -41,6 +41,19 @@ The checkout scene pays in Stripe's sandbox with the test card `4242 4242 4242 4
 
 If a scene fails, the page it stopped on is saved to `out/failed-<scene>.png` and `.html`.
 
+## Narration
+
+The narrator is [Kokoro](https://huggingface.co/hexgrad/Kokoro-82M), a free text-to-speech model that runs on the CPU. It needs Python 3.12 and about 1–2 GB of downloads:
+
+```bash
+py -3.12 -m venv voice/.venv
+voice/.venv/Scripts/pip install -r voice/requirements.txt
+npm run voice:samples   # the first two lines in four voices, in out/voice-samples/
+npm run voice           # the whole script, in the voice from voice/config.json
+```
+
+`voice/script.json` holds the seven lines and the pause after each one. `npm run voice` writes `video/public/voice/narration.wav` and `timings.json`, which records when each word is spoken so the subtitles can follow along. It fails if the narration doesn't last 80–88 seconds: lower `speed` in `voice/config.json` to slow it down, or raise it to speed it up.
+
 ## Product photos
 
 `photos/process.sh <raw-dir> <out-dir>` turns downloaded photos into catalogue images: 1200 × 1200 squares of 250 KB or less. `photos/candidates.md` lists where each one came from, and `docs/photo-credits.md` credits the photographers.

@@ -1,0 +1,39 @@
+{
+    "segments": [
+        {
+            "id": "intro",
+            "text": "This is Cartopia, an online grocery store I rebuilt from the ground up, from the database to the last button.",
+            "pauseAfterMs": 900
+        },
+        {
+            "id": "browse",
+            "text": "Shoppers browse by aisle, search as they type, and see every product up close, with its price, stock and reviews in one place.",
+            "pauseAfterMs": 900
+        },
+        {
+            "id": "pay",
+            "text": "Every price is calculated on the server, so the total can't be altered in the browser. Pay from your wallet, by card or with PayPal, or split one order across them. Here, the wallet covers most of it and the card pays the rest. Stripe confirms the payment, and the receipt arrives by email.",
+            "pauseAfterMs": 900
+        },
+        {
+            "id": "ledger",
+            "text": "Every cent moves through a ledger, so balances always add up, and every top-up and refund leaves a record. And only shoppers who bought a product can review it.",
+            "pauseAfterMs": 900
+        },
+        {
+            "id": "admin",
+            "text": "Behind the store sits a full back office. The owner tracks sales, updates prices, moderates reviews, and refunds an order in one click. The money goes straight back where it came from, to the wallet or the card.",
+            "pauseAfterMs": 900
+        },
+        {
+            "id": "screens",
+            "text": "It works on any screen, from a phone to a wide desktop, in light or dark.",
+            "pauseAfterMs": 900
+        },
+        {
+            "id": "close",
+            "text": "Built with Laravel, Vue and Filament, and covered by hundreds of automated tests. Like what you see? I build online stores and web apps like this one. Let's talk about yours.",
+            "pauseAfterMs": 0
+        }
+    ]
+}
