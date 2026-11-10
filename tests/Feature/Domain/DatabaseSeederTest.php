@@ -47,11 +47,12 @@ it('seeds the legacy catalog, shipping, demo and admin users', function () {
         ->and(Product::query()->where('slug', 'apple')->value('description'))->toContain('"health is wealth."')
         ->and(ShippingMethod::query()->count())->toBe(2);
 
-    $demo = User::query()->where('email', 'amrcs1992@gmail.com')->firstOrFail();
-    expect($demo->name)->toBe('amrcs92')
+    $demo = User::query()->where('email', 'demo@cartopia.test')->firstOrFail();
+    expect($demo->name)->toBe('Sam Rivera')
         ->and(Hash::check('12345', $demo->password))->toBeTrue()
         ->and($demo->balance->cents())->toBe(2000)
-        ->and($demo->walletTransactions()->where('type', 'signup_bonus')->count())->toBe(1);
+        ->and($demo->walletTransactions()->where('type', 'signup_bonus')->count())->toBe(1)
+        ->and(User::query()->where('email', 'amrcs1992@gmail.com')->exists())->toBeFalse();
 
     $admin = User::query()->where('email', 'admin@cartopia.test')->firstOrFail();
     expect($admin->is_admin)->toBeTrue()

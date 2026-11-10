@@ -66,7 +66,7 @@ For front-end development use `npm run dev` instead of building.
 
 | Role  | Email                 | Password   |
 | ----- | --------------------- | ---------- |
-| Demo  | `amrcs1992@gmail.com` | `12345`    |
+| Demo  | `demo@cartopia.test`  | `12345`    |
 | Admin | `admin@cartopia.test` | `password` |
 
 The admin account signs in to the [admin panel](#admin-panel).

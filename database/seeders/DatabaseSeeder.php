@@ -69,8 +69,8 @@ class DatabaseSeeder extends Seeder
         ShippingMethod::factory()->ups()->create();
 
         $demo = User::factory()->create([
-            'name' => 'amrcs92',
-            'email' => 'amrcs1992@gmail.com',
+            'name' => 'Sam Rivera',
+            'email' => 'demo@cartopia.test',
             'password' => '12345',
         ]);
         app(Wallet::class)->credit($demo, Money::fromCents(StoreSettings::DEFAULT_SIGNUP_CREDIT_CENTS), WalletTransactionType::SignupBonus);
