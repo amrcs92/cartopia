@@ -1,0 +1,1117 @@
+{
+  "durationMs": 80750,
+  "voice": "am_fenrir",
+  "segments": [
+    {
+      "id": "intro",
+      "text": "This is Cartopia, an online grocery store I rebuilt from the ground up, from the database to the last button.",
+      "startMs": 400,
+      "endMs": 8000,
+      "words": [
+        {
+          "text": "This",
+          "startMs": 600,
+          "endMs": 838
+        },
+        {
+          "text": "is",
+          "startMs": 838,
+          "endMs": 1025
+        },
+        {
+          "text": "Cartopia,",
+          "startMs": 1025,
+          "endMs": 1800
+        },
+        {
+          "text": "an",
+          "startMs": 1900,
+          "endMs": 2100
+        },
+        {
+          "text": "online",
+          "startMs": 2100,
+          "endMs": 2788
+        },
+        {
+          "text": "grocery",
+          "startMs": 2788,
+          "endMs": 3388
+        },
+        {
+          "text": "store",
+          "startMs": 3388,
+          "endMs": 3800
+        },
+        {
+          "text": "I",
+          "startMs": 3800,
+          "endMs": 3975
+        },
+        {
+          "text": "rebuilt",
+          "startMs": 3975,
+          "endMs": 4425
+        },
+        {
+          "text": "from",
+          "startMs": 4425,
+          "endMs": 4588
+        },
+        {
+          "text": "the",
+          "startMs": 4588,
+          "endMs": 4675
+        },
+        {
+          "text": "ground",
+          "startMs": 4675,
+          "endMs": 5075
+        },
+        {
+          "text": "up,",
+          "startMs": 5075,
+          "endMs": 5375
+        },
+        {
+          "text": "from",
+          "startMs": 5450,
+          "endMs": 5612
+        },
+        {
+          "text": "the",
+          "startMs": 5612,
+          "endMs": 5725
+        },
+        {
+          "text": "database",
+          "startMs": 5725,
+          "endMs": 6375
+        },
+        {
+          "text": "to",
+          "startMs": 6375,
+          "endMs": 6475
+        },
+        {
+          "text": "the",
+          "startMs": 6475,
+          "endMs": 6600
+        },
+        {
+          "text": "last",
+          "startMs": 6600,
+          "endMs": 7000
+        },
+        {
+          "text": "button.",
+          "startMs": 7000,
+          "endMs": 7750
+        }
+      ]
+    },
+    {
+      "id": "browse",
+      "text": "Shoppers browse by aisle, search as they type, and see every product up close, with its price, stock and reviews in one place.",
+      "startMs": 8900,
+      "endMs": 17150,
+      "words": [
+        {
+          "text": "Shoppers",
+          "startMs": 9175,
+          "endMs": 9612
+        },
+        {
+          "text": "browse",
+          "startMs": 9612,
+          "endMs": 10050
+        },
+        {
+          "text": "by",
+          "startMs": 10050,
+          "endMs": 10262
+        },
+        {
+          "text": "aisle,",
+          "startMs": 10262,
+          "endMs": 10650
+        },
+        {
+          "text": "search",
+          "startMs": 10738,
+          "endMs": 11050
+        },
+        {
+          "text": "as",
+          "startMs": 11050,
+          "endMs": 11200
+        },
+        {
+          "text": "they",
+          "startMs": 11200,
+          "endMs": 11412
+        },
+        {
+          "text": "type,",
+          "startMs": 11412,
+          "endMs": 11775
+        },
+        {
+          "text": "and",
+          "startMs": 11850,
+          "endMs": 11988
+        },
+        {
+          "text": "see",
+          "startMs": 11988,
+          "endMs": 12238
+        },
+        {
+          "text": "every",
+          "startMs": 12238,
+          "endMs": 12588
+        },
+        {
+          "text": "product",
+          "startMs": 12588,
+          "endMs": 13062
+        },
+        {
+          "text": "up",
+          "startMs": 13062,
+          "endMs": 13225
+        },
+        {
+          "text": "close,",
+          "startMs": 13225,
+          "endMs": 13600
+        },
+        {
+          "text": "with",
+          "startMs": 13638,
+          "endMs": 13762
+        },
+        {
+          "text": "its",
+          "startMs": 13762,
+          "endMs": 13962
+        },
+        {
+          "text": "price,",
+          "startMs": 13962,
+          "endMs": 14475
+        },
+        {
+          "text": "stock",
+          "startMs": 14588,
+          "endMs": 15000
+        },
+        {
+          "text": "and",
+          "startMs": 15000,
+          "endMs": 15125
+        },
+        {
+          "text": "reviews",
+          "startMs": 15125,
+          "endMs": 15700
+        },
+        {
+          "text": "in",
+          "startMs": 15700,
+          "endMs": 15850
+        },
+        {
+          "text": "one",
+          "startMs": 15850,
+          "endMs": 16075
+        },
+        {
+          "text": "place.",
+          "startMs": 16075,
+          "endMs": 16900
+        }
+      ]
+    },
+    {
+      "id": "pay",
+      "text": "Every price is calculated on the server, so the total can't be altered in the browser. Pay from your wallet, by card or with PayPal, or split one order across them. Here, the wallet covers most of it and the card pays the rest. Stripe confirms the payment, and the receipt arrives by email.",
+      "startMs": 18050,
+      "endMs": 36100,
+      "words": [
+        {
+          "text": "Every",
+          "startMs": 18300,
+          "endMs": 18588
+        },
+        {
+          "text": "price",
+          "startMs": 18588,
+          "endMs": 18925
+        },
+        {
+          "text": "is",
+          "startMs": 18925,
+          "endMs": 19088
+        },
+        {
+          "text": "calculated",
+          "startMs": 19088,
+          "endMs": 19738
+        },
+        {
+          "text": "on",
+          "startMs": 19738,
+          "endMs": 19862
+        },
+        {
+          "text": "the",
+          "startMs": 19862,
+          "endMs": 19962
+        },
+        {
+          "text": "server,",
+          "startMs": 19962,
+          "endMs": 20375
+        },
+        {
+          "text": "so",
+          "startMs": 20425,
+          "endMs": 20600
+        },
+        {
+          "text": "the",
+          "startMs": 20600,
+          "endMs": 20712
+        },
+        {
+          "text": "total",
+          "startMs": 20712,
+          "endMs": 21112
+        },
+        {
+          "text": "can't",
+          "startMs": 21112,
+          "endMs": 21400
+        },
+        {
+          "text": "be",
+          "startMs": 21400,
+          "endMs": 21588
+        },
+        {
+          "text": "altered",
+          "startMs": 21588,
+          "endMs": 22025
+        },
+        {
+          "text": "in",
+          "startMs": 22025,
+          "endMs": 22112
+        },
+        {
+          "text": "the",
+          "startMs": 22112,
+          "endMs": 22200
+        },
+        {
+          "text": "browser.",
+          "startMs": 22200,
+          "endMs": 22950
+        },
+        {
+          "text": "Pay",
+          "startMs": 23088,
+          "endMs": 23375
+        },
+        {
+          "text": "from",
+          "startMs": 23375,
+          "endMs": 23550
+        },
+        {
+          "text": "your",
+          "startMs": 23550,
+          "endMs": 23738
+        },
+        {
+          "text": "wallet,",
+          "startMs": 23738,
+          "endMs": 24175
+        },
+        {
+          "text": "by",
+          "startMs": 24225,
+          "endMs": 24438
+        },
+        {
+          "text": "card",
+          "startMs": 24438,
+          "endMs": 24912
+        },
+        {
+          "text": "or",
+          "startMs": 24912,
+          "endMs": 25075
+        },
+        {
+          "text": "with",
+          "startMs": 25075,
+          "endMs": 25262
+        },
+        {
+          "text": "PayPal,",
+          "startMs": 25262,
+          "endMs": 25875
+        },
+        {
+          "text": "or",
+          "startMs": 25925,
+          "endMs": 26088
+        },
+        {
+          "text": "split",
+          "startMs": 26088,
+          "endMs": 26462
+        },
+        {
+          "text": "one",
+          "startMs": 26462,
+          "endMs": 26700
+        },
+        {
+          "text": "order",
+          "startMs": 26700,
+          "endMs": 27050
+        },
+        {
+          "text": "across",
+          "startMs": 27050,
+          "endMs": 27475
+        },
+        {
+          "text": "them.",
+          "startMs": 27475,
+          "endMs": 27950
+        },
+        {
+          "text": "Here,",
+          "startMs": 28062,
+          "endMs": 28400
+        },
+        {
+          "text": "the",
+          "startMs": 28475,
+          "endMs": 28612
+        },
+        {
+          "text": "wallet",
+          "startMs": 28612,
+          "endMs": 29038
+        },
+        {
+          "text": "covers",
+          "startMs": 29038,
+          "endMs": 29488
+        },
+        {
+          "text": "most",
+          "startMs": 29488,
+          "endMs": 29788
+        },
+        {
+          "text": "of",
+          "startMs": 29788,
+          "endMs": 29875
+        },
+        {
+          "text": "it",
+          "startMs": 29875,
+          "endMs": 30025
+        },
+        {
+          "text": "and",
+          "startMs": 30025,
+          "endMs": 30138
+        },
+        {
+          "text": "the",
+          "startMs": 30138,
+          "endMs": 30238
+        },
+        {
+          "text": "card",
+          "startMs": 30238,
+          "endMs": 30662
+        },
+        {
+          "text": "pays",
+          "startMs": 30662,
+          "endMs": 31025
+        },
+        {
+          "text": "the",
+          "startMs": 31025,
+          "endMs": 31150
+        },
+        {
+          "text": "rest.",
+          "startMs": 31150,
+          "endMs": 31825
+        },
+        {
+          "text": "Stripe",
+          "startMs": 31975,
+          "endMs": 32375
+        },
+        {
+          "text": "confirms",
+          "startMs": 32375,
+          "endMs": 32975
+        },
+        {
+          "text": "the",
+          "startMs": 32975,
+          "endMs": 33075
+        },
+        {
+          "text": "payment,",
+          "startMs": 33075,
+          "endMs": 33500
+        },
+        {
+          "text": "and",
+          "startMs": 33550,
+          "endMs": 33662
+        },
+        {
+          "text": "the",
+          "startMs": 33662,
+          "endMs": 33750
+        },
+        {
+          "text": "receipt",
+          "startMs": 33750,
+          "endMs": 34175
+        },
+        {
+          "text": "arrives",
+          "startMs": 34175,
+          "endMs": 34700
+        },
+        {
+          "text": "by",
+          "startMs": 34700,
+          "endMs": 34925
+        },
+        {
+          "text": "email.",
+          "startMs": 34925,
+          "endMs": 35850
+        }
+      ]
+    },
+    {
+      "id": "ledger",
+      "text": "Every cent moves through a ledger, so balances always add up, and every top-up and refund leaves a record. And only shoppers who bought a product can review it.",
+      "startMs": 37000,
+      "endMs": 47100,
+      "words": [
+        {
+          "text": "Every",
+          "startMs": 37250,
+          "endMs": 37575
+        },
+        {
+          "text": "cent",
+          "startMs": 37575,
+          "endMs": 37938
+        },
+        {
+          "text": "moves",
+          "startMs": 37938,
+          "endMs": 38338
+        },
+        {
+          "text": "through",
+          "startMs": 38338,
+          "endMs": 38550
+        },
+        {
+          "text": "a",
+          "startMs": 38550,
+          "endMs": 38650
+        },
+        {
+          "text": "ledger,",
+          "startMs": 38650,
+          "endMs": 39000
+        },
+        {
+          "text": "so",
+          "startMs": 39075,
+          "endMs": 39288
+        },
+        {
+          "text": "balances",
+          "startMs": 39288,
+          "endMs": 39938
+        },
+        {
+          "text": "always",
+          "startMs": 39938,
+          "endMs": 40525
+        },
+        {
+          "text": "add",
+          "startMs": 40525,
+          "endMs": 40825
+        },
+        {
+          "text": "up,",
+          "startMs": 40825,
+          "endMs": 41050
+        },
+        {
+          "text": "and",
+          "startMs": 41100,
+          "endMs": 41238
+        },
+        {
+          "text": "every",
+          "startMs": 41238,
+          "endMs": 41562
+        },
+        {
+          "text": "top-up",
+          "startMs": 41562,
+          "endMs": 42038
+        },
+        {
+          "text": "and",
+          "startMs": 42038,
+          "endMs": 42150
+        },
+        {
+          "text": "refund",
+          "startMs": 42150,
+          "endMs": 42700
+        },
+        {
+          "text": "leaves",
+          "startMs": 42700,
+          "endMs": 43000
+        },
+        {
+          "text": "a",
+          "startMs": 43000,
+          "endMs": 43100
+        },
+        {
+          "text": "record.",
+          "startMs": 43100,
+          "endMs": 43725
+        },
+        {
+          "text": "And",
+          "startMs": 43825,
+          "endMs": 44000
+        },
+        {
+          "text": "only",
+          "startMs": 44000,
+          "endMs": 44350
+        },
+        {
+          "text": "shoppers",
+          "startMs": 44350,
+          "endMs": 44812
+        },
+        {
+          "text": "who",
+          "startMs": 44812,
+          "endMs": 44950
+        },
+        {
+          "text": "bought",
+          "startMs": 44950,
+          "endMs": 45162
+        },
+        {
+          "text": "a",
+          "startMs": 45162,
+          "endMs": 45225
+        },
+        {
+          "text": "product",
+          "startMs": 45225,
+          "endMs": 45725
+        },
+        {
+          "text": "can",
+          "startMs": 45725,
+          "endMs": 45900
+        },
+        {
+          "text": "review",
+          "startMs": 45900,
+          "endMs": 46288
+        },
+        {
+          "text": "it.",
+          "startMs": 46288,
+          "endMs": 46850
+        }
+      ]
+    },
+    {
+      "id": "admin",
+      "text": "Behind the store sits a full back office. The owner tracks sales, updates prices, moderates reviews, and refunds an order in one click. The money goes straight back where it came from, to the wallet or the card.",
+      "startMs": 48000,
+      "endMs": 61825,
+      "words": [
+        {
+          "text": "Behind",
+          "startMs": 48250,
+          "endMs": 48638
+        },
+        {
+          "text": "the",
+          "startMs": 48638,
+          "endMs": 48738
+        },
+        {
+          "text": "store",
+          "startMs": 48738,
+          "endMs": 49162
+        },
+        {
+          "text": "sits",
+          "startMs": 49162,
+          "endMs": 49425
+        },
+        {
+          "text": "a",
+          "startMs": 49425,
+          "endMs": 49550
+        },
+        {
+          "text": "full",
+          "startMs": 49550,
+          "endMs": 49825
+        },
+        {
+          "text": "back",
+          "startMs": 49825,
+          "endMs": 50125
+        },
+        {
+          "text": "office.",
+          "startMs": 50125,
+          "endMs": 50850
+        },
+        {
+          "text": "The",
+          "startMs": 50950,
+          "endMs": 51100
+        },
+        {
+          "text": "owner",
+          "startMs": 51100,
+          "endMs": 51438
+        },
+        {
+          "text": "tracks",
+          "startMs": 51438,
+          "endMs": 51825
+        },
+        {
+          "text": "sales,",
+          "startMs": 51825,
+          "endMs": 52400
+        },
+        {
+          "text": "updates",
+          "startMs": 52475,
+          "endMs": 53012
+        },
+        {
+          "text": "prices,",
+          "startMs": 53012,
+          "endMs": 53575
+        },
+        {
+          "text": "moderates",
+          "startMs": 53662,
+          "endMs": 54250
+        },
+        {
+          "text": "reviews,",
+          "startMs": 54250,
+          "endMs": 54825
+        },
+        {
+          "text": "and",
+          "startMs": 54875,
+          "endMs": 55000
+        },
+        {
+          "text": "refunds",
+          "startMs": 55000,
+          "endMs": 55512
+        },
+        {
+          "text": "an",
+          "startMs": 55512,
+          "endMs": 55650
+        },
+        {
+          "text": "order",
+          "startMs": 55650,
+          "endMs": 56025
+        },
+        {
+          "text": "in",
+          "startMs": 56025,
+          "endMs": 56175
+        },
+        {
+          "text": "one",
+          "startMs": 56175,
+          "endMs": 56412
+        },
+        {
+          "text": "click.",
+          "startMs": 56412,
+          "endMs": 57025
+        },
+        {
+          "text": "The",
+          "startMs": 57125,
+          "endMs": 57250
+        },
+        {
+          "text": "money",
+          "startMs": 57250,
+          "endMs": 57588
+        },
+        {
+          "text": "goes",
+          "startMs": 57588,
+          "endMs": 57988
+        },
+        {
+          "text": "straight",
+          "startMs": 57988,
+          "endMs": 58350
+        },
+        {
+          "text": "back",
+          "startMs": 58350,
+          "endMs": 58650
+        },
+        {
+          "text": "where",
+          "startMs": 58650,
+          "endMs": 58812
+        },
+        {
+          "text": "it",
+          "startMs": 58812,
+          "endMs": 58900
+        },
+        {
+          "text": "came",
+          "startMs": 58900,
+          "endMs": 59200
+        },
+        {
+          "text": "from,",
+          "startMs": 59200,
+          "endMs": 59500
+        },
+        {
+          "text": "to",
+          "startMs": 59550,
+          "endMs": 59675
+        },
+        {
+          "text": "the",
+          "startMs": 59675,
+          "endMs": 59812
+        },
+        {
+          "text": "wallet",
+          "startMs": 59812,
+          "endMs": 60312
+        },
+        {
+          "text": "or",
+          "startMs": 60312,
+          "endMs": 60500
+        },
+        {
+          "text": "the",
+          "startMs": 60500,
+          "endMs": 60638
+        },
+        {
+          "text": "card.",
+          "startMs": 60638,
+          "endMs": 61550
+        }
+      ]
+    },
+    {
+      "id": "screens",
+      "text": "It works on any screen, from a phone to a wide desktop, in light or dark.",
+      "startMs": 62725,
+      "endMs": 67850,
+      "words": [
+        {
+          "text": "It",
+          "startMs": 62900,
+          "endMs": 63025
+        },
+        {
+          "text": "works",
+          "startMs": 63025,
+          "endMs": 63263
+        },
+        {
+          "text": "on",
+          "startMs": 63263,
+          "endMs": 63425
+        },
+        {
+          "text": "any",
+          "startMs": 63425,
+          "endMs": 63687
+        },
+        {
+          "text": "screen,",
+          "startMs": 63687,
+          "endMs": 64200
+        },
+        {
+          "text": "from",
+          "startMs": 64275,
+          "endMs": 64413
+        },
+        {
+          "text": "a",
+          "startMs": 64413,
+          "endMs": 64525
+        },
+        {
+          "text": "phone",
+          "startMs": 64525,
+          "endMs": 64950
+        },
+        {
+          "text": "to",
+          "startMs": 64950,
+          "endMs": 65075
+        },
+        {
+          "text": "a",
+          "startMs": 65075,
+          "endMs": 65187
+        },
+        {
+          "text": "wide",
+          "startMs": 65187,
+          "endMs": 65550
+        },
+        {
+          "text": "desktop,",
+          "startMs": 65550,
+          "endMs": 66150
+        },
+        {
+          "text": "in",
+          "startMs": 66200,
+          "endMs": 66363
+        },
+        {
+          "text": "light",
+          "startMs": 66363,
+          "endMs": 66700
+        },
+        {
+          "text": "or",
+          "startMs": 66700,
+          "endMs": 66850
+        },
+        {
+          "text": "dark.",
+          "startMs": 66850,
+          "endMs": 67575
+        }
+      ]
+    },
+    {
+      "id": "close",
+      "text": "Built with Laravel, Vue and Filament, and covered by hundreds of automated tests. Like what you see? I build online stores and web apps like this one. Let's talk about yours.",
+      "startMs": 68750,
+      "endMs": 80750,
+      "words": [
+        {
+          "text": "Built",
+          "startMs": 69025,
+          "endMs": 69300
+        },
+        {
+          "text": "with",
+          "startMs": 69300,
+          "endMs": 69512
+        },
+        {
+          "text": "Laravel,",
+          "startMs": 69512,
+          "endMs": 70150
+        },
+        {
+          "text": "Vue",
+          "startMs": 70238,
+          "endMs": 70662
+        },
+        {
+          "text": "and",
+          "startMs": 70662,
+          "endMs": 70825
+        },
+        {
+          "text": "Filament,",
+          "startMs": 70825,
+          "endMs": 71300
+        },
+        {
+          "text": "and",
+          "startMs": 71350,
+          "endMs": 71488
+        },
+        {
+          "text": "covered",
+          "startMs": 71488,
+          "endMs": 71900
+        },
+        {
+          "text": "by",
+          "startMs": 71900,
+          "endMs": 72112
+        },
+        {
+          "text": "hundreds",
+          "startMs": 72112,
+          "endMs": 72600
+        },
+        {
+          "text": "of",
+          "startMs": 72600,
+          "endMs": 72775
+        },
+        {
+          "text": "automated",
+          "startMs": 72775,
+          "endMs": 73412
+        },
+        {
+          "text": "tests.",
+          "startMs": 73412,
+          "endMs": 74175
+        },
+        {
+          "text": "Like",
+          "startMs": 74275,
+          "endMs": 74488
+        },
+        {
+          "text": "what",
+          "startMs": 74488,
+          "endMs": 74625
+        },
+        {
+          "text": "you",
+          "startMs": 74625,
+          "endMs": 74788
+        },
+        {
+          "text": "see?",
+          "startMs": 74788,
+          "endMs": 75250
+        },
+        {
+          "text": "I",
+          "startMs": 75425,
+          "endMs": 75600
+        },
+        {
+          "text": "build",
+          "startMs": 75600,
+          "endMs": 75950
+        },
+        {
+          "text": "online",
+          "startMs": 75950,
+          "endMs": 76512
+        },
+        {
+          "text": "stores",
+          "startMs": 76512,
+          "endMs": 77050
+        },
+        {
+          "text": "and",
+          "startMs": 77050,
+          "endMs": 77188
+        },
+        {
+          "text": "web",
+          "startMs": 77188,
+          "endMs": 77450
+        },
+        {
+          "text": "apps",
+          "startMs": 77450,
+          "endMs": 77750
+        },
+        {
+          "text": "like",
+          "startMs": 77750,
+          "endMs": 77975
+        },
+        {
+          "text": "this",
+          "startMs": 77975,
+          "endMs": 78175
+        },
+        {
+          "text": "one.",
+          "startMs": 78175,
+          "endMs": 78525
+        },
+        {
+          "text": "Let's",
+          "startMs": 78638,
+          "endMs": 78925
+        },
+        {
+          "text": "talk",
+          "startMs": 78925,
+          "endMs": 79162
+        },
+        {
+          "text": "about",
+          "startMs": 79162,
+          "endMs": 79488
+        },
+        {
+          "text": "yours.",
+          "startMs": 79488,
+          "endMs": 80500
+        }
+      ]
+    }
+  ]
+}
