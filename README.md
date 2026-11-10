@@ -1,171 +1,73 @@
 # Cartopia
 
+An online store with a wallet, card and PayPal checkout, and an admin back office, rebuilt from a 2018 PHP project in Laravel 13 and Vue.
+
 [![CI](https://github.com/amrcs92/cartopia/actions/workflows/ci.yml/badge.svg)](https://github.com/amrcs92/cartopia/actions/workflows/ci.yml)
 
-Cartopia is a small online store with a virtual wallet. Browse and search a catalog, review what you bought, fill a basket (as a guest or logged in), and pay for orders from your balance. Top up the wallet whenever you like and review every order and ledger entry.
+<!-- walkthrough video: added after upload -->
 
-It started in 2018 as a plain-PHP project and was rebuilt in 2026 as a Laravel showcase: modern idioms, a current front end, real tests and CI.
+<table>
+  <tr>
+    <td><img src="docs/screenshots/shop-light.jpg" alt="The shop, with aisle and price filters"></td>
+    <td><img src="docs/screenshots/checkout-light.jpg" alt="The basket's checkout panel, with wallet, card and PayPal"></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/admin-dashboard-light.jpg" alt="The admin dashboard and its 30-day sales chart"></td>
+    <td><img src="docs/screenshots/responsive.jpg" alt="A product page on desktop and on a phone"></td>
+  </tr>
+</table>
 
-## Screenshots
+<details>
+<summary>More screenshots</summary>
 
 | Light                                                 | Dark                                                |
 | ----------------------------------------------------- | --------------------------------------------------- |
 | ![Home, light](docs/screenshots/home-light.jpg)       | ![Home, dark](docs/screenshots/home-dark.jpg)       |
-| ![Shop, light](docs/screenshots/shop-light.jpg)       | ![Shop, dark](docs/screenshots/shop-dark.jpg)       |
 | ![Product, light](docs/screenshots/product-light.jpg) | ![Product, dark](docs/screenshots/product-dark.jpg) |
+| ![Reviews, light](docs/screenshots/reviews-light.jpg) | ![Reviews, dark](docs/screenshots/reviews-dark.jpg) |
 | ![Basket, light](docs/screenshots/basket-light.jpg)   | ![Basket, dark](docs/screenshots/basket-dark.jpg)   |
 | ![Wallet, light](docs/screenshots/wallet-light.jpg)   | ![Wallet, dark](docs/screenshots/wallet-dark.jpg)   |
+| ![Orders, light](docs/screenshots/orders-light.jpg)   | ![Orders, dark](docs/screenshots/orders-dark.jpg)   |
+| ![Receipt, light](docs/screenshots/receipt-light.jpg) | ![Receipt, dark](docs/screenshots/receipt-dark.jpg) |
 
-## Stack
+| Admin                                                        |                                                              |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| ![Admin orders](docs/screenshots/admin-orders-light.jpg)     | ![Admin products](docs/screenshots/admin-products-light.jpg) |
+| ![Admin payments](docs/screenshots/admin-payments-light.jpg) | ![Admin reviews](docs/screenshots/admin-reviews-light.jpg)   |
+
+</details>
+
+## Work with me
+
+Like what you see? I build online stores and custom web applications with Laravel and Vue, from the first idea to launch. If you have a project in mind, email me at [amrcs1992@gmail.com](mailto:amrcs1992@gmail.com) and tell me about it.
+
+## What it does
+
+- Shoppers browse six aisles, search as they type, and filter by price and rating.
+- Every product has a photo gallery with zoom, and reviews from people who actually bought it.
+- The basket works for guests too, and moves into their account when they sign in.
+- Customers pay from a built-in wallet, by card, with PayPal, or split one order between the wallet and a card.
+- Every order, top-up and refund is listed, with receipts by email.
+- The store owner runs everything from an admin panel: products, aisles, orders, payments, refunds, customers and reviews.
+
+## What I built
+
+- **Real payments, in sandbox.** Stripe and PayPal checkout with webhooks, so an order is settled even if the shopper closes the tab before coming back.
+- **Money that can't go wrong.** Prices are worked out on the server, amounts are stored as whole cents, and every balance change runs in a locked database transaction with a ledger row, so a balance always matches its history.
+- **A full back office.** A Filament admin panel with a sales dashboard, one-click refunds back to the wallet or the card, payment checks with the provider, and review moderation.
+- **Honest reviews.** Only customers who bought a product can review it, and a refund removes that review.
+- **Tested end to end.** 900+ automated tests, including browser tests that click through the store, plus static analysis at Larastan level 7, all run in CI on every push.
+- **A rewrite, not a reskin.** It began in 2018 as plain PHP that trusted prices sent by the browser and changed balances without locking. [What changed in the rewrite](docs/rewrite-2018-2026.md).
+
+## Stack and quality
 
 - **Backend:** Laravel 13, PHP 8.3, MySQL 8.4
-- **Front end:** Inertia 3, Vue 3 + TypeScript, Tailwind 4, shadcn-vue, Laravel Wayfinder, vite-plus
-- **Auth:** Laravel Fortify via the official Vue starter kit (login, registration, password reset, profile, optional two-factor and passkeys)
-- **Tests:** Pest 4, including browser tests (pest-plugin-browser with Playwright)
-- **Quality:** Pint, Larastan level 7, Oxlint, Oxfmt, vue-tsc
-- **CI:** GitHub Actions
+- **Front end:** Inertia 3, Vue 3 + TypeScript, Tailwind 4, shadcn-vue
+- **Admin:** Filament
+- **Payments:** Stripe and PayPal, in sandbox mode
+- **Tests:** Pest 4, with browser tests on Playwright
+- **Quality:** Pint, Larastan level 7, Oxlint, Oxfmt, vue-tsc and GitHub Actions
 
-## Features
+## Run it locally
 
-- Product catalog with search, price and rating filters, sorting and pagination
-- Aisles (categories) with a filter for each, and a featured carousel on the home, shop and product pages
-- Product detail with a photo gallery (thumbnails and arrows, a zoom panel on hover, and a full-screen view with swipe on phones)
-- Reviews from buyers only: 1-5 stars with optional text, one per customer and product, editable and deletable. Written reviews show on the product page five at a time, and a refund removes the review of what that order held.
-- Basket for guests (session) and users (database); a guest basket is merged into the account on login or registration
-- An added-to-basket panel that confirms each addition and links to the basket
-- Checkout paid from the wallet balance, priced entirely on the server
-- Order history with price and name snapshots
-- Wallet top-ups ($5-$500) with an append-only transaction ledger
-- A $20 sign-up credit for new accounts, which admins can change under Store settings
-- Light and dark themes, with a toggle in the header
-- A friendly not-found page that points back to the home page and the shop
-- A Filament admin panel at `/admin` for products, aisles, orders, payments, customers and refunds
-
-## Setup (Laragon, Windows)
-
-Requirements: Laragon with PHP 8.3, MySQL 8.4 and Node 22.
-
-1. Clone the repository into `C:\laragon\www`:
-    ```bash
-    git clone https://github.com/amrcs92/cartopia.git C:\laragon\www\cartopia
-    cd C:\laragon\www\cartopia
-    git checkout laravel
-    ```
-2. Install PHP dependencies: `composer install`
-3. Install JS dependencies: `npm install`
-4. Create the environment file with `cp .env.example .env`, create an empty MySQL database named `cartopia`, and set `DB_DATABASE=cartopia` (user `root`, empty password on a default Laragon).
-5. Generate the app key: `php artisan key:generate`
-6. Migrate and seed: `php artisan migrate --seed`
-7. Link public storage (product images): `php artisan storage:link`
-8. Build the front end: `npm run build`. This needs `php` on your `PATH`, because Wayfinder generates the route helpers at build time.
-9. Open <https://cartopia.test> (Laragon creates the virtual host automatically; turn on SSL under Menu → Apache → SSL → Enabled and reload the web server if needed).
-
-For front-end development use `npm run dev` instead of building.
-
-### Demo logins
-
-| Role  | Email                 | Password   |
-| ----- | --------------------- | ---------- |
-| Demo  | `demo@cartopia.test`  | `12345`    |
-| Admin | `admin@cartopia.test` | `password` |
-
-The admin account signs in to the [admin panel](#admin-panel).
-
-## Payments in sandbox mode
-
-Shoppers can pay with Stripe or PayPal, alone or together with their wallet balance, at checkout and when topping up. Both providers run in sandbox mode only, and `.env` is never committed. After editing `.env` run `php artisan config:clear`.
-
-### Setup
-
-1. **Stripe:** copy the test secret key (`sk_test_…`) from the Stripe dashboard into `STRIPE_SECRET`. For the webhook, run the Stripe CLI:
-    ```bash
-    stripe listen --forward-to https://cartopia.test/webhooks/stripe --skip-verify
-    ```
-    Put the `whsec_…` secret it prints into `STRIPE_WEBHOOK_SECRET`. `--skip-verify` is needed because Laragon's certificate is self-signed.
-2. **PayPal:** in the PayPal Developer dashboard open a sandbox app (Apps & Credentials) and copy its Client ID and Secret into `PAYPAL_CLIENT_ID` and `PAYPAL_SECRET`.
-3. **PayPal webhook:** PayPal must reach your machine, so expose it with ngrok (ideally on your free static domain):
-    ```bash
-    ngrok http http://localhost:80 --host-header=cartopia.test
-    ```
-    In the sandbox app add a webhook with the URL `https://<ngrok-host>/webhooks/paypal` and these events: `CHECKOUT.ORDER.APPROVED`, `PAYMENT.CAPTURE.COMPLETED` and `PAYMENT.CAPTURE.DENIED`. Copy the webhook's ID into `PAYPAL_WEBHOOK_ID`. Point ngrok at plain HTTP as above: forwarding to `https://cartopia.test` makes Apache pick its virtual host from the TLS connection rather than the rewritten Host header, so PayPal's webhooks get Apache's 404 instead of reaching Cartopia. Use a sandbox Business account in a country that can receive payments (the United States, say): one in Egypt makes every capture fail with `COMPLIANCE_VIOLATION`.
-4. **Mail:** start Mailpit from Laragon and set these lines in `.env`. The inbox is at <http://localhost:8025>.
-    ```
-    MAIL_MAILER=smtp
-    MAIL_HOST=127.0.0.1
-    MAIL_PORT=1025
-    ```
-5. **Background work:** run each in its own terminal. Emails only reach Mailpit while the queue worker runs, and the scheduler expires stale payments.
-    ```bash
-    php artisan queue:work
-    php artisan schedule:work
-    ```
-
-### Try it
-
-At <https://cartopia.test>:
-
-- [ ] Stripe card `4242 4242 4242 4242` pays and the order is placed.
-- [ ] Stripe card `4000 0025 0000 3155` asks for 3-D Secure, then pays.
-- [ ] Stripe card `4000 0000 0000 0002` is declined and Stripe keeps you on its page.
-- [ ] PayPal pays with the sandbox Personal (buyer) account, and cancelling on PayPal's page returns you to the basket.
-- [ ] A split order: with a wallet balance below the total, put the balance towards the order and pay the rest with Stripe or PayPal.
-- [ ] A top-up with Stripe and one with PayPal.
-- [ ] Pay with each provider and close the tab before returning. The webhook alone settles it: the order shows as placed and the receipt email arrives.
-- [ ] Every email appears in Mailpit and reads well in light and dark.
-
-## Admin panel
-
-A Filament back office at <https://cartopia.test/admin>.
-
-### Access
-
-Sign in with the seeded admin from [Demo logins](#demo-logins). Anyone who is not an admin gets the store's not-found page. Admins see an "Admin" link in the account menu.
-
-### Screens
-
-- **Dashboard:** sales overview, a sales chart and the latest orders.
-- **Products:** add, edit, feature and move products between aisles. Photos are JPG or WebP, under 1 MB, square and at least 1200 × 1200px, up to five per product. Hide a product rather than deleting it.
-- **Aisles:** add and rename the store's categories, with a product count for each.
-- **Orders:** browse and open orders, and refund them.
-- **Payments:** every Stripe and PayPal payment. The "Needs attention" tab lists payments still pending more than 30 minutes after they started, and "Check with provider" asks Stripe or PayPal for the payment's current state.
-- **Customers:** accounts with their orders and wallet ledger. "Adjust wallet" credits or debits a balance, and "Make admin" or "Remove admin" changes who can sign in to the panel.
-- **Reviews:** every customer review, filterable by product and by hidden or visible. "Hide" takes a review off the product page and out of its average without deleting it, "Unhide" brings it back, and "Delete" removes it.
-- **Store settings:** the sign-up credit new accounts get, from $0 to $500. The store's copy follows it, and $0 turns the credit and the copy off.
-
-### Refunds in sandbox
-
-Only a whole order can be refunded. The part paid from the wallet goes back to the wallet, and the Stripe or PayPal part goes back through the provider's sandbox. If the provider refuses the refund or can't be reached, "Retry refund" appears on the order. The shopper gets a refund receipt email, which shows up in Mailpit while the queue worker runs. Stripe and PayPal refunds also appear in each provider's sandbox dashboard.
-
-### Look
-
-The panel uses a custom theme that matches the store, in `resources/css/filament/admin/theme.css`. `npm run build` builds it.
-
-## Quality checks and tests
-
-```bash
-composer lint:check      # Pint
-composer analyse         # Larastan level 7
-npm run lint             # vp lint (Oxlint)
-npm run format:check     # vp fmt --check (Oxfmt)
-npm run types            # vue-tsc
-npm run build
-php artisan test         # or: vendor/bin/pest
-```
-
-The browser tests need PHP's `sockets` extension. In Laragon enable it under Menu, PHP, Extensions, `sockets`. Alternatively run the tests with `php -d extension=sockets vendor/bin/pest`. Browser tests also need Playwright's browsers (`npx playwright install chromium`). The rest of the suite runs on in-memory SQLite.
-
-## 2018 → 2026 rewrite
-
-The original app (plain PHP, PDO, jQuery, Bootstrap 4 and a localStorage cart) is still in git history on `master` and `main`. The rewrite fixes its defects:
-
-| 2018 defect                                      | 2026 fix                                                                                                                                                 |
-| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Checkout trusted client-side prices and totals   | The server rebuilds the basket from current database prices; the request carries no price, and order totals are computed in a `PlaceOrder` action        |
-| Balance updates had no transaction and no lock   | Every balance change goes through a `Wallet` service: one DB transaction, `lockForUpdate`, and a ledger row, so the balance always equals the ledger sum |
-| Orders were not linked to users                  | Orders belong to a user, are protected by an `OrderPolicy`, and snapshot item names and prices                                                           |
-| One shared fixed salt with SHA-512 for passwords | Laravel's hasher (bcrypt) with per-password salts, via Fortify                                                                                           |
-| No output escaping (XSS) and no CSRF protection  | Vue templates escape by default; Inertia and Laravel send CSRF tokens on every form                                                                      |
-| Ratings were unvalidated and could be duplicated | Form request validation (1-5 stars) and a unique `(user_id, product_id)` constraint with `updateOrCreate`                                                |
-| N+1 queries on every listing page                | Eager loading (`primaryImage`, `withAvg`, `withCount`) and paginated queries                                                                             |
-
-All money is stored as integer cents and wrapped in a `Money` value object, with no float arithmetic and no money math in the browser.
+Clone it, install with Composer and npm, then migrate and seed. The [setup guide](docs/setup.md) has every step and the demo logins. There are also guides to [payments in sandbox mode](docs/payments-sandbox.md) and the [admin panel](docs/admin-panel.md). Product photos are credited in [photo credits](docs/photo-credits.md).
