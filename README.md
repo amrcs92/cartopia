@@ -10,11 +10,11 @@ It started in 2018 as a plain-PHP project and was rebuilt in 2026 as a Laravel s
 
 | Light                                                 | Dark                                                |
 | ----------------------------------------------------- | --------------------------------------------------- |
-| ![Home, light](docs/screenshots/home-light.png)       | ![Home, dark](docs/screenshots/home-dark.png)       |
-| ![Shop, light](docs/screenshots/shop-light.png)       | ![Shop, dark](docs/screenshots/shop-dark.png)       |
-| ![Product, light](docs/screenshots/product-light.png) | ![Product, dark](docs/screenshots/product-dark.png) |
-| ![Basket, light](docs/screenshots/basket-light.png)   | ![Basket, dark](docs/screenshots/basket-dark.png)   |
-| ![Wallet, light](docs/screenshots/wallet-light.png)   | ![Wallet, dark](docs/screenshots/wallet-dark.png)   |
+| ![Home, light](docs/screenshots/home-light.jpg)       | ![Home, dark](docs/screenshots/home-dark.jpg)       |
+| ![Shop, light](docs/screenshots/shop-light.jpg)       | ![Shop, dark](docs/screenshots/shop-dark.jpg)       |
+| ![Product, light](docs/screenshots/product-light.jpg) | ![Product, dark](docs/screenshots/product-dark.jpg) |
+| ![Basket, light](docs/screenshots/basket-light.jpg)   | ![Basket, dark](docs/screenshots/basket-dark.jpg)   |
+| ![Wallet, light](docs/screenshots/wallet-light.jpg)   | ![Wallet, dark](docs/screenshots/wallet-dark.jpg)   |
 
 ## Stack
 

@@ -49,3 +49,9 @@ yarn-error.log
 tests/Browser/Screenshots
 
 /showcase/photos/raw
+/showcase/node_modules
+/showcase/out
+/showcase/video/public/clips
+/showcase/video/public/voice
+/showcase/video/public/music
+/showcase/voice/.venv
