@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { AbsoluteFill, Audio, interpolate, Sequence, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
 import { CameraClip } from './components/CameraClip';
-import { ClosingCard } from './components/ClosingCard';
+import { ClosingCard, type Channel } from './components/ClosingCard';
 import { DarkWipe } from './components/DarkWipe';
 import { PhoneFrame } from './components/PhoneFrame';
 import { SceneTitle } from './components/SceneTitle';
@@ -47,7 +47,7 @@ function musicVolume(frame: number, timeline: Timeline): number {
     return level * fade;
 }
 
-export function Walkthrough({ timeline, edit }: { timeline: Timeline; edit: Edit }) {
+export function Walkthrough({ timeline, edit, channel }: { timeline: Timeline; edit: Edit; channel?: Channel }) {
     const { fps } = useVideoConfig();
 
     const content = (id: SegmentId, frames: number): ReactNode => {
@@ -80,7 +80,7 @@ export function Walkthrough({ timeline, edit }: { timeline: Timeline; edit: Edit
                         <StackCards />
                         <Sequence from={edit.close.stackFrames}>
                             <Enter frames={12}>
-                                <ClosingCard />
+                                <ClosingCard channel={channel} />
                             </Enter>
                         </Sequence>
                     </>

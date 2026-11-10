@@ -20,6 +20,8 @@ const showcase = join(repoRoot, 'showcase');
 const out = join(showcase, 'out');
 const files = {
     master: join(out, 'walkthrough-master.mp4'),
+    readmeMaster: join(out, 'walkthrough-readme-master.mp4'),
+    readmeLevelled: join(out, 'walkthrough-readme-levelled.mp4'),
     hd: join(out, 'cartopia-walkthrough-1080p.mp4'),
     small: join(out, 'cartopia-walkthrough-720p.mp4'),
     thumbnail: join(out, 'cartopia-thumbnail.png'),
@@ -85,27 +87,40 @@ function main(): void {
     const timings = JSON.parse(readFileSync(join(showcase, 'video/public/voice/timings.json'), 'utf8')) as Timings;
     const timeline = buildTimeline(timings, FPS);
 
-    // --reuse skips the slow render when an earlier run already made the master.
-    if (process.argv.includes('--reuse') && existsSync(files.master)) {
-        step('1/6  Reusing the rendered master.');
-    } else {
-        step('1/6  Rendering the walkthrough at 1080p...');
-        remotion(['render', 'Walkthrough', files.master, '--crf', '18', '--audio-bitrate', '192k', '--log', 'error']);
+    // Two cuts: the YouTube one ends on the channel, the README one on the contact details alone.
+    // --reuse skips the slow renders when an earlier run already made the masters.
+    const reuse = process.argv.includes('--reuse');
+    for (const [composition, master] of [
+        ['Walkthrough', files.master],
+        ['WalkthroughReadme', files.readmeMaster],
+    ] as const) {
+        if (reuse && existsSync(master)) {
+            step(`1/6  Reusing the rendered ${composition} master.`);
+        } else {
+            step(`1/6  Rendering ${composition} at 1080p...`);
+            remotion(['render', composition, master, '--crf', '18', '--audio-bitrate', '192k', '--log', 'error']);
+        }
     }
 
     step('2/6  Setting the loudness to -14 LUFS...');
-    const m = measure(files.master);
-    remotion([
-        'ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-i', files.master,
-        '-af', `loudnorm=${LOUDNESS}:measured_I=${m.input_i}:measured_TP=${m.input_tp}:measured_LRA=${m.input_lra}:measured_thresh=${m.input_thresh}:offset=${m.target_offset}:linear=true`,
-        '-ar', '48000', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', files.hd,
-    ]);
+    for (const [master, levelled] of [
+        [files.master, files.hd],
+        [files.readmeMaster, files.readmeLevelled],
+    ] as const) {
+        const m = measure(master);
+        remotion([
+            'ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-i', master,
+            '-af', `loudnorm=${LOUDNESS}:measured_I=${m.input_i}:measured_TP=${m.input_tp}:measured_LRA=${m.input_lra}:measured_thresh=${m.input_thresh}:offset=${m.target_offset}:linear=true`,
+            '-ar', '48000', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', levelled,
+        ]);
+    }
 
     step('3/6  Encoding the 720p copy for the README...');
     const passlog = join(out, 'x264-720p');
     const scale = ['-vf', 'scale=1280:720:flags=lanczos', '-c:v', 'libx264', '-preset', 'slow', '-b:v', '720k', '-pix_fmt', 'yuv420p', '-passlogfile', passlog];
-    remotion(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-i', files.hd, ...scale, '-pass', '1', '-an', '-f', 'null', '-']);
-    remotion(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-i', files.hd, ...scale, '-pass', '2', '-c:a', 'aac', '-b:a', '96k', '-movflags', '+faststart', files.small]);
+    const source = files.readmeLevelled;
+    remotion(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-i', source, ...scale, '-pass', '1', '-an', '-f', 'null', '-']);
+    remotion(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-i', source, ...scale, '-pass', '2', '-c:a', 'aac', '-b:a', '96k', '-movflags', '+faststart', files.small]);
 
     step('4/6  Rendering the thumbnail...');
     remotion(['still', 'Thumbnail', files.thumbnail, '--log', 'error']);
@@ -125,7 +140,8 @@ function main(): void {
     const thumb = probe(files.thumbnail);
     check(thumb.width === 1280 && thumb.height === 720, `thumbnail is ${thumb.width} x ${thumb.height}`);
 
-    rmSync(files.master, { force: true });
+    // The masters stay in out/ (git-ignored) so --reuse can skip their renders next time.
+    rmSync(files.readmeLevelled, { force: true });
     rmSync(`${passlog}-0.log`, { force: true });
     rmSync(`${passlog}-0.log.mbtree`, { force: true });
 
