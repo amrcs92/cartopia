@@ -5,6 +5,7 @@ arpeggio on beats 1 and 3, and a light kick from bar 3 that drops out for the la
 bars. The same seed always gives the same track.
 
     python compose.py   writes ../public/music/music.wav (48 kHz stereo, exactly 92 s)
+                        and click.wav, the pointer's click sound
 """
 
 from __future__ import annotations
@@ -15,6 +16,7 @@ import numpy as np
 import soundfile as sf
 
 OUT = Path(__file__).resolve().parent.parent / "public" / "music" / "music.wav"
+CLICK = OUT.parent / "click.wav"
 
 SR = 48_000
 LENGTH_S = 92.0
@@ -168,9 +170,22 @@ def compose() -> np.ndarray:
     return (mix / peak * 10 ** (PEAK_DBFS / 20)).astype(np.float32)
 
 
+def click() -> np.ndarray:
+    """A soft mouse click for the pointer: a short, muted tick with a little body under it."""
+    rng = np.random.default_rng(SEED + 1)
+    t = np.arange(round(0.06 * SR)) / SR
+    tick = rng.uniform(-1, 1, len(t)) * np.exp(-t / 0.004)
+    tick = np.convolve(tick, np.ones(6) / 6, mode="same")
+    body = np.sin(2 * np.pi * 1_400 * t) * np.exp(-t / 0.012) * 0.6
+    sound = tick + body
+    sound /= np.max(np.abs(sound))
+    return np.repeat((sound * 10 ** (-6 / 20))[:, None], 2, axis=1).astype(np.float32)
+
+
 def main() -> None:
     OUT.parent.mkdir(parents=True, exist_ok=True)
     sf.write(OUT, compose(), SR, subtype="PCM_16")
+    sf.write(CLICK, click(), SR, subtype="PCM_16")
     info = sf.info(OUT)
     print(f"{OUT}  {info.duration:.2f} s  {info.samplerate} Hz  {info.channels} ch")
 
