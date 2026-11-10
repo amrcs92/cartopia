@@ -2,7 +2,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { assertLocalDatabase } from './env';
+import { assertLocalDatabase, assertSafeConnection } from './env';
 
 function envFile(contents: string): string {
     const path = join(mkdtempSync(join(tmpdir(), 'showcase-env-')), '.env');
@@ -37,5 +37,27 @@ describe('assertLocalDatabase', () => {
         expect(
             assertLocalDatabase(envFile('# comment\nAPP_ENV="local"\nDB_DATABASE="cartopia"\n')),
         ).toEqual({ database: 'cartopia' });
+    });
+});
+
+// What Laravel itself resolves, after cached config and environment variables have had their say.
+describe('assertSafeConnection', () => {
+    const local = { environment: 'local', driver: 'mysql', host: '127.0.0.1', database: 'cartopia' };
+
+    it('accepts the local database on this machine', () => {
+        expect(() => assertSafeConnection(local)).not.toThrow();
+        expect(() => assertSafeConnection({ ...local, host: 'localhost' })).not.toThrow();
+    });
+
+    it('refuses when Laravel resolves an environment other than local', () => {
+        expect(() => assertSafeConnection({ ...local, environment: 'production' })).toThrow(/production/);
+    });
+
+    it('refuses a database on another host', () => {
+        expect(() => assertSafeConnection({ ...local, host: 'db.example.com' })).toThrow(/db\.example\.com/);
+    });
+
+    it('refuses the test database even when .env names another', () => {
+        expect(() => assertSafeConnection({ ...local, database: 'cartopia_testing' })).toThrow(/cartopia_testing/);
     });
 });

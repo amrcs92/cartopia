@@ -12,7 +12,8 @@ import { youtubeText } from './youtube';
 
 const FPS = 30;
 const LOUDNESS = 'I=-14:TP=-1.5:LRA=11';
-const MAX_720P_BYTES = 10_485_760;
+// GitHub's limit is "10 MB": check the decimal reading, the stricter one.
+const MAX_720P_BYTES = 10_000_000;
 const TOPICS = ['ecommerce', 'filament', 'inertiajs', 'laravel', 'paypal', 'pest', 'stripe', 'tailwindcss', 'typescript', 'vue'];
 
 const showcase = join(repoRoot, 'showcase');
@@ -102,7 +103,7 @@ function main(): void {
 
     step('3/6  Encoding the 720p copy for the README...');
     const passlog = join(out, 'x264-720p');
-    const scale = ['-vf', 'scale=1280:720:flags=lanczos', '-c:v', 'libx264', '-preset', 'slow', '-b:v', '780k', '-pix_fmt', 'yuv420p', '-passlogfile', passlog];
+    const scale = ['-vf', 'scale=1280:720:flags=lanczos', '-c:v', 'libx264', '-preset', 'slow', '-b:v', '720k', '-pix_fmt', 'yuv420p', '-passlogfile', passlog];
     remotion(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-i', files.hd, ...scale, '-pass', '1', '-an', '-f', 'null', '-']);
     remotion(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-i', files.hd, ...scale, '-pass', '2', '-c:a', 'aac', '-b:a', '96k', '-movflags', '+faststart', files.small]);
 
@@ -120,7 +121,7 @@ function main(): void {
     const loud = Number(measure(files.hd).input_i);
     check(Math.abs(loud + 14) <= 1, `1080p loudness is ${loud.toFixed(1)} LUFS`);
     const size = statSync(files.small).size;
-    check(size <= MAX_720P_BYTES, `720p is ${(size / 1024 / 1024).toFixed(2)} MB, within GitHub's 10 MB`);
+    check(size <= MAX_720P_BYTES, `720p is ${(size / 1024 / 1024).toFixed(2)} MB, within GitHub's 10 MB (decimal)`);
     const thumb = probe(files.thumbnail);
     check(thumb.width === 1280 && thumb.height === 720, `thumbnail is ${thumb.width} x ${thumb.height}`);
 

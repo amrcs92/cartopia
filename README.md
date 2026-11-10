@@ -56,7 +56,7 @@ Like what you see? I build online stores and custom web applications with Larave
 - **Money that can't go wrong.** Prices are worked out on the server, amounts are stored as whole cents, and every balance change runs in a locked database transaction with a ledger row, so a balance always matches its history.
 - **A full back office.** A Filament admin panel with a sales dashboard, one-click refunds back to the wallet or the card, payment checks with the provider, and review moderation.
 - **Honest reviews.** Only customers who bought a product can review it, and a refund removes that review.
-- **Tested end to end.** 900+ automated tests, including browser tests that click through the store, plus static analysis at Larastan level 7, all run in CI on every push.
+- **Tested end to end.** 900+ automated tests. The 800+ unit and feature tests and static analysis at Larastan level 7 run in CI on every push, and 100+ browser tests click through the store locally.
 - **A rewrite, not a reskin.** It began in 2018 as plain PHP that trusted prices sent by the browser and changed balances without locking. [What changed in the rewrite](docs/rewrite-2018-2026.md).
 
 ## Stack and quality
