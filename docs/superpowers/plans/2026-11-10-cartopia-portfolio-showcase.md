@@ -71,7 +71,7 @@ These must stay green after every store-side task:
 - **Sound:** mix at −14 LUFS integrated, true peak −1.5 dBTP.
 
 ### Deliverables, rendered in `showcase/out/` (git-ignored, never committed)
-At the end, `npm run render` copies the five deliverables to `SHOWCASE_DELIVER_DIR`, which defaults to `os.homedir()/Downloads`. For Amr that is `C:\Users\engam\Downloads`, as he asked.
+At the end, `npm run render` copies the five deliverables to `SHOWCASE_DELIVER_DIR`, which defaults to `os.homedir()/Downloads`. That is Amr's Downloads folder, as he asked.
 
 - `cartopia-walkthrough-1080p.mp4`
 - `cartopia-walkthrough-720p.mp4`, at most 10 MB (10,485,760 bytes)
@@ -673,8 +673,8 @@ npx remotion ffmpeg -i ../out/cartopia-walkthrough-1080p.mp4 -af ebur128 -f null
   - integrated loudness −14 ± 1 LUFS
   - the 720p file at most 10 MB
   - the thumbnail at 1280 × 720
-  - all five files present in `C:\Users\engam\Downloads`
-- [ ] **Step 5:** Commit "Add the final render and delivery scripts" and push. Tell Amr the five files are in `C:\Users\engam\Downloads`, and tell him:
+  - all five files present in the Downloads folder
+- [ ] **Step 5:** Commit "Add the final render and delivery scripts" and push. Tell Amr the five files are in his Downloads folder, and tell him:
   1. Upload the 1080p video to YouTube, with the thumbnail, the `.srt` and `youtube.md`.
   2. Drag the 720p video into the README in GitHub's web editor.
   3. Send back both links.
