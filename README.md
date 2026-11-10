@@ -4,7 +4,9 @@ An online store with a wallet, card and PayPal checkout, and an admin back offic
 
 [![CI](https://github.com/amrcs92/cartopia/actions/workflows/ci.yml/badge.svg)](https://github.com/amrcs92/cartopia/actions/workflows/ci.yml)
 
-<!-- walkthrough video: added after upload -->
+[![The 90-second walkthrough of Cartopia](docs/screenshots/walkthrough-video.jpg)](https://youtu.be/kiOWb290oNQ)
+
+**[Watch the 90-second tour on YouTube](https://youtu.be/kiOWb290oNQ)**, with narration and subtitles.
 
 <table>
   <tr>
