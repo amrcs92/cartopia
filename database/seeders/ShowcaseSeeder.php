@@ -21,6 +21,7 @@ use App\Support\Money;
 use App\Wallet\Wallet;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
+use LogicException;
 use RuntimeException;
 
 /**
@@ -121,6 +122,11 @@ class ShowcaseSeeder extends Seeder
 
     public function run(): void
     {
+        // Demo accounts with the password "password" and fake payments never belong in production.
+        if (app()->isProduction()) {
+            throw new LogicException('ShowcaseSeeder only seeds local demo data: it never runs in production.');
+        }
+
         $this->call(DatabaseSeeder::class);
 
         $this->now = Carbon::now();

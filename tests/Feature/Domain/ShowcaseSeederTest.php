@@ -70,3 +70,10 @@ it('spreads orders over the dashboard month with every recent day covered', func
     'just before midnight' => [23, 59],
     'just after midnight' => [0, 0],
 ]);
+
+it('refuses to seed demo accounts in production', function () {
+    app()->detectEnvironment(fn () => 'production');
+
+    expect(fn () => app(ShowcaseSeeder::class)->run())->toThrow(LogicException::class, 'production');
+    expect(User::query()->count())->toBe(0);
+});
