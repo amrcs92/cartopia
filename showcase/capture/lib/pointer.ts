@@ -1,4 +1,5 @@
 import type { BrowserContext, Locator, Page } from 'playwright';
+import { clicked } from './clicks';
 
 // Headless recordings show no cursor, so the scenes draw their own: an ink
 // arrow with a cream fill that glides between targets and ripples on a click.
@@ -98,6 +99,7 @@ export async function clickWith(page: Page, locator: Locator): Promise<void> {
     const { x, y } = await centreOf(locator);
     await glideTo(page, x, y, 600);
     await page.waitForTimeout(150);
+    clicked(page);
     await ripple(page, x, y);
     await page.mouse.click(x, y);
 }

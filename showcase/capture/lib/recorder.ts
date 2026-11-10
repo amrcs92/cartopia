@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { CDPSession, Locator, Page } from 'playwright';
 import { repoRoot } from './env';
+import { watchClicks } from './clicks';
 import { concatList, toConstantRate, type Frame } from './frames';
 
 export interface Mark {
@@ -18,6 +19,8 @@ export interface Clip {
     width: number;
     height: number;
     marks: Mark[];
+    /** When the pointer clicked, in ms from the clip's start. */
+    clicks: number[];
 }
 
 /** Runs Remotion's bundled ffmpeg, so nothing else needs installing. */
@@ -38,6 +41,8 @@ export class Recorder {
     private session: CDPSession | null = null;
     private readonly frames: Frame[] = [];
     private readonly marks: Mark[] = [];
+    private readonly clicks: number[] = [];
+    private stopWatching: () => void = () => undefined;
     private readonly dir = mkdtempSync(join(tmpdir(), 'showcase-frames-'));
     private startMs = 0;
     private count = 0;
@@ -58,6 +63,7 @@ export class Recorder {
             void this.session?.send('Page.screencastFrameAck', { sessionId: event.sessionId }).catch(() => undefined);
         });
         this.startMs = Date.now();
+        this.stopWatching = watchClicks(this.page, () => this.clicks.push(this.elapsedMs()));
         await this.session.send('Page.startScreencast', {
             format: 'jpeg',
             quality: 92,
@@ -88,6 +94,7 @@ export class Recorder {
     /** Stops recording and writes `<outDir>/<name>.mp4`. */
     async stop(outDir: string, name: string): Promise<Clip> {
         const endMs = this.elapsedMs();
+        this.stopWatching();
         await this.session?.send('Page.stopScreencast');
         await this.session?.detach();
 
@@ -100,10 +107,12 @@ export class Recorder {
             '-vf', `scale=${this.width}:${this.height}`,
             '-fps_mode', 'cfr', '-r', '30',
             '-c:v', 'libx264', '-crf', '16', '-preset', 'medium', '-pix_fmt', 'yuv420p',
+            // No B-frames and a keyframe every half second, so Remotion can seek to any frame.
+            '-bf', '0', '-g', '15', '-movflags', '+faststart',
             join(outDir, file),
         ]);
         rmSync(this.dir, { recursive: true, force: true });
 
-        return { file, durationMs: endMs, width: this.width, height: this.height, marks: this.marks };
+        return { file, durationMs: endMs, width: this.width, height: this.height, marks: this.marks, clicks: this.clicks };
     }
 }
