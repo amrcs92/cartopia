@@ -14,7 +14,7 @@ const timeline = buildTimeline(timings as Timings, 30);
 const edit = buildEdit(timeline, manifest as Manifest);
 
 const channel: Channel = {
-    name: 'Amr',
+    name: 'Amr Ashraf',
     handle: '@amrashrafserageldin',
     avatar: staticFile('brand/amr-avatar.png'),
 };
